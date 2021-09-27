@@ -6,7 +6,8 @@
     "test": "hardhat test",
     "compile": "hardhat compile",
     "deploy-mainnet": "hardhat --network mainnet deploy",
-    "deploy-apothem": "hardhat --network apothem deploy"
+    "deploy-apothem": "hardhat --network apothem deploy",
+    "remixd": "remixd -s ./ -u https://remix.ethereum.org"
   },
   "repository": {
     "type": "git",
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.10",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@remix-project/remixd": "^0.5.2",
     "chai": "^4.3.4",
     "dotenv": "^10.0.0",
     "ethereum-waffle": "^3.4.0",

@@ -1,9 +1,9 @@
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
-  const { deployer } = await getNamedAccounts();
+  const { controllerOwner } = await getNamedAccounts();
 
   await deploy("Controller", {
-    from: deployer,
+    from: controllerOwner,
     args: [],
     log: true,
   });

@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
+require("hardhat-watcher");
 require("dotenv").config();
 
 const { MNEMONIC } = process.env;
@@ -25,7 +26,9 @@ module.exports = {
     },
   },
   namedAccounts: {
-    deployer: 0,
+    controllerOwner: 0,
+    issuer: 1,
+    nonIssuer: 2,
   },
   networks: {
     mainnet: {
@@ -35,6 +38,12 @@ module.exports = {
     apothem: {
       ...sharedNetworkConfig,
       url: "https://safe-apothem.xinfin.yodaplus.net:8083",
+    },
+  },
+  watcher: {
+    test: {
+      tasks: ["test"],
+      files: ["./contracts", "./test"],
     },
   },
 };

@@ -26,7 +26,7 @@ module.exports = {
     },
   },
   namedAccounts: {
-    controllerOwner: 0,
+    custodianContractOwner: 0,
     issuer: 1,
     nonIssuer: 2,
   },

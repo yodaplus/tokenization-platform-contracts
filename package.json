@@ -8,7 +8,9 @@
     "compile": "hardhat compile",
     "deploy-mainnet": "hardhat --network mainnet deploy",
     "deploy-apothem": "hardhat --network apothem deploy",
-    "remixd": "remixd -s ./ -u https://remix.ethereum.org"
+    "remixd": "remixd -s ./ -u https://remix.ethereum.org",
+    "gas": "REPORT_GAS=true npm test",
+    "size": "hardhat size-contracts"
   },
   "repository": {
     "type": "git",
@@ -25,7 +27,9 @@
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.7",
     "hardhat": "^2.6.4",
+    "hardhat-contract-sizer": "^2.1.1",
     "hardhat-deploy": "^0.9.1",
+    "hardhat-gas-reporter": "^1.0.4",
     "hardhat-watcher": "^2.1.1",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.18",

@@ -5,3 +5,15 @@
 ```
 npm start
 ```
+
+## Gas report
+
+```
+npm run gas
+```
+
+## Contracts size
+
+```
+npm run size
+```

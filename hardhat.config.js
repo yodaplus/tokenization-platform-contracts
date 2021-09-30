@@ -2,6 +2,8 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
 require("hardhat-watcher");
+require("hardhat-gas-reporter");
+require("hardhat-contract-sizer");
 require("dotenv").config();
 
 const { MNEMONIC } = process.env;
@@ -49,5 +51,8 @@ module.exports = {
       tasks: ["test"],
       files: ["./contracts", "./test"],
     },
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
   },
 };

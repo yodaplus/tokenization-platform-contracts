@@ -1,6 +1,17 @@
 const { expect } = require("chai");
 const { ethers, deployments, getNamedAccounts } = require("hardhat");
 
+const TOKEN_EXAMPLE = {
+  name: "Test Token",
+  symbol: "TT1",
+  decimal: 18,
+  totalSupply: 10,
+  value: 1000,
+  currency: "USD",
+  earlyRedemption: true,
+  minSubscription: 1,
+};
+
 describe("CustodianContract", () => {
   let CustodianContract;
 
@@ -17,6 +28,53 @@ describe("CustodianContract", () => {
     const CustodianContract = await ethers.getContract("CustodianContract");
 
     expect(await CustodianContract.VERSION()).to.equal("0.0.1");
+  });
+
+  describe("tokens", () => {
+    let CustodianContractIssuer;
+
+    beforeEach(async () => {
+      const { issuer, custodian } = await getNamedAccounts();
+      CustodianContract.addIssuer(1, "lei", "countryCode", issuer);
+      CustodianContract.addCustodian(2, "lei", "countryCode", custodian);
+      CustodianContractIssuer = await ethers.getContract(
+        "CustodianContract",
+        issuer
+      );
+    });
+
+    it(`doesn't allow non-issuers to publish tokens`, async () => {
+      await expect(
+        CustodianContract.publishToken({
+          ...TOKEN_EXAMPLE,
+          id: 1,
+          issuerId: 1,
+          custodianId: 2,
+        })
+      ).to.be.revertedWith("caller is not an issuer");
+    });
+
+    it(`can't publish a token for non-existent issuer`, async () => {
+      await expect(
+        CustodianContractIssuer.publishToken({
+          ...TOKEN_EXAMPLE,
+          id: 1,
+          issuerId: 999,
+          custodianId: 2,
+        })
+      ).to.be.revertedWith("issuer does not exists");
+    });
+
+    it(`can't publish a token for non-existent custodian`, async () => {
+      await expect(
+        CustodianContractIssuer.publishToken({
+          ...TOKEN_EXAMPLE,
+          id: 1,
+          issuerId: 1,
+          custodianId: 99,
+        })
+      ).to.be.revertedWith("custodian does not exists");
+    });
   });
 
   describe("entities CRUD", () => {

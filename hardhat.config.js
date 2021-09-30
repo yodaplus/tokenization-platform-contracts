@@ -35,6 +35,7 @@ module.exports = {
     userOfType: 4,
     userOfType2: 5,
     userOfOtherType: 6,
+    custodian: 7,
   },
   networks: {
     mainnet: {

@@ -35,7 +35,7 @@ contract CustodianContract is Ownable {
   }
 
   function isKycProvider(address addr) public view returns (bool) {
-    return _isCustodian[_addressToKycProviderId[addr]];
+    return _isKycProvider[_addressToKycProviderId[addr]];
   }
 
   modifier onlyIssuer() {
@@ -142,7 +142,7 @@ contract CustodianContract is Ownable {
     );
   }
 
-  function addKYCProvider(
+  function addKycProvider(
     uint256 id,
     string calldata lei,
     string calldata countryCode,

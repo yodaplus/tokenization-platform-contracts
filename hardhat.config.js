@@ -29,6 +29,10 @@ module.exports = {
     custodianContractOwner: 0,
     issuer: 1,
     nonIssuer: 2,
+    issuer2: 3,
+    userOfType: 4,
+    userOfType2: 5,
+    userOfOtherType: 6,
   },
   networks: {
     mainnet: {

@@ -114,7 +114,7 @@ describe("CustodianContract", () => {
           );
         });
 
-        it(`cannot add ${entityName} addresses to non-existent userOfTypes`, async () => {
+        it(`cannot add addresses to non-existent ${entityName}`, async () => {
           const { userOfType } = await getNamedAccounts();
 
           await expect(

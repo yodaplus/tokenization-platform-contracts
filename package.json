@@ -10,7 +10,8 @@
     "deploy-apothem": "hardhat --network apothem deploy",
     "remixd": "remixd -s ./ -u https://remix.ethereum.org",
     "gas": "REPORT_GAS=true npm test",
-    "size": "hardhat size-contracts"
+    "size": "hardhat size-contracts",
+    "coverage": "hardhat coverage"
   },
   "repository": {
     "type": "git",
@@ -37,6 +38,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.18",
     "solc": "^0.8.4",
     "solhint": "^3.3.6",
-    "solhint-plugin-prettier": "^0.0.5"
+    "solhint-plugin-prettier": "^0.0.5",
+    "solidity-coverage": "^0.7.17"
   }
 }

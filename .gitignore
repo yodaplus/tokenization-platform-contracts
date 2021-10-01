@@ -6,3 +6,5 @@ cache
 artifacts
 deployments
 bin
+coverage
+coverage.json

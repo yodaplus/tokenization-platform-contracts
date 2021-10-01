@@ -4,6 +4,7 @@ require("hardhat-deploy");
 require("hardhat-watcher");
 require("hardhat-gas-reporter");
 require("hardhat-contract-sizer");
+require("solidity-coverage");
 require("dotenv").config();
 
 const { MNEMONIC } = process.env;

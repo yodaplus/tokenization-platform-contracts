@@ -165,6 +165,22 @@ describe("CustodianContract", function () {
       expect(normalizeArrayOutput(tokens)).to.matchSnapshot(this);
     });
 
+    it(`emits TokenPublished(...) event on token publish`, async () => {
+      const { custodian, issuer } = await getNamedAccounts();
+
+      const publishTokenHandler = await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+      });
+
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      await expect(publishTokenHandler)
+        .to.emit(CustodianContractIssuer, "TokenPublished")
+        .withArgs(TOKEN_EXAMPLE.symbol, tokens[0].address_);
+    });
+
     it(`sets proper name, symbol and decimals for the published token`, async () => {
       const { custodian, issuer } = await getNamedAccounts();
 

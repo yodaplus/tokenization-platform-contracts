@@ -33,6 +33,8 @@ contract CustodianContract is Ownable {
     address address_;
   }
 
+  event TokenPublished(string symbol, address address_);
+
   mapping(address => RoleData) internal _issuers;
   mapping(address => RoleData) internal _custodians;
   mapping(address => RoleData) internal _kycProviders;
@@ -307,6 +309,8 @@ contract CustodianContract is Ownable {
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
       tokenAddress
     );
+
+    emit TokenPublished(token.symbol, tokenAddress);
   }
 
   function getTokens(address issuerPrimaryAddress)

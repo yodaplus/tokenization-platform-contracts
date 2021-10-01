@@ -7,8 +7,7 @@ import {Token as TokenContract} from "./Token.sol";
 contract CustodianContract is Ownable {
   string public constant VERSION = "0.0.1";
 
-  struct User {
-    uint256 id;
+  struct RoleData {
     string lei;
     string countryCode;
     address primaryAddress;
@@ -27,42 +26,42 @@ contract CustodianContract is Ownable {
     uint256 totalSupply;
     uint256 value;
     string currency;
-    uint256 issuerId;
-    uint256 custodianId;
+    address issuerPrimaryAddress;
+    address custodianPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
     TokenStatus status;
     address address_;
   }
 
-  mapping(uint256 => User) internal _issuers;
-  mapping(uint256 => User) internal _custodians;
-  mapping(uint256 => User) internal _kycProviders;
+  mapping(address => RoleData) internal _issuers;
+  mapping(address => RoleData) internal _custodians;
+  mapping(address => RoleData) internal _kycProviders;
 
-  mapping(address => uint256) internal _addressToIssuerId;
-  mapping(address => uint256) internal _addressToCustodianId;
-  mapping(address => uint256) internal _addressToKycProviderId;
+  mapping(address => address) internal _addressToIssuerPrimaryAddress;
+  mapping(address => address) internal _addressToCustodianPrimaryAddress;
+  mapping(address => address) internal _addressToKycProviderPrimaryAddress;
 
-  mapping(uint256 => bool) internal _isIssuer;
-  mapping(uint256 => bool) internal _isCustodian;
-  mapping(uint256 => bool) internal _isKycProvider;
+  mapping(address => bool) internal _isIssuer;
+  mapping(address => bool) internal _isCustodian;
+  mapping(address => bool) internal _isKycProvider;
 
   mapping(uint256 => Token) internal _tokens;
   mapping(address => uint256) internal _addressToTokenId;
-  mapping(uint256 => address[]) internal _tokenAddressesByIssuerId;
+  mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
   mapping(string => bool) internal _tokenWithNameExists;
   mapping(string => bool) internal _tokenWithSymbolExists;
 
   function isIssuer(address addr) public view returns (bool) {
-    return _isIssuer[_addressToIssuerId[addr]];
+    return _isIssuer[_addressToIssuerPrimaryAddress[addr]];
   }
 
   function isCustodian(address addr) public view returns (bool) {
-    return _isCustodian[_addressToCustodianId[addr]];
+    return _isCustodian[_addressToCustodianPrimaryAddress[addr]];
   }
 
   function isKycProvider(address addr) public view returns (bool) {
-    return _isKycProvider[_addressToKycProviderId[addr]];
+    return _isKycProvider[_addressToKycProviderPrimaryAddress[addr]];
   }
 
   modifier onlyIssuer() {
@@ -80,72 +79,68 @@ contract CustodianContract is Ownable {
     _;
   }
 
-  function _addUser(
-    mapping(uint256 => bool) storage _isUserType,
-    mapping(uint256 => User) storage _usersData,
-    mapping(address => uint256) storage _addressToUserId,
-    uint256 id,
+  function _addRole(
+    mapping(address => bool) storage _isUserType,
+    mapping(address => RoleData) storage _usersData,
+    mapping(address => address) storage _addressToUserPrimaryAddress,
     string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) internal {
-    require(_isUserType[id] == false, "user already exists");
+    require(_isUserType[primaryAddress] == false, "user already exists");
 
-    _isUserType[id] = true;
-    _usersData[id].id = id;
-    _usersData[id].lei = lei;
-    _usersData[id].countryCode = countryCode;
-    _usersData[id].primaryAddress = primaryAddress;
-    _usersData[id].addresses.push(primaryAddress);
-    _addressToUserId[primaryAddress] = id;
+    _isUserType[primaryAddress] = true;
+    _usersData[primaryAddress].lei = lei;
+    _usersData[primaryAddress].countryCode = countryCode;
+    _usersData[primaryAddress].primaryAddress = primaryAddress;
+    _usersData[primaryAddress].addresses.push(primaryAddress);
+    _addressToUserPrimaryAddress[primaryAddress] = primaryAddress;
   }
 
-  function _removeUser(
-    mapping(uint256 => bool) storage _isUserType,
-    mapping(uint256 => User) storage _usersData,
-    mapping(address => uint256) storage _addressToUserId,
-    uint256 id
+  function _removeRole(
+    mapping(address => bool) storage _isUserType,
+    mapping(address => RoleData) storage _usersData,
+    mapping(address => address) storage _addressToUserPrimaryAddress,
+    address primaryAddress
   ) internal {
-    require(_isUserType[id] == true, "user does not exists");
+    require(_isUserType[primaryAddress] == true, "user does not exists");
 
-    address[] storage addresses = _usersData[id].addresses;
+    address[] storage addresses = _usersData[primaryAddress].addresses;
 
     for (uint256 i = 0; i < addresses.length; i++) {
-      delete _addressToUserId[addresses[i]];
+      delete _addressToUserPrimaryAddress[addresses[i]];
     }
 
-    delete _isUserType[id];
-    delete _usersData[id];
+    delete _isUserType[primaryAddress];
+    delete _usersData[primaryAddress];
   }
 
-  function _addUserAddresses(
-    mapping(uint256 => bool) storage _isUserType,
-    mapping(uint256 => User) storage _usersData,
-    mapping(address => uint256) storage _addressToUserId,
-    uint256 id,
+  function _addRoleAddresses(
+    mapping(address => bool) storage _isUserType,
+    mapping(address => RoleData) storage _usersData,
+    mapping(address => address) storage _addressToUserPrimaryAddress,
+    address primaryAddress,
     address[] calldata addresses
   ) internal {
-    require(_isUserType[id] == true, "user does not exists");
+    require(_isUserType[primaryAddress] == true, "user does not exists");
 
-    address[] storage userAddresses = _usersData[id].addresses;
+    address[] storage userAddresses = _usersData[primaryAddress].addresses;
 
     for (uint256 i = 0; i < addresses.length; i++) {
-      _addressToUserId[addresses[i]] = id;
+      _addressToUserPrimaryAddress[addresses[i]] = primaryAddress;
       userAddresses.push(addresses[i]);
     }
   }
 
   function addIssuer(
-    uint256 id,
     string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) external onlyOwner {
-    _addUser(
+    _addRole(
       _isIssuer,
       _issuers,
-      _addressToIssuerId,
-      id,
+      _addressToIssuerPrimaryAddress,
       lei,
       countryCode,
       primaryAddress
@@ -153,16 +148,14 @@ contract CustodianContract is Ownable {
   }
 
   function addCustodian(
-    uint256 id,
     string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) external onlyOwner {
-    _addUser(
+    _addRole(
       _isCustodian,
       _custodians,
-      _addressToCustodianId,
-      id,
+      _addressToCustodianPrimaryAddress,
       lei,
       countryCode,
       primaryAddress
@@ -170,63 +163,82 @@ contract CustodianContract is Ownable {
   }
 
   function addKycProvider(
-    uint256 id,
     string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) external onlyOwner {
-    _addUser(
+    _addRole(
       _isKycProvider,
       _kycProviders,
-      _addressToKycProviderId,
-      id,
+      _addressToKycProviderPrimaryAddress,
       lei,
       countryCode,
       primaryAddress
     );
   }
 
-  function removeIssuer(uint256 id) external onlyOwner {
-    _removeUser(_isIssuer, _issuers, _addressToIssuerId, id);
+  function removeIssuer(address primaryAddress) external onlyOwner {
+    _removeRole(
+      _isIssuer,
+      _issuers,
+      _addressToIssuerPrimaryAddress,
+      primaryAddress
+    );
   }
 
-  function removeCustodian(uint256 id) external onlyOwner {
-    _removeUser(_isCustodian, _custodians, _addressToCustodianId, id);
-  }
-
-  function removeKycProvider(uint256 id) external onlyOwner {
-    _removeUser(_isKycProvider, _kycProviders, _addressToKycProviderId, id);
-  }
-
-  function addIssuerAccounts(uint256 id, address[] calldata addresses)
-    external
-    onlyOwner
-  {
-    _addUserAddresses(_isIssuer, _issuers, _addressToIssuerId, id, addresses);
-  }
-
-  function addCustodianAccounts(uint256 id, address[] calldata addresses)
-    external
-    onlyOwner
-  {
-    _addUserAddresses(
+  function removeCustodian(address primaryAddress) external onlyOwner {
+    _removeRole(
       _isCustodian,
       _custodians,
-      _addressToCustodianId,
-      id,
+      _addressToCustodianPrimaryAddress,
+      primaryAddress
+    );
+  }
+
+  function removeKycProvider(address primaryAddress) external onlyOwner {
+    _removeRole(
+      _isKycProvider,
+      _kycProviders,
+      _addressToKycProviderPrimaryAddress,
+      primaryAddress
+    );
+  }
+
+  function addIssuerAccounts(
+    address primaryAddress,
+    address[] calldata addresses
+  ) external onlyOwner {
+    _addRoleAddresses(
+      _isIssuer,
+      _issuers,
+      _addressToIssuerPrimaryAddress,
+      primaryAddress,
       addresses
     );
   }
 
-  function addKycProviderAccounts(uint256 id, address[] calldata addresses)
-    external
-    onlyOwner
-  {
-    _addUserAddresses(
+  function addCustodianAccounts(
+    address primaryAddress,
+    address[] calldata addresses
+  ) external onlyOwner {
+    _addRoleAddresses(
+      _isCustodian,
+      _custodians,
+      _addressToCustodianPrimaryAddress,
+      primaryAddress,
+      addresses
+    );
+  }
+
+  function addKycProviderAccounts(
+    address primaryAddress,
+    address[] calldata addresses
+  ) external onlyOwner {
+    _addRoleAddresses(
       _isKycProvider,
       _kycProviders,
-      _addressToKycProviderId,
-      id,
+      _addressToKycProviderPrimaryAddress,
+      primaryAddress,
       addresses
     );
   }
@@ -239,16 +251,19 @@ contract CustodianContract is Ownable {
     uint256 totalSupply;
     uint256 value;
     string currency;
-    uint256 issuerId;
-    uint256 custodianId;
+    address issuerPrimaryAddress;
+    address custodianPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
-    require(_isIssuer[token.issuerId] == true, "issuer does not exists");
     require(
-      _isCustodian[token.custodianId] == true,
+      _isIssuer[token.issuerPrimaryAddress] == true,
+      "issuer does not exists"
+    );
+    require(
+      _isCustodian[token.custodianPrimaryAddress] == true,
       "custodian does not exists"
     );
     require(
@@ -275,8 +290,8 @@ contract CustodianContract is Ownable {
     _tokens[token.id].totalSupply = token.totalSupply;
     _tokens[token.id].value = token.value;
     _tokens[token.id].currency = token.currency;
-    _tokens[token.id].issuerId = token.issuerId;
-    _tokens[token.id].custodianId = token.custodianId;
+    _tokens[token.id].issuerPrimaryAddress = token.issuerPrimaryAddress;
+    _tokens[token.id].custodianPrimaryAddress = token.custodianPrimaryAddress;
     _tokens[token.id].earlyRedemption = token.earlyRedemption;
     _tokens[token.id].minSubscription = token.minSubscription;
     _tokens[token.id].status = TokenStatus.Published;
@@ -284,19 +299,29 @@ contract CustodianContract is Ownable {
     _tokenWithNameExists[token.name] = true;
     _tokenWithSymbolExists[token.symbol] = true;
     _addressToTokenId[address(deployedToken)] = token.id;
-    _tokenAddressesByIssuerId[token.issuerId].push(address(deployedToken));
+    _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
+      address(deployedToken)
+    );
   }
 
-  function getTokens(uint256 issuerId)
+  function getTokens(address issuerPrimaryAddress)
     external
     view
     returns (Token[] memory result)
   {
-    result = new Token[](_tokenAddressesByIssuerId[issuerId].length);
+    result = new Token[](
+      _tokenAddressesByIssuerPrimaryAddress[issuerPrimaryAddress].length
+    );
 
-    for (uint256 i = 0; i < _tokenAddressesByIssuerId[issuerId].length; i++) {
+    for (
+      uint256 i = 0;
+      i < _tokenAddressesByIssuerPrimaryAddress[issuerPrimaryAddress].length;
+      i++
+    ) {
       result[i] = _tokens[
-        _addressToTokenId[_tokenAddressesByIssuerId[issuerId][i]]
+        _addressToTokenId[
+          _tokenAddressesByIssuerPrimaryAddress[issuerPrimaryAddress][i]
+        ]
       ];
     }
   }

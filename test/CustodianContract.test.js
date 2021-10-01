@@ -5,7 +5,7 @@ const TOKEN_EXAMPLE = {
   name: "Test Token",
   symbol: "TT1",
   decimal: 18,
-  totalSupply: 10,
+  totalSupply: 0,
   value: 1000,
   currency: "USD",
   earlyRedemption: true,
@@ -35,8 +35,8 @@ describe("CustodianContract", () => {
 
     beforeEach(async () => {
       const { issuer, custodian } = await getNamedAccounts();
-      CustodianContract.addIssuer(1, "lei", "countryCode", issuer);
-      CustodianContract.addCustodian(2, "lei", "countryCode", custodian);
+      CustodianContract.addIssuer("lei", "countryCode", issuer);
+      CustodianContract.addCustodian("lei", "countryCode", custodian);
       CustodianContractIssuer = await ethers.getContract(
         "CustodianContract",
         issuer
@@ -44,34 +44,40 @@ describe("CustodianContract", () => {
     });
 
     it(`doesn't allow non-issuers to publish tokens`, async () => {
+      const { issuer, custodian } = await getNamedAccounts();
+
       await expect(
         CustodianContract.publishToken({
           ...TOKEN_EXAMPLE,
           id: 1,
-          issuerId: 1,
-          custodianId: 2,
+          issuerPrimaryAddress: issuer,
+          custodianPrimaryAddress: custodian,
         })
       ).to.be.revertedWith("caller is not an issuer");
     });
 
     it(`can't publish a token for non-existent issuer`, async () => {
+      const { userOfOtherType, custodian } = await getNamedAccounts();
+
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           id: 1,
-          issuerId: 999,
-          custodianId: 2,
+          issuerPrimaryAddress: userOfOtherType,
+          custodianPrimaryAddress: custodian,
         })
       ).to.be.revertedWith("issuer does not exists");
     });
 
     it(`can't publish a token for non-existent custodian`, async () => {
+      const { userOfOtherType, issuer } = await getNamedAccounts();
+
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           id: 1,
-          issuerId: 1,
-          custodianId: 99,
+          issuerPrimaryAddress: issuer,
+          custodianPrimaryAddress: userOfOtherType,
         })
       ).to.be.revertedWith("custodian does not exists");
     });
@@ -94,12 +100,7 @@ describe("CustodianContract", () => {
           );
 
           await expect(
-            CustodianContractNonOwner[addUser](
-              1,
-              "lei",
-              "countryCode",
-              userOfType
-            )
+            CustodianContractNonOwner[addUser]("lei", "countryCode", userOfType)
           ).to.be.revertedWith("Ownable: caller is not the owner");
         });
 
@@ -111,7 +112,9 @@ describe("CustodianContract", () => {
           );
 
           await expect(
-            CustodianContractNonOwner[addUserAccounts](1, [userOfType2])
+            CustodianContractNonOwner[addUserAccounts](userOfType, [
+              userOfType2,
+            ])
           ).to.be.revertedWith("Ownable: caller is not the owner");
         });
 
@@ -123,7 +126,7 @@ describe("CustodianContract", () => {
           );
 
           await expect(
-            CustodianContractNonOwner[removeUser](1)
+            CustodianContractNonOwner[removeUser](userOfType)
           ).to.be.revertedWith("Ownable: caller is not the owner");
         });
 
@@ -131,7 +134,7 @@ describe("CustodianContract", () => {
           const { userOfType, userOfOtherType } = await getNamedAccounts();
 
           await expect(
-            CustodianContract[addUser](1, "lei", "countryCode", userOfType)
+            CustodianContract[addUser]("lei", "countryCode", userOfType)
           ).not.to.be.reverted;
           expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
           expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
@@ -143,10 +146,10 @@ describe("CustodianContract", () => {
           const { userOfType, userOfOtherType } = await getNamedAccounts();
 
           await expect(
-            CustodianContract[addUser](1, "lei", "countryCode", userOfType)
+            CustodianContract[addUser]("lei", "countryCode", userOfType)
           ).not.to.be.reverted;
           await expect(
-            CustodianContract[addUser](1, "lei", "countryCode", userOfType)
+            CustodianContract[addUser]("lei", "countryCode", userOfType)
           ).to.be.revertedWith("user already exists");
           expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
           expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
@@ -159,10 +162,11 @@ describe("CustodianContract", () => {
             await getNamedAccounts();
 
           await expect(
-            CustodianContract[addUser](1, "lei", "countryCode", userOfType)
+            CustodianContract[addUser]("lei", "countryCode", userOfType)
           ).not.to.be.reverted;
-          await expect(CustodianContract[addUserAccounts](1, [userOfType2])).not
-            .to.be.reverted;
+          await expect(
+            CustodianContract[addUserAccounts](userOfType, [userOfType2])
+          ).not.to.be.reverted;
           expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
           expect(await CustodianContract[isUser](userOfType2)).to.be.equal(
             true
@@ -173,10 +177,10 @@ describe("CustodianContract", () => {
         });
 
         it(`cannot add addresses to non-existent ${entityName}`, async () => {
-          const { userOfType } = await getNamedAccounts();
+          const { userOfType, userOfType2 } = await getNamedAccounts();
 
           await expect(
-            CustodianContract[addUserAccounts](1, [userOfType])
+            CustodianContract[addUserAccounts](userOfType, [userOfType2])
           ).to.be.revertedWith("user does not exists");
         });
 
@@ -185,11 +189,13 @@ describe("CustodianContract", () => {
             await getNamedAccounts();
 
           await expect(
-            CustodianContract[addUser](1, "lei", "countryCode", userOfType)
+            CustodianContract[addUser]("lei", "countryCode", userOfType)
           ).not.to.be.reverted;
-          await expect(CustodianContract[addUserAccounts](1, [userOfType2])).not
-            .to.be.reverted;
-          await expect(CustodianContract[removeUser](1)).not.to.be.reverted;
+          await expect(
+            CustodianContract[addUserAccounts](userOfType, [userOfType2])
+          ).not.to.be.reverted;
+          await expect(CustodianContract[removeUser](userOfType)).not.to.be
+            .reverted;
           expect(await CustodianContract[isUser](userOfType)).to.be.equal(
             false
           );
@@ -202,9 +208,11 @@ describe("CustodianContract", () => {
         });
 
         it(`cannot remove non-existent ${entityName}`, async () => {
-          await expect(CustodianContract[removeUser](1)).to.be.revertedWith(
-            "user does not exists"
-          );
+          const { userOfType, userOfType2 } = await getNamedAccounts();
+
+          await expect(
+            CustodianContract[removeUser](userOfType)
+          ).to.be.revertedWith("user does not exists");
         });
       });
     };
@@ -233,16 +241,15 @@ describe("CustodianContract", () => {
       isUser: "isKycProvider",
     });
 
-    it("can add multiple entities with the same id", async () => {
+    it("can add multiple entities with the same primary address", async () => {
       const { issuer } = await getNamedAccounts();
 
-      await expect(CustodianContract.addIssuer(1, "lei", "countryCode", issuer))
+      await expect(CustodianContract.addIssuer("lei", "countryCode", issuer))
+        .not.to.be.reverted;
+      await expect(CustodianContract.addCustodian("lei", "countryCode", issuer))
         .not.to.be.reverted;
       await expect(
-        CustodianContract.addCustodian(1, "lei", "countryCode", issuer)
-      ).not.to.be.reverted;
-      await expect(
-        CustodianContract.addKycProvider(1, "lei", "countryCode", issuer)
+        CustodianContract.addKycProvider("lei", "countryCode", issuer)
       ).not.to.be.reverted;
       expect(await CustodianContract.isIssuer(issuer)).to.be.equal(true);
       expect(await CustodianContract.isCustodian(issuer)).to.be.equal(true);

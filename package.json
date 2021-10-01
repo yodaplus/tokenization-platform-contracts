@@ -4,7 +4,7 @@
   "description": "Smart contracts for the Yodaplus Tokenization Platform",
   "scripts": {
     "test": "hardhat test",
-    "start": "npm test && hardhat watch test",
+    "start": "CHAI_SNAPSHOT_UPDATE=true npm test && hardhat watch test",
     "compile": "hardhat compile",
     "deploy-mainnet": "hardhat --network mainnet deploy",
     "deploy-apothem": "hardhat --network apothem deploy",
@@ -31,6 +31,8 @@
     "hardhat-deploy": "^0.9.1",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-watcher": "^2.1.1",
+    "lodash": "^4.17.21",
+    "mocha-chai-snapshot": "^1.0.0",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.18",
     "solc": "^0.8.4",

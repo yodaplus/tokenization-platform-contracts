@@ -19,10 +19,9 @@ contract CustodianContract is Ownable {
   }
 
   struct Token {
-    uint256 id;
     string name;
     string symbol;
-    uint8 decimal;
+    uint8 decimals;
     uint256 totalSupply;
     uint256 value;
     string currency;
@@ -46,8 +45,7 @@ contract CustodianContract is Ownable {
   mapping(address => bool) internal _isCustodian;
   mapping(address => bool) internal _isKycProvider;
 
-  mapping(uint256 => Token) internal _tokens;
-  mapping(address => uint256) internal _addressToTokenId;
+  mapping(address => Token) internal _tokens;
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
   mapping(string => bool) internal _tokenWithNameExists;
   mapping(string => bool) internal _tokenWithSymbolExists;
@@ -178,6 +176,11 @@ contract CustodianContract is Ownable {
   }
 
   function removeIssuer(address primaryAddress) external onlyOwner {
+    require(
+      _tokenAddressesByIssuerPrimaryAddress[primaryAddress].length == 0,
+      "removed issuer must not have tokens"
+    );
+
     _removeRole(
       _isIssuer,
       _issuers,
@@ -244,10 +247,9 @@ contract CustodianContract is Ownable {
   }
 
   struct TokenInput {
-    uint256 id;
     string name;
     string symbol;
-    uint8 decimal;
+    uint8 decimals;
     uint256 totalSupply;
     uint256 value;
     string currency;
@@ -258,6 +260,7 @@ contract CustodianContract is Ownable {
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
+    require(token.totalSupply == 0, "totalSupply must be 0");
     require(
       _isIssuer[token.issuerPrimaryAddress] == true,
       "issuer does not exists"
@@ -267,10 +270,6 @@ contract CustodianContract is Ownable {
       "custodian does not exists"
     );
     require(
-      _tokens[token.id].address_ != address(0),
-      "token with the same id already exists"
-    );
-    require(
       _tokenWithNameExists[token.name] == false,
       "token with the same name already exists"
     );
@@ -278,29 +277,35 @@ contract CustodianContract is Ownable {
       _tokenWithSymbolExists[token.symbol] == false,
       "token with the same symbol already exists"
     );
+
     TokenContract deployedToken = new TokenContract(
       token.name,
       token.symbol,
-      token.decimal
+      token.decimals
     );
-    _tokens[token.id].id = token.id;
-    _tokens[token.id].name = token.name;
-    _tokens[token.id].symbol = token.symbol;
-    _tokens[token.id].decimal = token.decimal;
-    _tokens[token.id].totalSupply = token.totalSupply;
-    _tokens[token.id].value = token.value;
-    _tokens[token.id].currency = token.currency;
-    _tokens[token.id].issuerPrimaryAddress = token.issuerPrimaryAddress;
-    _tokens[token.id].custodianPrimaryAddress = token.custodianPrimaryAddress;
-    _tokens[token.id].earlyRedemption = token.earlyRedemption;
-    _tokens[token.id].minSubscription = token.minSubscription;
-    _tokens[token.id].status = TokenStatus.Published;
-    _tokens[token.id].address_ = address(deployedToken);
+
+    deployedToken.transferOwnership(msg.sender);
+
+    address tokenAddress = address(deployedToken);
+
+    _tokens[tokenAddress].name = token.name;
+    _tokens[tokenAddress].symbol = token.symbol;
+    _tokens[tokenAddress].decimals = token.decimals;
+    _tokens[tokenAddress].totalSupply = token.totalSupply;
+    _tokens[tokenAddress].value = token.value;
+    _tokens[tokenAddress].currency = token.currency;
+    _tokens[tokenAddress].issuerPrimaryAddress = token.issuerPrimaryAddress;
+    _tokens[tokenAddress].custodianPrimaryAddress = token
+      .custodianPrimaryAddress;
+    _tokens[tokenAddress].earlyRedemption = token.earlyRedemption;
+    _tokens[tokenAddress].minSubscription = token.minSubscription;
+    _tokens[tokenAddress].status = TokenStatus.Published;
+    _tokens[tokenAddress].address_ = tokenAddress;
+
     _tokenWithNameExists[token.name] = true;
     _tokenWithSymbolExists[token.symbol] = true;
-    _addressToTokenId[address(deployedToken)] = token.id;
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
-      address(deployedToken)
+      tokenAddress
     );
   }
 
@@ -319,9 +324,7 @@ contract CustodianContract is Ownable {
       i++
     ) {
       result[i] = _tokens[
-        _addressToTokenId[
-          _tokenAddressesByIssuerPrimaryAddress[issuerPrimaryAddress][i]
-        ]
+        _tokenAddressesByIssuerPrimaryAddress[issuerPrimaryAddress][i]
       ];
     }
   }

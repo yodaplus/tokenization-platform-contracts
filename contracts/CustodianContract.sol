@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {Token as TokenContract} from "./Token.sol";
+import "./ICustodianContract.sol";
 
-contract CustodianContract is Ownable {
+contract CustodianContract is Ownable, ICustodianContract {
   string public constant VERSION = "0.0.1";
 
   struct RoleData {
@@ -22,7 +23,6 @@ contract CustodianContract is Ownable {
     string name;
     string symbol;
     uint8 decimals;
-    uint256 totalSupply;
     uint256 value;
     string currency;
     address issuerPrimaryAddress;
@@ -34,6 +34,8 @@ contract CustodianContract is Ownable {
   }
 
   event TokenPublished(string symbol, address address_);
+  event AddWhitelist(address tokenAddress, address address_);
+  event RemoveWhitelist(address tokenAddress, address address_);
 
   mapping(address => RoleData) internal _issuers;
   mapping(address => RoleData) internal _custodians;
@@ -51,6 +53,8 @@ contract CustodianContract is Ownable {
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
   mapping(string => bool) internal _tokenWithNameExists;
   mapping(string => bool) internal _tokenWithSymbolExists;
+
+  mapping(address => mapping(address => bool)) internal _whitelist;
 
   function isIssuer(address addr) public view returns (bool) {
     return _isIssuer[_addressToIssuerPrimaryAddress[addr]];
@@ -74,7 +78,7 @@ contract CustodianContract is Ownable {
     _;
   }
 
-  modifier onlyKYCProvider() {
+  modifier onlyKycProvider() {
     require(isKycProvider(msg.sender), "caller is not a KYC provider");
     _;
   }
@@ -252,7 +256,7 @@ contract CustodianContract is Ownable {
     string name;
     string symbol;
     uint8 decimals;
-    uint256 totalSupply;
+    uint256 maxTotalSupply;
     uint256 value;
     string currency;
     address issuerPrimaryAddress;
@@ -262,7 +266,6 @@ contract CustodianContract is Ownable {
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
-    require(token.totalSupply == 0, "totalSupply must be 0");
     require(
       _isIssuer[token.issuerPrimaryAddress] == true,
       "issuer does not exists"
@@ -283,7 +286,8 @@ contract CustodianContract is Ownable {
     TokenContract deployedToken = new TokenContract(
       token.name,
       token.symbol,
-      token.decimals
+      token.decimals,
+      token.maxTotalSupply
     );
 
     deployedToken.transferOwnership(msg.sender);
@@ -293,7 +297,6 @@ contract CustodianContract is Ownable {
     _tokens[tokenAddress].name = token.name;
     _tokens[tokenAddress].symbol = token.symbol;
     _tokens[tokenAddress].decimals = token.decimals;
-    _tokens[tokenAddress].totalSupply = token.totalSupply;
     _tokens[tokenAddress].value = token.value;
     _tokens[tokenAddress].currency = token.currency;
     _tokens[tokenAddress].issuerPrimaryAddress = token.issuerPrimaryAddress;
@@ -331,6 +334,37 @@ contract CustodianContract is Ownable {
         _tokenAddressesByIssuerPrimaryAddress[issuerPrimaryAddress][i]
       ];
     }
+  }
+
+  function addWhitelist(address tokenAddress, address[] calldata addresses)
+    external
+    onlyKycProvider
+  {
+    for (uint256 i = 0; i < addresses.length; i++) {
+      _whitelist[tokenAddress][addresses[i]] = true;
+      emit AddWhitelist(tokenAddress, addresses[i]);
+    }
+  }
+
+  function removeWhitelist(address tokenAddress, address[] calldata addresses)
+    external
+    onlyKycProvider
+  {
+    for (uint256 i = 0; i < addresses.length; i++) {
+      delete _whitelist[tokenAddress][addresses[i]];
+      emit RemoveWhitelist(tokenAddress, addresses[i]);
+    }
+  }
+
+  function canIssue(
+    address tokenAddress,
+    address to,
+    uint256 value
+  ) external view override {
+    require(
+      _whitelist[tokenAddress][to] == true,
+      "recipient is not whitelisted"
+    );
   }
 
   constructor() {}

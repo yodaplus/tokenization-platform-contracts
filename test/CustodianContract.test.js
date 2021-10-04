@@ -3,19 +3,8 @@ const chai = require("chai");
 const chaiSnapshot = require("mocha-chai-snapshot");
 const { ethers, deployments, getNamedAccounts } = require("hardhat");
 const { expect } = chai;
-
+const { TOKEN_EXAMPLE } = require("./utils");
 chai.use(chaiSnapshot);
-
-const TOKEN_EXAMPLE = {
-  name: "Test Token",
-  symbol: "TT1",
-  decimals: 18,
-  totalSupply: 0,
-  value: 1000,
-  currency: "USD",
-  earlyRedemption: true,
-  minSubscription: 1,
-};
 
 const normalizeOutput = (output) =>
   output.map((v) => (ethers.BigNumber.isBigNumber(v) ? v.toNumber() : v));
@@ -35,8 +24,6 @@ describe("CustodianContract", function () {
   });
 
   it("has a version", async () => {
-    const CustodianContract = await ethers.getContract("CustodianContract");
-
     expect(await CustodianContract.VERSION()).to.equal("0.0.1");
   });
 
@@ -45,8 +32,8 @@ describe("CustodianContract", function () {
 
     beforeEach(async () => {
       const { issuer, custodian } = await getNamedAccounts();
-      CustodianContract.addIssuer("lei", "countryCode", issuer);
-      CustodianContract.addCustodian("lei", "countryCode", custodian);
+      await CustodianContract.addIssuer("lei", "countryCode", issuer);
+      await CustodianContract.addCustodian("lei", "countryCode", custodian);
       CustodianContractIssuer = await ethers.getContract(
         "CustodianContract",
         issuer
@@ -129,19 +116,6 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
         })
       ).to.be.revertedWith("token with the same symbol already exists");
-    });
-
-    it(`can't publish a token with totalSupply != 0`, async () => {
-      const { custodian, issuer } = await getNamedAccounts();
-
-      await expect(
-        CustodianContractIssuer.publishToken({
-          ...TOKEN_EXAMPLE,
-          totalSupply: 1,
-          issuerPrimaryAddress: issuer,
-          custodianPrimaryAddress: custodian,
-        })
-      ).to.be.revertedWith("totalSupply must be 0");
     });
 
     it(`can publish a token`, async () => {

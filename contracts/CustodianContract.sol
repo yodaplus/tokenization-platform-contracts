@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {Token as TokenContract} from "./Token.sol";
 import "./ICustodianContract.sol";
+import "./ReasonCodes.sol";
 
-contract CustodianContract is Ownable, ICustodianContract {
+contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
   struct RoleData {
@@ -33,10 +34,6 @@ contract CustodianContract is Ownable, ICustodianContract {
     address address_;
   }
 
-  event TokenPublished(string symbol, address address_);
-  event AddWhitelist(address tokenAddress, address address_);
-  event RemoveWhitelist(address tokenAddress, address address_);
-
   mapping(address => RoleData) internal _issuers;
   mapping(address => RoleData) internal _custodians;
   mapping(address => RoleData) internal _kycProviders;
@@ -56,6 +53,67 @@ contract CustodianContract is Ownable, ICustodianContract {
 
   mapping(address => mapping(address => bool)) internal _whitelist;
 
+  event TokenPublished(string symbol, address address_);
+  event AddWhitelist(address tokenAddress, address address_);
+  event RemoveWhitelist(address tokenAddress, address address_);
+
+  error ERC1066Error(bytes1 errorCode, string message);
+
+  enum ErrorCondition {
+    WRONG_CALLER,
+    USER_ALREADY_EXISTS,
+    USER_DOES_NOT_EXIST,
+    REMOVED_ISSUER_HAS_TOKENS,
+    TOKEN_WRONG_ISSUER,
+    TOKEN_WRONG_CUSTODIAN,
+    TOKEN_SAME_NAME_EXISTS,
+    TOKEN_SAME_SYMBOL_EXISTS
+  }
+
+  function throwError(ErrorCondition condition) internal pure {
+    if (condition == ErrorCondition.WRONG_CALLER) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "caller is not allowed"
+      );
+    } else if (condition == ErrorCondition.USER_ALREADY_EXISTS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "user already exists"
+      );
+    } else if (condition == ErrorCondition.USER_DOES_NOT_EXIST) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "user does not exists"
+      );
+    } else if (condition == ErrorCondition.REMOVED_ISSUER_HAS_TOKENS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "removed issuer must not have tokens"
+      );
+    } else if (condition == ErrorCondition.TOKEN_WRONG_ISSUER) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "issuer does not exists"
+      );
+    } else if (condition == ErrorCondition.TOKEN_WRONG_CUSTODIAN) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "custodian does not exists"
+      );
+    } else if (condition == ErrorCondition.TOKEN_SAME_NAME_EXISTS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "token with the same name already exists"
+      );
+    } else if (condition == ErrorCondition.TOKEN_SAME_SYMBOL_EXISTS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "token with the same symbol already exists"
+      );
+    }
+  }
+
   function isIssuer(address addr) public view returns (bool) {
     return _isIssuer[_addressToIssuerPrimaryAddress[addr]];
   }
@@ -69,17 +127,23 @@ contract CustodianContract is Ownable, ICustodianContract {
   }
 
   modifier onlyIssuer() {
-    require(isIssuer(msg.sender), "caller is not an issuer");
+    if (isIssuer(msg.sender) == false) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
     _;
   }
 
   modifier onlyCustodian() {
-    require(isCustodian(msg.sender), "caller is not a custodian");
+    if (isCustodian(msg.sender) == false) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
     _;
   }
 
   modifier onlyKycProvider() {
-    require(isKycProvider(msg.sender), "caller is not a KYC provider");
+    if (isKycProvider(msg.sender) == false) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
     _;
   }
 
@@ -91,7 +155,9 @@ contract CustodianContract is Ownable, ICustodianContract {
     string calldata countryCode,
     address primaryAddress
   ) internal {
-    require(_isUserType[primaryAddress] == false, "user already exists");
+    if (_isUserType[primaryAddress] == true) {
+      throwError(ErrorCondition.USER_ALREADY_EXISTS);
+    }
 
     _isUserType[primaryAddress] = true;
     _usersData[primaryAddress].lei = lei;
@@ -107,7 +173,9 @@ contract CustodianContract is Ownable, ICustodianContract {
     mapping(address => address) storage _addressToUserPrimaryAddress,
     address primaryAddress
   ) internal {
-    require(_isUserType[primaryAddress] == true, "user does not exists");
+    if (_isUserType[primaryAddress] == false) {
+      throwError(ErrorCondition.USER_DOES_NOT_EXIST);
+    }
 
     address[] storage addresses = _usersData[primaryAddress].addresses;
 
@@ -126,7 +194,9 @@ contract CustodianContract is Ownable, ICustodianContract {
     address primaryAddress,
     address[] calldata addresses
   ) internal {
-    require(_isUserType[primaryAddress] == true, "user does not exists");
+    if (_isUserType[primaryAddress] == false) {
+      throwError(ErrorCondition.USER_DOES_NOT_EXIST);
+    }
 
     address[] storage userAddresses = _usersData[primaryAddress].addresses;
 
@@ -182,10 +252,9 @@ contract CustodianContract is Ownable, ICustodianContract {
   }
 
   function removeIssuer(address primaryAddress) external onlyOwner {
-    require(
-      _tokenAddressesByIssuerPrimaryAddress[primaryAddress].length == 0,
-      "removed issuer must not have tokens"
-    );
+    if (_tokenAddressesByIssuerPrimaryAddress[primaryAddress].length > 0) {
+      throwError(ErrorCondition.REMOVED_ISSUER_HAS_TOKENS);
+    }
 
     _removeRole(
       _isIssuer,
@@ -266,22 +335,21 @@ contract CustodianContract is Ownable, ICustodianContract {
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
-    require(
-      _isIssuer[token.issuerPrimaryAddress] == true,
-      "issuer does not exists"
-    );
-    require(
-      _isCustodian[token.custodianPrimaryAddress] == true,
-      "custodian does not exists"
-    );
-    require(
-      _tokenWithNameExists[token.name] == false,
-      "token with the same name already exists"
-    );
-    require(
-      _tokenWithSymbolExists[token.symbol] == false,
-      "token with the same symbol already exists"
-    );
+    if (_isIssuer[token.issuerPrimaryAddress] == false) {
+      throwError(ErrorCondition.TOKEN_WRONG_ISSUER);
+    }
+
+    if (_isCustodian[token.custodianPrimaryAddress] == false) {
+      throwError(ErrorCondition.TOKEN_WRONG_CUSTODIAN);
+    }
+
+    if (_tokenWithNameExists[token.name] == true) {
+      throwError(ErrorCondition.TOKEN_SAME_NAME_EXISTS);
+    }
+
+    if (_tokenWithSymbolExists[token.symbol] == true) {
+      throwError(ErrorCondition.TOKEN_SAME_SYMBOL_EXISTS);
+    }
 
     TokenContract deployedToken = new TokenContract(
       token.name,
@@ -360,11 +428,12 @@ contract CustodianContract is Ownable, ICustodianContract {
     address tokenAddress,
     address to,
     uint256 value
-  ) external view override {
-    require(
-      _whitelist[tokenAddress][to] == true,
-      "recipient is not whitelisted"
-    );
+  ) external view override returns (bytes1) {
+    if (_whitelist[tokenAddress][to] != true) {
+      return ReasonCodes.INVALID_RECEIVER;
+    }
+
+    return ReasonCodes.TRANSFER_SUCCESS;
   }
 
   constructor() {}

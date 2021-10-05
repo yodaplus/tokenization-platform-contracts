@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ICustodianContract.sol";
+import "./ReasonCodes.sol";
 
-contract Token is ERC20, Ownable {
+contract Token is ERC20, Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
   uint8 internal _decimals;
@@ -27,8 +28,43 @@ contract Token is ERC20, Ownable {
   }
 
   event SupplyIncreased(uint256 oldValue, uint256 newValue);
-
   event SupplyDecreased(uint256 oldValue, uint256 newValue);
+
+  error ERC1066Error(bytes1 errorCode, string message);
+
+  enum ErrorCondition {
+    TOKEN_IS_FINALIZED,
+    MAX_TOTAL_SUPPLY_MINT,
+    CUSTODIAN_VALIDATION_FAIL,
+    WRONG_INPUT,
+    MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY
+  }
+
+  function throwError(ErrorCondition condition) internal pure {
+    if (condition == ErrorCondition.TOKEN_IS_FINALIZED) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "token issuance is finalized"
+      );
+    } else if (condition == ErrorCondition.MAX_TOTAL_SUPPLY_MINT) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "can't mint more than max total supply"
+      );
+    } else if (condition == ErrorCondition.CUSTODIAN_VALIDATION_FAIL) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "custodian contract validation fail"
+      );
+    } else if (condition == ErrorCondition.WRONG_INPUT) {
+      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "wrong input");
+    } else if (condition == ErrorCondition.MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "can't set less than total supply"
+      );
+    }
+  }
 
   function decimals() public view override returns (uint8) {
     return _decimals;
@@ -43,10 +79,9 @@ contract Token is ERC20, Ownable {
   }
 
   function setMaxSupply(uint256 maxTotalSupply_) external onlyOwner {
-    require(
-      maxTotalSupply_ >= totalSupply(),
-      "can't set less than total supply"
-    );
+    if (maxTotalSupply_ < totalSupply()) {
+      throwError(ErrorCondition.MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY);
+    }
 
     if (maxTotalSupply_ > _maxTotalSupply) {
       emit SupplyIncreased(_maxTotalSupply, maxTotalSupply_);
@@ -58,14 +93,22 @@ contract Token is ERC20, Ownable {
   }
 
   function issue(address subscriber, uint256 value) public {
-    require(_isFinalized == false, "token issuance is finalized");
-    require(
-      _maxTotalSupply >= totalSupply() + value,
-      "can't mint more than max total supply"
+    if (_isFinalized == true) {
+      throwError(ErrorCondition.TOKEN_IS_FINALIZED);
+    }
+
+    if (_maxTotalSupply < totalSupply() + value) {
+      throwError(ErrorCondition.MAX_TOTAL_SUPPLY_MINT);
+    }
+
+    bytes1 reasonCode = _custodianContract.canIssue(
+      address(this),
+      subscriber,
+      value
     );
 
-    try _custodianContract.canIssue(address(this), subscriber, value) {} catch {
-      revert("custodian contract validation fail");
+    if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
+      throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
     }
 
     _mint(subscriber, value);
@@ -75,7 +118,9 @@ contract Token is ERC20, Ownable {
     external
     onlyOwner
   {
-    require(subscribers.length == value.length, "wrong input");
+    if (subscribers.length != value.length) {
+      throwError(ErrorCondition.WRONG_INPUT);
+    }
 
     for (uint256 i = 0; i < subscribers.length; i++) {
       issue(subscribers[i], value[i]);

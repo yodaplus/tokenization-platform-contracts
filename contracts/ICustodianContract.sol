@@ -6,5 +6,5 @@ interface ICustodianContract {
     address tokenAddress,
     address to,
     uint256 value
-  ) external view;
+  ) external view returns (bytes1);
 }

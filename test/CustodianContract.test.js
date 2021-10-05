@@ -49,7 +49,7 @@ describe("CustodianContract", function () {
           issuerPrimaryAddress: issuer,
           custodianPrimaryAddress: custodian,
         })
-      ).to.be.revertedWith("caller is not an issuer");
+      ).to.be.revertedWith("caller is not allowed");
     });
 
     it(`can't publish a token for non-existent issuer`, async () => {

@@ -1,8 +1,3 @@
-const {
-  abi,
-  address,
-} = require("../deployments/apothem/CustodianContract.json");
-
 const DEFAULT_ERROR_SIGNATURE = {
   inputs: [
     {
@@ -14,7 +9,7 @@ const DEFAULT_ERROR_SIGNATURE = {
   type: "error",
 };
 
-const parseError = (str) => {
+const parseError = (str, abi) => {
   const bytes = web3.utils.hexToBytes(str);
   const errorNameSignature = web3.utils.bytesToHex(bytes.slice(0, 4));
   const errorParameters = web3.utils.bytesToHex(bytes.slice(4));
@@ -43,12 +38,12 @@ const parseError = (str) => {
   }
 };
 
-const processTransaction = async (methodInvocation, { from, gas }) => {
+const processTransaction = async (methodInvocation, { abi, from, to, gas }) => {
   const data = methodInvocation.encodeABI();
 
   const callObj = {
     from,
-    to: address,
+    to,
     data,
     gasPrice: web3.utils.toWei("1", "gwei"),
     gas,
@@ -60,7 +55,7 @@ const processTransaction = async (methodInvocation, { from, gas }) => {
     return receipt;
   } catch (e) {
     const err = await web3.eth.call(callObj, e.receipt.blockNumber);
-    const parsedError = parseError(err);
+    const parsedError = parseError(err, abi);
 
     throw parsedError;
   }
@@ -71,6 +66,11 @@ task("addIssuer")
   .addParam("countryCode")
   .addParam("primaryAddress")
   .setAction(async (taskArgs) => {
+    const {
+      abi,
+      address,
+    } = require("../deployments/apothem/CustodianContract.json");
+
     const { custodianContractOwner } = await getNamedAccounts();
     const contract = new web3.eth.Contract(abi);
 
@@ -81,7 +81,7 @@ task("addIssuer")
           taskArgs.countryCode,
           taskArgs.primaryAddress
         ),
-        { from: custodianContractOwner, gas: 182242 }
+        { abi, to: address, from: custodianContractOwner, gas: 182242 }
       );
 
       console.log(receipt);

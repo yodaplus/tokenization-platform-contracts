@@ -44,11 +44,11 @@ module.exports = {
   networks: {
     mainnet: {
       ...sharedNetworkConfig,
-      url: `https://safe.xinfin.yodaplus.net:8083`,
+      url: `https://rpc.xinfin.yodaplus.net`,
     },
     apothem: {
       ...sharedNetworkConfig,
-      url: "https://safe-apothem.xinfin.yodaplus.net:8083",
+      url: "https://rpc-apothem.xinfin.yodaplus.net",
     },
   },
   watcher: {

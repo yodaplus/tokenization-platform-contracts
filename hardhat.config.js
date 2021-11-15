@@ -8,6 +8,7 @@ require("hardhat-contract-sizer");
 require("solidity-coverage");
 require("./tasks");
 require("dotenv").config();
+require("hardhat-contract-sizer");
 
 const { MNEMONIC } = process.env;
 const DEFAULT_MNEMONIC =

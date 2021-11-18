@@ -10,9 +10,8 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
   struct RoleData {
-    string lei;
-    string countryCode;
     address primaryAddress;
+    string countryCode;
     address[] addresses;
   }
 
@@ -28,19 +27,20 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     string currency;
     address issuerPrimaryAddress;
     address custodianPrimaryAddress;
+    address KycProviderPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
     TokenStatus status;
     address address_;
   }
 
-  mapping(address => RoleData) internal _issuers;
-  mapping(address => RoleData) internal _custodians;
-  mapping(address => RoleData) internal _kycProviders;
+  mapping(address => RoleData) public  _issuers;
+  mapping(address => RoleData) public _custodians;
+  mapping(address => RoleData) public _kycProviders;
 
-  mapping(address => address) internal _addressToIssuerPrimaryAddress;
-  mapping(address => address) internal _addressToCustodianPrimaryAddress;
-  mapping(address => address) internal _addressToKycProviderPrimaryAddress;
+  mapping(address => address) public _addressToIssuerPrimaryAddress;
+  mapping(address => address) public _addressToCustodianPrimaryAddress;
+  mapping(address => address) public _addressToKycProviderPrimaryAddress;
 
   mapping(address => bool) internal _isIssuer;
   mapping(address => bool) internal _isCustodian;
@@ -48,6 +48,9 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
 
   mapping(address => Token) internal _tokens;
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
+  mapping(address => address[]) internal _tokenAddressesByCustodianPrimaryAddress;
+  mapping(address => address[]) internal _tokenAddressesByKycProviderPrimaryAddress;
+  
   mapping(string => bool) internal _tokenWithNameExists;
   mapping(string => bool) internal _tokenWithSymbolExists;
 
@@ -79,8 +82,11 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     USER_ALREADY_EXISTS,
     USER_DOES_NOT_EXIST,
     REMOVED_ISSUER_HAS_TOKENS,
+    REMOVED_CUSTODIAN_HAS_TOKENS,
+    REMOVED_KYCPROVIDER_HAS_TOKENS,
     TOKEN_WRONG_ISSUER,
     TOKEN_WRONG_CUSTODIAN,
+    TOKEN_WRONG_KYCPROVIDER,
     TOKEN_SAME_NAME_EXISTS,
     TOKEN_SAME_SYMBOL_EXISTS
   }
@@ -166,7 +172,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     mapping(address => bool) storage _isUserType,
     mapping(address => RoleData) storage _usersData,
     mapping(address => address) storage _addressToUserPrimaryAddress,
-    string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) internal {
@@ -175,7 +180,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     }
 
     _isUserType[primaryAddress] = true;
-    _usersData[primaryAddress].lei = lei;
     _usersData[primaryAddress].countryCode = countryCode;
     _usersData[primaryAddress].primaryAddress = primaryAddress;
     _usersData[primaryAddress].addresses.push(primaryAddress);
@@ -224,7 +228,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function _removeRoleAddresses(
     mapping(address => bool) storage _isUserType,
     mapping(address => RoleData) storage _usersData,
-    mapping(address => address) storage _addressToUserPrimaryAddress,
+//    mapping(address => address) storage _addressToUserPrimaryAddress,
     address primaryAddress,
     address[] calldata addresses
   ) internal {
@@ -235,8 +239,8 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     address[] storage userAddresses = _usersData[primaryAddress].addresses;
 
     for (uint256 i = 0; i < addresses.length; i++) {
-      _addressToUserPrimaryAddress[addresses[i]] = primaryAddress;
-        for (uint256 j = 0; i < userAddresses.length; j++) {
+//      _addressToUserPrimaryAddress[addresses[i]] = primaryAddress;
+        for (uint256 j = 0; j < userAddresses.length; j++) {
            if (userAddresses[j] == addresses[i]) {   
                delete userAddresses[j] ;
            }
@@ -247,7 +251,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
 
 
   function addIssuer(
-    string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) external onlyOwner {
@@ -255,7 +258,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       _isIssuer,
       _issuers,
       _addressToIssuerPrimaryAddress,
-      lei,
       countryCode,
       primaryAddress
     );
@@ -263,7 +265,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   }
 
   function addCustodian(
-    string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) external onlyOwner {
@@ -271,7 +272,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       _isCustodian,
       _custodians,
       _addressToCustodianPrimaryAddress,
-      lei,
       countryCode,
       primaryAddress
     );
@@ -279,7 +279,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   }
 
   function addKycProvider(
-    string calldata lei,
     string calldata countryCode,
     address primaryAddress
   ) external onlyOwner {
@@ -287,7 +286,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       _isKycProvider,
       _kycProviders,
       _addressToKycProviderPrimaryAddress,
-      lei,
       countryCode,
       primaryAddress
     );
@@ -298,7 +296,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     if (_tokenAddressesByIssuerPrimaryAddress[primaryAddress].length > 0) {
       throwError(ErrorCondition.REMOVED_ISSUER_HAS_TOKENS);
     }
-
     _removeRole(
       _isIssuer,
       _issuers,
@@ -309,6 +306,9 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   }
 
   function removeCustodian(address primaryAddress) external onlyOwner {
+    if (_tokenAddressesByCustodianPrimaryAddress[primaryAddress].length > 0) {
+      throwError(ErrorCondition.REMOVED_CUSTODIAN_HAS_TOKENS);
+    }
     _removeRole(
       _isCustodian,
       _custodians,
@@ -319,6 +319,9 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   }
 
   function removeKycProvider(address primaryAddress) external onlyOwner {
+          if (_tokenAddressesByKycProviderPrimaryAddress[primaryAddress].length > 0) {
+      throwError(ErrorCondition.REMOVED_KYCPROVIDER_HAS_TOKENS);
+    }
     _removeRole(
       _isKycProvider,
       _kycProviders,
@@ -377,7 +380,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     _removeRoleAddresses(
       _isIssuer,
       _issuers,
-      _addressToIssuerPrimaryAddress,
+//      _addressToIssuerPrimaryAddress,
       primaryAddress,
       addresses
     );
@@ -391,7 +394,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     _removeRoleAddresses(
       _isCustodian,
       _custodians,
-      _addressToCustodianPrimaryAddress,
+//      _addressToCustodianPrimaryAddress,
       primaryAddress,
       addresses
     );
@@ -405,7 +408,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     _removeRoleAddresses(
       _isKycProvider,
       _kycProviders,
-      _addressToKycProviderPrimaryAddress,
+ //     _addressToKycProviderPrimaryAddress,
       primaryAddress,
       addresses
     );
@@ -422,6 +425,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     string currency;
     address issuerPrimaryAddress;
     address custodianPrimaryAddress;
+    address KycProviderPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
   }
@@ -433,6 +437,10 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
 
     if (_isCustodian[token.custodianPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_CUSTODIAN);
+    }
+
+    if (_isKycProvider[token.KycProviderPrimaryAddress] == false) {
+      throwError(ErrorCondition.TOKEN_WRONG_KYCPROVIDER);
     }
 
     if (_tokenWithNameExists[token.name] == true) {
@@ -462,11 +470,12 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     _tokens[tokenAddress].issuerPrimaryAddress = token.issuerPrimaryAddress;
     _tokens[tokenAddress].custodianPrimaryAddress = token
       .custodianPrimaryAddress;
+    _tokens[tokenAddress].KycProviderPrimaryAddress = token
+      .KycProviderPrimaryAddress;
     _tokens[tokenAddress].earlyRedemption = token.earlyRedemption;
     _tokens[tokenAddress].minSubscription = token.minSubscription;
     _tokens[tokenAddress].status = TokenStatus.Published;
     _tokens[tokenAddress].address_ = tokenAddress;
-
     _tokenWithNameExists[token.name] = true;
     _tokenWithSymbolExists[token.symbol] = true;
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
@@ -524,7 +533,10 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     if (_whitelist[tokenAddress][to] != true) {
       return ReasonCodes.INVALID_RECEIVER;
     }
-
+    if (value == 0) {
+      return ReasonCodes.APP_SPECIFIC_FAILURE;
+    }
+    
     return ReasonCodes.TRANSFER_SUCCESS;
   }
 

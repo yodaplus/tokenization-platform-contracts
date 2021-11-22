@@ -1,5 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {Token as TokenContract} from "./Token.sol";
 import "./ICustodianContract.sol";
@@ -26,14 +27,14 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     string currency;
     address issuerPrimaryAddress;
     address custodianPrimaryAddress;
-    address KycProviderPrimaryAddress;
+    address kycProviderPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
     TokenStatus status;
     address address_;
   }
 
-  mapping(address => RoleData) public  _issuers;
+  mapping(address => RoleData) public _issuers;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
 
@@ -47,9 +48,11 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
 
   mapping(address => Token) internal _tokens;
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
-  mapping(address => address[]) internal _tokenAddressesByCustodianPrimaryAddress;
-  mapping(address => address[]) internal _tokenAddressesByKycProviderPrimaryAddress;
-  
+  mapping(address => address[])
+    internal _tokenAddressesByCustodianPrimaryAddress;
+  mapping(address => address[])
+    internal _tokenAddressesByKycProviderPrimaryAddress;
+
   mapping(string => bool) internal _tokenWithNameExists;
   mapping(string => bool) internal _tokenWithSymbolExists;
 
@@ -58,22 +61,22 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   event TokenPublished(string symbol, address address_);
   event AddWhitelist(address tokenAddress, address address_);
   event RemoveWhitelist(address tokenAddress, address address_);
-  
-  event AddIssuer( address PrimaryAddress);
+
+  event AddIssuer(address PrimaryAddress);
   event RemoveIssuer(address primaryAddress);
-  event AddIssuerAddress (address primaryAddress , address[] addresses);
-  event RemoveIssuerAddress(address primaryAddress ,address[] addresses );
-  
+  event AddIssuerAddress(address primaryAddress, address[] addresses);
+  event RemoveIssuerAddress(address primaryAddress, address[] addresses);
+
   event AddCustodian(address primaryAddress);
   event RemoveCustodian(address primaryAddress);
-  event AddCustodianAddress(address primaryAddress , address[] addresses);
-  event RemoveCustodianAddress(address primaryAddress ,address[] addresses );
-  
-  event AddKYCProvider( address primaryAddress);
+  event AddCustodianAddress(address primaryAddress, address[] addresses);
+  event RemoveCustodianAddress(address primaryAddress, address[] addresses);
+
+  event AddKYCProvider(address primaryAddress);
   event RemoveKYCProvider(address primaryAddress);
-  event AddKYCProviderAddress(address primaryAddress , address[] addresses);
-  event RemoveKYCProviderAddress(address primaryAddress ,address[] addresses );
-  
+  event AddKYCProviderAddress(address primaryAddress, address[] addresses);
+  event RemoveKYCProviderAddress(address primaryAddress, address[] addresses);
+
   error ERC1066Error(bytes1 errorCode, string message);
 
   enum ErrorCondition {
@@ -111,6 +114,16 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "removed issuer must not have tokens"
       );
+    } else if (condition == ErrorCondition.REMOVED_CUSTODIAN_HAS_TOKENS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "removed custodian must not have tokens"
+      );
+    } else if (condition == ErrorCondition.REMOVED_KYCPROVIDER_HAS_TOKENS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "removed KYC provider must not have tokens"
+      );
     } else if (condition == ErrorCondition.TOKEN_WRONG_ISSUER) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
@@ -121,6 +134,11 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "custodian does not exists"
       );
+    } else if (condition == ErrorCondition.TOKEN_WRONG_KYCPROVIDER) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "kyc provider does not exists"
+      );
     } else if (condition == ErrorCondition.TOKEN_SAME_NAME_EXISTS) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
@@ -130,6 +148,11 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "token with the same symbol already exists"
+      );
+    } else {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "unknown error condition"
       );
     }
   }
@@ -227,7 +250,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function _removeRoleAddresses(
     mapping(address => bool) storage _isUserType,
     mapping(address => RoleData) storage _usersData,
-//    mapping(address => address) storage _addressToUserPrimaryAddress,
+    mapping(address => address) storage _addressToUserPrimaryAddress,
     address primaryAddress,
     address[] calldata addresses
   ) internal {
@@ -238,21 +261,19 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     address[] storage userAddresses = _usersData[primaryAddress].addresses;
 
     for (uint256 i = 0; i < addresses.length; i++) {
-//      _addressToUserPrimaryAddress[addresses[i]] = primaryAddress;
-        for (uint256 j = 0; j < userAddresses.length; j++) {
-           if (userAddresses[j] == addresses[i]) {   
-               delete userAddresses[j] ;
-           }
-        }      
+      for (uint256 j = 0; j < userAddresses.length; j++) {
+        if (userAddresses[j] == addresses[i]) {
+          delete _addressToUserPrimaryAddress[userAddresses[j]];
+          delete userAddresses[j];
+        }
+      }
     }
   }
 
-
-
-  function addIssuer(
-    string calldata countryCode,
-    address primaryAddress
-  ) external onlyOwner {
+  function addIssuer(string calldata countryCode, address primaryAddress)
+    external
+    onlyOwner
+  {
     _addRole(
       _isIssuer,
       _issuers,
@@ -260,13 +281,13 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       countryCode,
       primaryAddress
     );
-    emit AddIssuer( primaryAddress);
+    emit AddIssuer(primaryAddress);
   }
 
-  function addCustodian(
-    string calldata countryCode,
-    address primaryAddress
-  ) external onlyOwner {
+  function addCustodian(string calldata countryCode, address primaryAddress)
+    external
+    onlyOwner
+  {
     _addRole(
       _isCustodian,
       _custodians,
@@ -274,13 +295,13 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       countryCode,
       primaryAddress
     );
-    emit AddCustodian( primaryAddress);
+    emit AddCustodian(primaryAddress);
   }
 
-  function addKycProvider(
-    string calldata countryCode,
-    address primaryAddress
-  ) external onlyOwner {
+  function addKycProvider(string calldata countryCode, address primaryAddress)
+    external
+    onlyOwner
+  {
     _addRole(
       _isKycProvider,
       _kycProviders,
@@ -288,7 +309,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       countryCode,
       primaryAddress
     );
-    emit AddKYCProvider( primaryAddress);
+    emit AddKYCProvider(primaryAddress);
   }
 
   function removeIssuer(address primaryAddress) external onlyOwner {
@@ -318,7 +339,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   }
 
   function removeKycProvider(address primaryAddress) external onlyOwner {
-          if (_tokenAddressesByKycProviderPrimaryAddress[primaryAddress].length > 0) {
+    if (_tokenAddressesByKycProviderPrimaryAddress[primaryAddress].length > 0) {
       throwError(ErrorCondition.REMOVED_KYCPROVIDER_HAS_TOKENS);
     }
     _removeRole(
@@ -341,7 +362,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       primaryAddress,
       addresses
     );
-    emit AddIssuerAddress(primaryAddress , addresses);
+    emit AddIssuerAddress(primaryAddress, addresses);
   }
 
   function addCustodianAccounts(
@@ -355,7 +376,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       primaryAddress,
       addresses
     );
-    emit AddCustodianAddress(primaryAddress , addresses);
+    emit AddCustodianAddress(primaryAddress, addresses);
   }
 
   function addKycProviderAccounts(
@@ -369,21 +390,21 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       primaryAddress,
       addresses
     );
-    emit AddKYCProviderAddress(primaryAddress , addresses);
+    emit AddKYCProviderAddress(primaryAddress, addresses);
   }
-  
-    function removeIssuerAccounts(
+
+  function removeIssuerAccounts(
     address primaryAddress,
     address[] calldata addresses
   ) external onlyOwner {
     _removeRoleAddresses(
       _isIssuer,
       _issuers,
-//      _addressToIssuerPrimaryAddress,
+      _addressToIssuerPrimaryAddress,
       primaryAddress,
       addresses
     );
-    emit RemoveIssuerAddress(primaryAddress ,addresses );
+    emit RemoveIssuerAddress(primaryAddress, addresses);
   }
 
   function removeCustodianAccounts(
@@ -393,27 +414,26 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     _removeRoleAddresses(
       _isCustodian,
       _custodians,
-//      _addressToCustodianPrimaryAddress,
+      _addressToCustodianPrimaryAddress,
       primaryAddress,
       addresses
     );
-    emit RemoveCustodianAddress(primaryAddress ,addresses );
+    emit RemoveCustodianAddress(primaryAddress, addresses);
   }
-  
-    function removeKycProviderAccounts(
+
+  function removeKycProviderAccounts(
     address primaryAddress,
     address[] calldata addresses
   ) external onlyOwner {
     _removeRoleAddresses(
       _isKycProvider,
       _kycProviders,
- //     _addressToKycProviderPrimaryAddress,
+      _addressToKycProviderPrimaryAddress,
       primaryAddress,
       addresses
     );
-    emit RemoveKYCProviderAddress(primaryAddress ,addresses );
+    emit RemoveKYCProviderAddress(primaryAddress, addresses);
   }
-
 
   struct TokenInput {
     string name;
@@ -424,7 +444,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     string currency;
     address issuerPrimaryAddress;
     address custodianPrimaryAddress;
-    address KycProviderPrimaryAddress;
+    address kycProviderPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
   }
@@ -438,7 +458,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       throwError(ErrorCondition.TOKEN_WRONG_CUSTODIAN);
     }
 
-    if (_isKycProvider[token.KycProviderPrimaryAddress] == false) {
+    if (_isKycProvider[token.kycProviderPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_KYCPROVIDER);
     }
 
@@ -469,8 +489,8 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     _tokens[tokenAddress].issuerPrimaryAddress = token.issuerPrimaryAddress;
     _tokens[tokenAddress].custodianPrimaryAddress = token
       .custodianPrimaryAddress;
-    _tokens[tokenAddress].KycProviderPrimaryAddress = token
-      .KycProviderPrimaryAddress;
+    _tokens[tokenAddress].kycProviderPrimaryAddress = token
+      .kycProviderPrimaryAddress;
     _tokens[tokenAddress].earlyRedemption = token.earlyRedemption;
     _tokens[tokenAddress].minSubscription = token.minSubscription;
     _tokens[tokenAddress].status = TokenStatus.Published;
@@ -480,6 +500,10 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
       tokenAddress
     );
+    _tokenAddressesByCustodianPrimaryAddress[token.custodianPrimaryAddress]
+      .push(tokenAddress);
+    _tokenAddressesByKycProviderPrimaryAddress[token.kycProviderPrimaryAddress]
+      .push(tokenAddress);
 
     emit TokenPublished(token.symbol, tokenAddress);
   }
@@ -532,10 +556,11 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     if (_whitelist[tokenAddress][to] != true) {
       return ReasonCodes.INVALID_RECEIVER;
     }
+
     if (value == 0) {
       return ReasonCodes.APP_SPECIFIC_FAILURE;
     }
-    
+
     return ReasonCodes.TRANSFER_SUCCESS;
   }
 

@@ -4,6 +4,7 @@
   "description": "Smart contracts for the Yodaplus Tokenization Platform",
   "scripts": {
     "test": "hardhat test",
+    "test-update-snapshots": "CHAI_SNAPSHOT_UPDATE=true hardhat test",
     "start": "CHAI_SNAPSHOT_UPDATE=true npm test && hardhat watch test",
     "compile": "hardhat compile",
     "deploy-mainnet": "hardhat --network mainnet deploy",

@@ -14,7 +14,7 @@ describe("Token", function () {
 
   beforeEach(async () => {
     await deployments.fixture(["CustodianContract"]);
-    const { custodianContractOwner, custodian, issuer } =
+    const { custodianContractOwner, custodian, issuer, kycProvider } =
       await getNamedAccounts();
     CustodianContract = await ethers.getContract(
       "CustodianContract",
@@ -24,13 +24,14 @@ describe("Token", function () {
       "CustodianContract",
       issuer
     );
-    await CustodianContract.addIssuer("lei", "countryCode", issuer);
-    await CustodianContract.addCustodian("lei", "countryCode", custodian);
-    await CustodianContract.addKycProvider("lei", "countryCode", custodian);
+    await CustodianContract.addIssuer("countryCode", issuer);
+    await CustodianContract.addCustodian("countryCode", custodian);
+    await CustodianContract.addKycProvider("countryCode", kycProvider);
     CustodianContractIssuer.publishToken({
       ...TOKEN_EXAMPLE,
       issuerPrimaryAddress: issuer,
       custodianPrimaryAddress: custodian,
+      kycProviderPrimaryAddress: kycProvider,
     });
     const tokens = await CustodianContract.getTokens(issuer);
     TokenContract = await ethers.getContractAt(
@@ -137,11 +138,11 @@ describe("Token", function () {
     });
 
     it("can issue if subscriber is whitelisted", async () => {
-      const { custodian, subscriber } = await getNamedAccounts();
+      const { kycProvider, subscriber } = await getNamedAccounts();
 
       const CustodianContractKycProvider = await ethers.getContract(
         "CustodianContract",
-        custodian
+        kycProvider
       );
 
       await expect(
@@ -157,11 +158,11 @@ describe("Token", function () {
     });
 
     it("can issue if subscriber is removed from the whitelist", async () => {
-      const { custodian, subscriber } = await getNamedAccounts();
+      const { kycProvider, subscriber } = await getNamedAccounts();
 
       const CustodianContractKycProvider = await ethers.getContract(
         "CustodianContract",
-        custodian
+        kycProvider
       );
 
       await expect(

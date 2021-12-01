@@ -12,6 +12,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
   uint8 internal _decimals;
 
   bool internal _isFinalized;
+  bool internal _ispaused; 
   uint256 internal _maxTotalSupply;
 
   ICustodianContract internal _custodianContract;
@@ -37,7 +38,8 @@ contract Token is ERC20, Ownable, ReasonCodes {
     MAX_TOTAL_SUPPLY_MINT,
     CUSTODIAN_VALIDATION_FAIL,
     WRONG_INPUT,
-    MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY
+    MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY,
+    TOKEN_IS_PAUSED
   }
 
   function throwError(ErrorCondition condition) internal pure {
@@ -75,10 +77,24 @@ contract Token is ERC20, Ownable, ReasonCodes {
   }
 
   function finalizeIssuance() external onlyOwner {
+      if (_ispaused == true) {
+      throwError(ErrorCondition.TOKEN_IS_PAUSED);
+    }
     _isFinalized = true;
   }
 
+  function Pause() external onlyOwner {
+    _ispaused = true;
+  }
+
+  function UnPause() external onlyOwner {
+    _ispaused = false;
+  }
+
   function setMaxSupply(uint256 maxTotalSupply_) external onlyOwner {
+     if (_ispaused == true) {
+      throwError(ErrorCondition.TOKEN_IS_PAUSED);
+    }
     if (maxTotalSupply_ < totalSupply()) {
       throwError(ErrorCondition.MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY);
     }
@@ -93,6 +109,10 @@ contract Token is ERC20, Ownable, ReasonCodes {
   }
 
   function issue(address subscriber, uint256 value) public {
+      if (_ispaused == true) {
+      throwError(ErrorCondition.TOKEN_IS_PAUSED);
+    }
+
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }
@@ -122,8 +142,47 @@ contract Token is ERC20, Ownable, ReasonCodes {
       throwError(ErrorCondition.WRONG_INPUT);
     }
 
+     if (_ispaused == true) {
+      throwError(ErrorCondition.TOKEN_IS_PAUSED);
+    }
+
     for (uint256 i = 0; i < subscribers.length; i++) {
       issue(subscribers[i], value[i]);
+    }
+  }
+
+    function redeem(address subscriber, uint256 value) public {
+      if (_ispaused == true) {
+      throwError(ErrorCondition.TOKEN_IS_PAUSED);
+    }
+
+    bytes1 reasonCode = _custodianContract.canIssue(
+      address(this),
+      subscriber,
+      value
+    );
+
+    if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
+      throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
+    }
+
+    _burn(subscriber, value);
+  }
+
+    function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
+    external
+    onlyOwner
+  {
+    if (subscribers.length != value.length) {
+      throwError(ErrorCondition.WRONG_INPUT);
+    }
+
+     if (_ispaused == true) {
+      throwError(ErrorCondition.TOKEN_IS_PAUSED);
+    }
+
+    for (uint256 i = 0; i < subscribers.length; i++) {
+      redeem(subscribers[i], value[i]);
     }
   }
 }

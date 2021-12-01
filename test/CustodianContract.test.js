@@ -13,6 +13,7 @@ const normalizeArrayOutput = (arrOutput) => arrOutput.map(normalizeOutput);
 
 describe("CustodianContract", function () {
   let CustodianContract;
+  let TokenCreator;
 
   beforeEach(async () => {
     await deployments.fixture(["CustodianContract"]);
@@ -27,8 +28,29 @@ describe("CustodianContract", function () {
     expect(await CustodianContract.VERSION()).to.equal("0.0.1");
   });
 
+  describe("token creator", () => {
+    beforeEach(async () => {
+      await deployments.fixture(["TokenCreator"]);
+      const { custodianContractOwner } = await getNamedAccounts();
+      TokenCreator = await ethers.getContract(
+        "TokenCreator",
+        custodianContractOwner
+      );
+      console.log(TokenCreator.address);
+      expect(
+        await CustodianContract.setTokenCreatorAddress(TokenCreator.address)
+      );
+    });
+    it("has a token creator contract", async () => {
+      expect(await CustodianContract.TokenCreatorAddr()).to.equal(
+        TokenCreator.address
+      );
+    });
+  });
+
   describe("tokens", () => {
     let CustodianContractIssuer;
+    let TokenCreatorIssuer;
 
     beforeEach(async () => {
       const { issuer, custodian, kycProvider } = await getNamedAccounts();
@@ -38,6 +60,19 @@ describe("CustodianContract", function () {
       CustodianContractIssuer = await ethers.getContract(
         "CustodianContract",
         issuer
+      );
+      TokenCreatorIssuer = await ethers.getContract("TokenCreator", issuer);
+      await CustodianContractIssuer.setTokenCreatorAddress(
+        TokenCreatorIssuer.address
+      );
+      await CustodianContract.setTokenCreatorAddress(TokenCreator.address);
+    });
+
+    it("has a token creator address", async () => {
+      console.log(await CustodianContract.TokenCreatorAddr());
+      console.log(TokenCreator.address);
+      expect(await CustodianContract.TokenCreatorAddr()).to.equal(
+        TokenCreator.address
       );
     });
 
@@ -104,7 +139,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
         })
-      ).not.to.be.reverted;
+      );
 
       await expect(
         CustodianContractIssuer.publishToken({

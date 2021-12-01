@@ -482,7 +482,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
 
     address public TokenCreatorAddr;
 
-    function setTokenCreatorAddress (address _TokenCreatorContractAddr) public payable {
+    function setTokenCreatorAddress (address _TokenCreatorContractAddr) public ownerOnly {
        TokenCreatorAddr = _TokenCreatorContractAddr;
     }
    

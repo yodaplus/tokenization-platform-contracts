@@ -13,9 +13,13 @@ describe("Token", function () {
   let TokenContractNonIssuer;
 
   beforeEach(async () => {
-    await deployments.fixture(["CustodianContract"]);
+    await deployments.fixture(["CustodianContract", "TokenCreator"]);
     const { custodianContractOwner, custodian, issuer, kycProvider } =
       await getNamedAccounts();
+    const TokenCreator = await ethers.getContract(
+      "TokenCreator",
+      custodianContractOwner
+    );
     CustodianContract = await ethers.getContract(
       "CustodianContract",
       custodianContractOwner
@@ -24,6 +28,7 @@ describe("Token", function () {
       "CustodianContract",
       issuer
     );
+    await CustodianContract.setTokenCreatorAddress(TokenCreator.address);
     await CustodianContract.addIssuer("countryCode", issuer);
     await CustodianContract.addCustodian("countryCode", custodian);
     await CustodianContract.addKycProvider("countryCode", kycProvider);

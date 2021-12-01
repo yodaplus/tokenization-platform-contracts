@@ -12,7 +12,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
   uint8 internal _decimals;
 
   bool internal _isFinalized;
-  bool internal _ispaused; 
+  bool internal _ispaused;
   uint256 internal _maxTotalSupply;
 
   ICustodianContract internal _custodianContract;
@@ -21,11 +21,12 @@ contract Token is ERC20, Ownable, ReasonCodes {
     string memory name,
     string memory symbol,
     uint8 decimals_,
-    uint256 maxTotalSupply_
+    uint256 maxTotalSupply_,
+    address custodianContract_
   ) ERC20(name, symbol) {
     _decimals = decimals_;
     _maxTotalSupply = maxTotalSupply_;
-    _custodianContract = ICustodianContract(msg.sender);
+    _custodianContract = ICustodianContract(custodianContract_);
   }
 
   event SupplyIncreased(uint256 oldValue, uint256 newValue);
@@ -77,7 +78,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
   }
 
   function finalizeIssuance() external onlyOwner {
-      if (_ispaused == true) {
+    if (_ispaused == true) {
       throwError(ErrorCondition.TOKEN_IS_PAUSED);
     }
     _isFinalized = true;
@@ -92,7 +93,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
   }
 
   function setMaxSupply(uint256 maxTotalSupply_) external onlyOwner {
-     if (_ispaused == true) {
+    if (_ispaused == true) {
       throwError(ErrorCondition.TOKEN_IS_PAUSED);
     }
     if (maxTotalSupply_ < totalSupply()) {
@@ -109,7 +110,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
   }
 
   function issue(address subscriber, uint256 value) public {
-      if (_ispaused == true) {
+    if (_ispaused == true) {
       throwError(ErrorCondition.TOKEN_IS_PAUSED);
     }
 
@@ -142,7 +143,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
       throwError(ErrorCondition.WRONG_INPUT);
     }
 
-     if (_ispaused == true) {
+    if (_ispaused == true) {
       throwError(ErrorCondition.TOKEN_IS_PAUSED);
     }
 
@@ -151,8 +152,8 @@ contract Token is ERC20, Ownable, ReasonCodes {
     }
   }
 
-    function redeem(address subscriber, uint256 value) public {
-      if (_ispaused == true) {
+  function redeem(address subscriber, uint256 value) public {
+    if (_ispaused == true) {
       throwError(ErrorCondition.TOKEN_IS_PAUSED);
     }
 
@@ -169,7 +170,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
     _burn(subscriber, value);
   }
 
-    function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
+  function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
     external
     onlyOwner
   {
@@ -177,7 +178,7 @@ contract Token is ERC20, Ownable, ReasonCodes {
       throwError(ErrorCondition.WRONG_INPUT);
     }
 
-     if (_ispaused == true) {
+    if (_ispaused == true) {
       throwError(ErrorCondition.TOKEN_IS_PAUSED);
     }
 

@@ -26,7 +26,6 @@ describe("CustodianContract", function () {
       "TokenCreator",
       custodianContractOwner
     );
-    await CustodianContract.setTokenCreatorAddress(TokenCreator.address);
   });
 
   it("has a version", async () => {
@@ -35,9 +34,38 @@ describe("CustodianContract", function () {
 
   describe("token creator", () => {
     it("has a token creator contract", async () => {
-      expect(await CustodianContract.TokenCreatorAddr()).to.equal(
+      expect(await CustodianContract.tokenCreatorAddr()).to.equal(
         TokenCreator.address
       );
+    });
+
+    it("only allows CustodianContract to publish tokens", async () => {
+      const { issuer } = await getNamedAccounts();
+
+      await expect(
+        TokenCreator.PublishToken(
+          TOKEN_EXAMPLE.name,
+          TOKEN_EXAMPLE.symbol,
+          TOKEN_EXAMPLE.decimals,
+          TOKEN_EXAMPLE.maxTotalSupply,
+          issuer
+        )
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+
+      const TokenCreatorCustodianContract = await ethers.getContract(
+        "TokenCreator",
+        CustodianContract.address
+      );
+
+      await expect(
+        TokenCreatorCustodianContract.PublishToken(
+          TOKEN_EXAMPLE.name,
+          TOKEN_EXAMPLE.symbol,
+          TOKEN_EXAMPLE.decimals,
+          TOKEN_EXAMPLE.maxTotalSupply,
+          issuer
+        )
+      ).not.to.be.reverted;
     });
   });
 
@@ -56,9 +84,9 @@ describe("CustodianContract", function () {
     });
 
     it("has a token creator address", async () => {
-      console.log(await CustodianContract.TokenCreatorAddr());
+      console.log(await CustodianContract.tokenCreatorAddr());
       console.log(TokenCreator.address);
-      expect(await CustodianContract.TokenCreatorAddr()).to.equal(
+      expect(await CustodianContract.tokenCreatorAddr()).to.equal(
         TokenCreator.address
       );
     });

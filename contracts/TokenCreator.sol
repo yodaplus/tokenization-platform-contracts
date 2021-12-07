@@ -14,7 +14,7 @@ contract TokenCreator is Ownable, ITokenCreator {
     uint8 decimals_,
     uint256 maxTotalSupply_,
     address issuer
-  ) external override returns (address tokenAddress) {
+  ) external override onlyOwner returns (address tokenAddress) {
     TokenContract deployedToken = new TokenContract(
       name,
       symbol,

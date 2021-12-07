@@ -28,7 +28,6 @@ describe("Token", function () {
       "CustodianContract",
       issuer
     );
-    await CustodianContract.setTokenCreatorAddress(TokenCreator.address);
     await CustodianContract.addIssuer("countryCode", issuer);
     await CustodianContract.addCustodian("countryCode", custodian);
     await CustodianContract.addKycProvider("countryCode", kycProvider);

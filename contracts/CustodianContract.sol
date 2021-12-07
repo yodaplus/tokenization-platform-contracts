@@ -9,6 +9,12 @@ import "./TokenCreator.sol";
 contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
+  address public tokenCreatorAddr;
+
+  constructor(address tokenCreatorAddr_) {
+    tokenCreatorAddr = tokenCreatorAddr_;
+  }
+
   struct RoleData {
     address primaryAddress;
     string countryCode;
@@ -34,24 +40,24 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     address address_;
   }
 
- struct InvestorData {    
+  struct InvestorData {
     string countryCode;
     bool LEI_check;
     bool bank_check;
     bool address_check;
     bool citizenship_check;
     bool accredated;
-    bool affiliated ;
-    bool exempted;  
+    bool affiliated;
+    bool exempted;
     bool pep_check;
     bool gol_check;
-    bool fatf_compliance_check;  
+    bool fatf_compliance_check;
   }
-  mapping (string => InvestorData) public _investors;
+  mapping(string => InvestorData) public _investors;
   mapping(address => RoleData) public _issuers;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
-  
+
   mapping(address => address) public _addressToIssuerPrimaryAddress;
   mapping(address => address) public _addressToCustodianPrimaryAddress;
   mapping(address => address) public _addressToKycProviderPrimaryAddress;
@@ -171,22 +177,22 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     }
   }
 
- 
-  function update_kyc(string calldata lei , InvestorData calldata investor_kyc_data) external onlyKycProvider {
-     
+  function update_kyc(
+    string calldata lei,
+    InvestorData calldata investor_kyc_data
+  ) external onlyKycProvider {
     _investors[lei].countryCode = investor_kyc_data.countryCode;
     _investors[lei].bank_check = investor_kyc_data.bank_check;
-    _investors[lei].address_check = investor_kyc_data.address_check; 
+    _investors[lei].address_check = investor_kyc_data.address_check;
     _investors[lei].citizenship_check = investor_kyc_data.citizenship_check;
     _investors[lei].accredated = investor_kyc_data.accredated;
     _investors[lei].affiliated = investor_kyc_data.affiliated;
-    _investors[lei].exempted = investor_kyc_data.exempted;  
+    _investors[lei].exempted = investor_kyc_data.exempted;
     _investors[lei].pep_check = investor_kyc_data.pep_check;
     _investors[lei].gol_check = investor_kyc_data.gol_check;
-    _investors[lei].fatf_compliance_check= investor_kyc_data.fatf_compliance_check;  
-  
+    _investors[lei].fatf_compliance_check = investor_kyc_data
+      .fatf_compliance_check;
   }
- 
 
   function isIssuer(address addr) public view returns (bool) {
     return _isIssuer[_addressToIssuerPrimaryAddress[addr]];
@@ -480,12 +486,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     uint256 minSubscription;
   }
 
-    address public TokenCreatorAddr;
-
-    function setTokenCreatorAddress (address _TokenCreatorContractAddr) public onlyOwner {
-       TokenCreatorAddr = _TokenCreatorContractAddr;
-    }
-   
   function publishToken(TokenInput calldata token) external onlyIssuer {
     if (_isIssuer[token.issuerPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_ISSUER);
@@ -507,14 +507,14 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       throwError(ErrorCondition.TOKEN_SAME_SYMBOL_EXISTS);
     }
 
-     address  tokenAddress = TokenCreator(TokenCreatorAddr).PublishToken(
-     token.name,
-     token.symbol,
-     token.decimals,
-     token.maxTotalSupply,
-     msg.sender
-   );
-      
+    address tokenAddress = TokenCreator(tokenCreatorAddr).PublishToken(
+      token.name,
+      token.symbol,
+      token.decimals,
+      token.maxTotalSupply,
+      msg.sender
+    );
+
     _tokens[tokenAddress].name = token.name;
     _tokens[tokenAddress].symbol = token.symbol;
     _tokens[tokenAddress].decimals = token.decimals;
@@ -597,6 +597,4 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
 
     return ReasonCodes.TRANSFER_SUCCESS;
   }
-
-  constructor() {}
 }

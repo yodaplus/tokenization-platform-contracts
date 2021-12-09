@@ -13,7 +13,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   uint256 internal _maxTotalSupply;
 
   ICustodianContract internal _custodianContract;
-
+  
   constructor(
     string memory name,
     string memory symbol,
@@ -25,7 +25,12 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     _maxTotalSupply = maxTotalSupply_;
     _custodianContract = ICustodianContract(custodianContract_);
   }
-
+  function pause() external onlyOwner {
+      _pause();
+  }
+  function unpause() external onlyOwner{
+      _unpause();
+  }
   event SupplyIncreased(uint256 oldValue, uint256 newValue);
   event SupplyDecreased(uint256 oldValue, uint256 newValue);
 
@@ -92,7 +97,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     _maxTotalSupply = maxTotalSupply_;
   }
 
-  function issue(address subscriber, uint256 value) public {
+  function issue(address subscriber, uint256 value) public onlyOwner {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }
@@ -127,7 +132,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     }
   }
 
-  function redeem(address subscriber, uint256 value) public whenNotPaused {
+  function redeem(address subscriber, uint256 value) public onlyOwner {
 
     bytes1 reasonCode = _custodianContract.canIssue(
       address(this),

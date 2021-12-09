@@ -1,18 +1,15 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ICustodianContract.sol";
 import "./ReasonCodes.sol";
 
-contract Token is ERC20, Ownable, ReasonCodes {
+contract Token is ERC20Pausable, Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
-
   uint8 internal _decimals;
-
   bool internal _isFinalized;
-  bool internal _ispaused;
   uint256 internal _maxTotalSupply;
 
   ICustodianContract internal _custodianContract;
@@ -78,24 +75,10 @@ contract Token is ERC20, Ownable, ReasonCodes {
   }
 
   function finalizeIssuance() external onlyOwner {
-    if (_ispaused == true) {
-      throwError(ErrorCondition.TOKEN_IS_PAUSED);
-    }
     _isFinalized = true;
   }
 
-  function Pause() external onlyOwner {
-    _ispaused = true;
-  }
-
-  function UnPause() external onlyOwner {
-    _ispaused = false;
-  }
-
   function setMaxSupply(uint256 maxTotalSupply_) external onlyOwner {
-    if (_ispaused == true) {
-      throwError(ErrorCondition.TOKEN_IS_PAUSED);
-    }
     if (maxTotalSupply_ < totalSupply()) {
       throwError(ErrorCondition.MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY);
     }
@@ -110,10 +93,6 @@ contract Token is ERC20, Ownable, ReasonCodes {
   }
 
   function issue(address subscriber, uint256 value) public {
-    if (_ispaused == true) {
-      throwError(ErrorCondition.TOKEN_IS_PAUSED);
-    }
-
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }
@@ -143,19 +122,12 @@ contract Token is ERC20, Ownable, ReasonCodes {
       throwError(ErrorCondition.WRONG_INPUT);
     }
 
-    if (_ispaused == true) {
-      throwError(ErrorCondition.TOKEN_IS_PAUSED);
-    }
-
     for (uint256 i = 0; i < subscribers.length; i++) {
       issue(subscribers[i], value[i]);
     }
   }
 
-  function redeem(address subscriber, uint256 value) public {
-    if (_ispaused == true) {
-      throwError(ErrorCondition.TOKEN_IS_PAUSED);
-    }
+  function redeem(address subscriber, uint256 value) public whenNotPaused {
 
     bytes1 reasonCode = _custodianContract.canIssue(
       address(this),
@@ -178,9 +150,6 @@ contract Token is ERC20, Ownable, ReasonCodes {
       throwError(ErrorCondition.WRONG_INPUT);
     }
 
-    if (_ispaused == true) {
-      throwError(ErrorCondition.TOKEN_IS_PAUSED);
-    }
 
     for (uint256 i = 0; i < subscribers.length; i++) {
       redeem(subscribers[i], value[i]);

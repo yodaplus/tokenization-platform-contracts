@@ -9,17 +9,20 @@ chai.use(chaiSnapshot);
 describe("Token", function () {
   let CustodianContract;
   let CustodianContractIssuer;
+  let CustodianContractKycProvider;
   let TokenContract;
   let TokenContractNonIssuer;
 
   beforeEach(async () => {
     await deployments.fixture(["CustodianContract", "TokenCreator"]);
-    const { custodianContractOwner, custodian, issuer, kycProvider } =
-      await getNamedAccounts();
-    const TokenCreator = await ethers.getContract(
-      "TokenCreator",
-      custodianContractOwner
-    );
+    const {
+      custodianContractOwner,
+      custodian,
+      issuer,
+      subscriber,
+      subscriber2,
+      kycProvider,
+    } = await getNamedAccounts();
     CustodianContract = await ethers.getContract(
       "CustodianContract",
       custodianContractOwner
@@ -27,6 +30,10 @@ describe("Token", function () {
     CustodianContractIssuer = await ethers.getContract(
       "CustodianContract",
       issuer
+    );
+    CustodianContractKycProvider = await ethers.getContract(
+      "CustodianContract",
+      kycProvider
     );
     await CustodianContract.addIssuer("countryCode", issuer);
     await CustodianContract.addCustodian("countryCode", custodian);
@@ -48,6 +55,10 @@ describe("Token", function () {
       tokens[0].address_,
       custodianContractOwner
     );
+    await CustodianContractKycProvider.addWhitelist(tokens[0].address_, [
+      subscriber,
+      subscriber2,
+    ]);
   });
 
   it("has a version", async () => {
@@ -62,11 +73,63 @@ describe("Token", function () {
       await expect(TokenContract.setMaxSupply(TOKEN_EXAMPLE.maxTotalSupply + 1))
         .not.to.be.reverted;
     });
+    it("pause", async () => {
+      await expect(TokenContractNonIssuer.pause()).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+      await expect(TokenContract.pause()).not.to.be.reverted;
+    });
+    it("unpause", async () => {
+      await TokenContract.pause();
+
+      await expect(TokenContractNonIssuer.unpause()).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+      await expect(TokenContract.unpause()).not.to.be.reverted;
+    });
     it("finalizeIssuance", async () => {
       await expect(
         TokenContractNonIssuer.finalizeIssuance()
       ).to.be.revertedWith("Ownable: caller is not the owner");
       await expect(TokenContract.finalizeIssuance()).not.to.be.reverted;
+    });
+    it("issue", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await expect(
+        TokenContractNonIssuer.issue(subscriber, 1)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+      await expect(TokenContract.issue(subscriber, 1)).not.to.be.reverted;
+    });
+    it("issueBatch", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await expect(
+        TokenContractNonIssuer.issueBatch([subscriber], [1])
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+      await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be
+        .reverted;
+    });
+    it("redeem", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.issue(subscriber, 1);
+
+      await expect(
+        TokenContractNonIssuer.redeem(subscriber, 1)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+      await expect(TokenContract.redeem(subscriber, 1)).not.to.be.reverted;
+    });
+    it("redeemBatch", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.issue(subscriber, 1);
+
+      await expect(
+        TokenContractNonIssuer.redeemBatch([subscriber], [1])
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+      await expect(TokenContract.redeemBatch([subscriber], [1])).not.to.be
+        .reverted;
     });
   });
 
@@ -110,6 +173,30 @@ describe("Token", function () {
       ).to.be.revertedWith("token issuance is finalized");
     });
 
+    it("can't issue if it's paused", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.pause();
+
+      await expect(TokenContract.issue(subscriber, 1)).to.be.revertedWith(
+        "ERC20Pausable: token transfer while paused"
+      );
+      await expect(
+        TokenContract.issueBatch([subscriber], [1])
+      ).to.be.revertedWith("ERC20Pausable: token transfer while paused");
+    });
+
+    it("can issue if it's unpaused", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.pause();
+      await TokenContract.unpause();
+
+      await expect(TokenContract.issue(subscriber, 1)).not.to.be.reverted;
+      await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be
+        .reverted;
+    });
+
     it("reverts on wrong batch input", async () => {
       await expect(TokenContract.issueBatch([], [1])).to.be.revertedWith(
         "wrong input"
@@ -130,19 +217,34 @@ describe("Token", function () {
       ).to.be.revertedWith("can't mint more than max total supply");
     });
 
-    it("can't issue if canIssue fails on custodian contract", async () => {
-      const { subscriber } = await getNamedAccounts();
+    it("can't issue more than max total supply when many subscribers", async () => {
+      const { subscriber, subscriber2 } = await getNamedAccounts();
 
-      await expect(TokenContract.issue(subscriber, 1)).to.be.revertedWith(
-        "custodian contract validation fail"
+      await expect(
+        TokenContract.issue(subscriber, TOKEN_EXAMPLE.maxTotalSupply)
+      ).not.to.be.reverted;
+
+      await expect(TokenContract.issue(subscriber2, 1)).to.be.revertedWith(
+        "can't mint more than max total supply"
       );
       await expect(
         TokenContract.issueBatch([subscriber], [1])
+      ).to.be.revertedWith("can't mint more than max total supply");
+    });
+
+    it("can't issue if canIssue fails on custodian contract", async () => {
+      const { nonSubscriber } = await getNamedAccounts();
+
+      await expect(TokenContract.issue(nonSubscriber, 1)).to.be.revertedWith(
+        "custodian contract validation fail"
+      );
+      await expect(
+        TokenContract.issueBatch([nonSubscriber], [1])
       ).to.be.revertedWith("custodian contract validation fail");
     });
 
     it("can issue if subscriber is whitelisted", async () => {
-      const { kycProvider, subscriber } = await getNamedAccounts();
+      const { kycProvider, nonSubscriber } = await getNamedAccounts();
 
       const CustodianContractKycProvider = await ethers.getContract(
         "CustodianContract",
@@ -151,17 +253,17 @@ describe("Token", function () {
 
       await expect(
         CustodianContractKycProvider.addWhitelist(TokenContract.address, [
-          subscriber,
+          nonSubscriber,
         ])
       ).not.to.be.reverted;
-      await expect(TokenContract.issue(subscriber, 1)).not.to.be.reverted;
-      await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be
+      await expect(TokenContract.issue(nonSubscriber, 1)).not.to.be.reverted;
+      await expect(TokenContract.issueBatch([nonSubscriber], [1])).not.to.be
         .reverted;
-      expect(await TokenContract.balanceOf(subscriber)).to.be.equal(2);
+      expect(await TokenContract.balanceOf(nonSubscriber)).to.be.equal(2);
       expect(await TokenContract.totalSupply()).to.be.equal(2);
     });
 
-    it("can issue if subscriber is removed from the whitelist", async () => {
+    it("can't issue if subscriber is removed from the whitelist", async () => {
       const { kycProvider, subscriber } = await getNamedAccounts();
 
       const CustodianContractKycProvider = await ethers.getContract(
@@ -187,6 +289,95 @@ describe("Token", function () {
       await expect(
         TokenContract.issueBatch([subscriber], [1])
       ).to.be.revertedWith("custodian contract validation fail");
+    });
+  });
+
+  describe("token redeem", async () => {
+    beforeEach(async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.issue(subscriber, 2);
+    });
+
+    it(`can't redeem if tokens were not issued`, async () => {
+      const { subscriber2 } = await getNamedAccounts();
+
+      await expect(TokenContract.redeem(subscriber2, 1)).to.be.revertedWith(
+        "ERC20: burn amount exceeds balance"
+      );
+      await expect(
+        TokenContract.redeemBatch([subscriber2], [1])
+      ).to.be.revertedWith("ERC20: burn amount exceeds balance");
+    });
+
+    it(`can't redeem more tokens than were issued`, async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await expect(TokenContract.redeem(subscriber, 3)).to.be.revertedWith(
+        "ERC20: burn amount exceeds balance"
+      );
+      await expect(
+        TokenContract.redeemBatch([subscriber], [3])
+      ).to.be.revertedWith("ERC20: burn amount exceeds balance");
+    });
+
+    it("can't redeem if it's paused", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.pause();
+
+      await expect(TokenContract.redeem(subscriber, 1)).to.be.revertedWith(
+        "ERC20Pausable: token transfer while paused"
+      );
+      await expect(
+        TokenContract.redeemBatch([subscriber], [1])
+      ).to.be.revertedWith("ERC20Pausable: token transfer while paused");
+    });
+
+    it("can redeem if it's unpaused", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.pause();
+      await TokenContract.unpause();
+
+      await expect(TokenContract.redeem(subscriber, 1)).not.to.be.reverted;
+      await expect(TokenContract.redeemBatch([subscriber], [1])).not.to.be
+        .reverted;
+    });
+
+    it("reverts on wrong batch input", async () => {
+      await expect(TokenContract.redeemBatch([], [1])).to.be.revertedWith(
+        "wrong input"
+      );
+    });
+
+    it("can't redeem if canIssue fails on custodian contract", async () => {
+      const { nonSubscriber } = await getNamedAccounts();
+
+      await expect(TokenContract.redeem(nonSubscriber, 1)).to.be.revertedWith(
+        "custodian contract validation fail"
+      );
+      await expect(
+        TokenContract.redeemBatch([nonSubscriber], [1])
+      ).to.be.revertedWith("custodian contract validation fail");
+    });
+
+    it("can redeem if all conditions are met", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await expect(TokenContract.redeem(subscriber, 1)).not.to.be.reverted;
+      await expect(TokenContract.redeemBatch([subscriber], [1])).not.to.be
+        .reverted;
+    });
+
+    it("can redeem if it's finalized", async () => {
+      const { subscriber } = await getNamedAccounts();
+
+      await TokenContract.finalizeIssuance();
+
+      await expect(TokenContract.redeem(subscriber, 1)).not.to.be.reverted;
+      await expect(TokenContract.redeemBatch([subscriber], [1])).not.to.be
+        .reverted;
     });
   });
 });

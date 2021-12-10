@@ -19,6 +19,23 @@ const sharedNetworkConfig = {
   },
 };
 
+const namedAccounts = Object.fromEntries(
+  [
+    "custodianContractOwner",
+    "issuer",
+    "nonIssuer",
+    "issuer2",
+    "userOfType",
+    "userOfType2",
+    "userOfOtherType",
+    "custodian",
+    "subscriber",
+    "subscriber2",
+    "kycProvider",
+    "nonSubscriber",
+  ].map((name, i) => [name, i])
+);
+
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
@@ -30,18 +47,7 @@ module.exports = {
       optimizer: { enabled: true, runs: 200 },
     },
   },
-  namedAccounts: {
-    custodianContractOwner: 0,
-    issuer: 1,
-    nonIssuer: 2,
-    issuer2: 3,
-    userOfType: 4,
-    userOfType2: 5,
-    userOfOtherType: 6,
-    custodian: 7,
-    subscriber: 8,
-    kycProvider: 9,
-  },
+  namedAccounts,
   networks: {
     mainnet: {
       ...sharedNetworkConfig,

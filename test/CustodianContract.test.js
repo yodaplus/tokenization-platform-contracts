@@ -84,8 +84,6 @@ describe("CustodianContract", function () {
     });
 
     it("has a token creator address", async () => {
-      console.log(await CustodianContract.tokenCreatorAddr());
-      console.log(TokenCreator.address);
       expect(await CustodianContract.tokenCreatorAddr()).to.equal(
         TokenCreator.address
       );

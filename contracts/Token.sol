@@ -36,6 +36,11 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
 
   event SupplyIncreased(uint256 oldValue, uint256 newValue);
   event SupplyDecreased(uint256 oldValue, uint256 newValue);
+  event Issued(address  _to, uint256 _value, bytes1 _data);
+  event Issuance_Failure(address  _to, uint256 _value, bytes1 _data);
+  event Redeemed(address _from, uint256 _value, bytes1 _data);
+  event RedeemFailed(address _from, uint256 _value, bytes1 _data);
+
 
   error ERC1066Error(bytes1 errorCode, string message);
 
@@ -116,10 +121,13 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     );
 
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
-      throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
+      // throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
+      emit Issuance_Failure(subscriber, value, reasonCode);
+    }else{
+      _mint(subscriber, value);
+      emit Issued(subscriber, value, reasonCode);
     }
 
-    _mint(subscriber, value);
   }
 
   function issueBatch(address[] calldata subscribers, uint256[] calldata value)

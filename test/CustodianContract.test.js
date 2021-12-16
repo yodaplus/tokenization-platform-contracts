@@ -71,15 +71,22 @@ describe("CustodianContract", function () {
 
   describe("tokens", () => {
     let CustodianContractIssuer;
+    let CustodianContractSecondaryIssuer;
 
     beforeEach(async () => {
-      const { issuer, custodian, kycProvider } = await getNamedAccounts();
+      const { issuer, secondaryIssuer, custodian, kycProvider } =
+        await getNamedAccounts();
       await CustodianContract.addIssuer("countryCode", issuer);
       await CustodianContract.addCustodian("countryCode", custodian);
       await CustodianContract.addKycProvider("countryCode", kycProvider);
+      await CustodianContract.addIssuerAccounts(issuer, [secondaryIssuer]);
       CustodianContractIssuer = await ethers.getContract(
         "CustodianContract",
         issuer
+      );
+      CustodianContractSecondaryIssuer = await ethers.getContract(
+        "CustodianContract",
+        secondaryIssuer
       );
     });
 
@@ -102,6 +109,19 @@ describe("CustodianContract", function () {
       ).to.be.revertedWith("caller is not allowed");
     });
 
+    it(`allows secondary issuers to publish tokens`, async () => {
+      const { issuer, custodian, kycProvider } = await getNamedAccounts();
+
+      await expect(
+        CustodianContractSecondaryIssuer.publishToken({
+          ...TOKEN_EXAMPLE,
+          issuerPrimaryAddress: issuer,
+          custodianPrimaryAddress: custodian,
+          kycProviderPrimaryAddress: kycProvider,
+        })
+      ).not.to.be.reverted;
+    });
+
     it(`can't publish a token for non-existent issuer`, async () => {
       const { userOfOtherType, custodian, kycProvider } =
         await getNamedAccounts();
@@ -110,6 +130,20 @@ describe("CustodianContract", function () {
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: userOfOtherType,
+          custodianPrimaryAddress: custodian,
+          kycProviderPrimaryAddress: kycProvider,
+        })
+      ).to.be.revertedWith("issuer does not exists");
+    });
+
+    it(`can't publish a token for a secondary issuer`, async () => {
+      const { secondaryIssuer, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await expect(
+        CustodianContractIssuer.publishToken({
+          ...TOKEN_EXAMPLE,
+          issuerPrimaryAddress: secondaryIssuer,
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
         })
@@ -254,11 +288,33 @@ describe("CustodianContract", function () {
       );
     });
 
-    it(`sets proper owner for the published token`, async () => {
+    it(`sets proper owner for the published token if published by primary issuer`, async () => {
       const { custodian, issuer, kycProvider } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
+          ...TOKEN_EXAMPLE,
+          issuerPrimaryAddress: issuer,
+          custodianPrimaryAddress: custodian,
+          kycProviderPrimaryAddress: kycProvider,
+        })
+      ).not.to.be.reverted;
+
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const TokenContract = await ethers.getContractAt(
+        "Token",
+        tokens[0].address_
+      );
+
+      expect(await TokenContract.owner()).to.be.equal(issuer);
+    });
+
+    it(`sets proper owner for the published token if published by secondary issuer`, async () => {
+      const { custodian, issuer, kycProvider } = await getNamedAccounts();
+
+      await expect(
+        CustodianContractSecondaryIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: issuer,
           custodianPrimaryAddress: custodian,

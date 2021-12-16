@@ -481,7 +481,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       token.symbol,
       token.decimals,
       token.maxTotalSupply,
-      msg.sender
+      token.issuerPrimaryAddress
     );
 
     _tokens[tokenAddress].name = token.name;

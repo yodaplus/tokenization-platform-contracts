@@ -23,6 +23,7 @@ const namedAccounts = Object.fromEntries(
   [
     "custodianContractOwner",
     "issuer",
+    "secondaryIssuer",
     "nonIssuer",
     "issuer2",
     "userOfType",

@@ -43,7 +43,7 @@ describe("CustodianContract", function () {
       const { issuer } = await getNamedAccounts();
 
       await expect(
-        TokenCreator.PublishToken(
+        TokenCreator.publishToken(
           TOKEN_EXAMPLE.name,
           TOKEN_EXAMPLE.symbol,
           TOKEN_EXAMPLE.decimals,
@@ -58,7 +58,7 @@ describe("CustodianContract", function () {
       );
 
       await expect(
-        TokenCreatorCustodianContract.PublishToken(
+        TokenCreatorCustodianContract.publishToken(
           TOKEN_EXAMPLE.name,
           TOKEN_EXAMPLE.symbol,
           TOKEN_EXAMPLE.decimals,

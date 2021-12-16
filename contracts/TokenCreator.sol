@@ -8,7 +8,7 @@ import "./ITokenCreator.sol";
 contract TokenCreator is Ownable, ITokenCreator {
   string public constant VERSION = "0.0.1";
 
-  function PublishToken(
+  function publishToken(
     string memory name,
     string memory symbol,
     uint8 decimals_,

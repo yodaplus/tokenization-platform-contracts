@@ -507,7 +507,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       throwError(ErrorCondition.TOKEN_SAME_SYMBOL_EXISTS);
     }
 
-    address tokenAddress = TokenCreator(tokenCreatorAddr).PublishToken(
+    address tokenAddress = TokenCreator(tokenCreatorAddr).publishToken(
       token.name,
       token.symbol,
       token.decimals,

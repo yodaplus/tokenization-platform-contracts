@@ -113,7 +113,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     } else if (condition == ErrorCondition.USER_DOES_NOT_EXIST) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
-        "user does not exists"
+        "user does not exist"
       );
     } else if (condition == ErrorCondition.REMOVED_ISSUER_HAS_TOKENS) {
       revert ERC1066Error(
@@ -241,7 +241,15 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     address primaryAddress,
     address[] calldata addresses
   ) internal {
-    if (_isUserType[primaryAddress] == false) {
+    bool senderNotOwner = owner() != msg.sender;
+    bool senderNoPrimaryArgMatch = primaryAddress != msg.sender;
+    bool primaryArgNotUser = _isUserType[primaryAddress] == false;
+
+    if (senderNotOwner && (senderNoPrimaryArgMatch || primaryArgNotUser)) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
+
+    if (primaryArgNotUser) {
       throwError(ErrorCondition.USER_DOES_NOT_EXIST);
     }
 
@@ -260,7 +268,15 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     address primaryAddress,
     address[] calldata addresses
   ) internal {
-    if (_isUserType[primaryAddress] == false) {
+    bool senderNotOwner = owner() != msg.sender;
+    bool senderNoPrimaryArgMatch = primaryAddress != msg.sender;
+    bool primaryArgNotUser = _isUserType[primaryAddress] == false;
+
+    if (senderNotOwner && (senderNoPrimaryArgMatch || primaryArgNotUser)) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
+
+    if (primaryArgNotUser) {
       throwError(ErrorCondition.USER_DOES_NOT_EXIST);
     }
 
@@ -360,7 +376,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function addIssuerAccounts(
     address primaryAddress,
     address[] calldata addresses
-  ) external onlyOwner {
+  ) external {
     _addRoleAddresses(
       _isIssuer,
       _issuers,
@@ -374,7 +390,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function addCustodianAccounts(
     address primaryAddress,
     address[] calldata addresses
-  ) external onlyOwner {
+  ) external {
     _addRoleAddresses(
       _isCustodian,
       _custodians,
@@ -388,7 +404,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function addKycProviderAccounts(
     address primaryAddress,
     address[] calldata addresses
-  ) external onlyOwner {
+  ) external {
     _addRoleAddresses(
       _isKycProvider,
       _kycProviders,
@@ -402,7 +418,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function removeIssuerAccounts(
     address primaryAddress,
     address[] calldata addresses
-  ) external onlyOwner {
+  ) external {
     _removeRoleAddresses(
       _isIssuer,
       _issuers,
@@ -416,7 +432,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function removeCustodianAccounts(
     address primaryAddress,
     address[] calldata addresses
-  ) external onlyOwner {
+  ) external {
     _removeRoleAddresses(
       _isCustodian,
       _custodians,
@@ -430,7 +446,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function removeKycProviderAccounts(
     address primaryAddress,
     address[] calldata addresses
-  ) external onlyOwner {
+  ) external {
     _removeRoleAddresses(
       _isKycProvider,
       _kycProviders,

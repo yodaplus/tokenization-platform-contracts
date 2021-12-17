@@ -234,13 +234,10 @@ describe("Token", function () {
 
     it("can't issue if canIssue fails on custodian contract", async () => {
       const { nonSubscriber } = await getNamedAccounts();
-
-      await expect(TokenContract.issue(nonSubscriber, 1)).to.be.revertedWith(
-        "custodian contract validation fail"
-      );
-      await expect(
-        TokenContract.issueBatch([nonSubscriber], [1])
-      ).to.be.revertedWith("custodian contract validation fail");
+      const issueHandler = TokenContract.issue(nonSubscriber, 1);
+      const batchIssueHandler = TokenContract.issueBatch([nonSubscriber], [1]);
+      await expect(issueHandler).to.emit(TokenContract, "Issuance_Failure");
+      await expect(batchIssueHandler).not.to.be.reverted;
     });
 
     it("can issue if subscriber is whitelisted", async () => {
@@ -283,12 +280,14 @@ describe("Token", function () {
           subscriber,
         ])
       ).not.to.be.reverted;
-      await expect(TokenContract.issue(subscriber, 1)).to.be.revertedWith(
-        "custodian contract validation fail"
+      await expect(TokenContract.issue(subscriber, 1)).to.emit(
+        TokenContract,
+        "Issuance_Failure"
       );
-      await expect(
-        TokenContract.issueBatch([subscriber], [1])
-      ).to.be.revertedWith("custodian contract validation fail");
+      await expect(TokenContract.issueBatch([subscriber], [1])).to.emit(
+        TokenContract,
+        "Issuance_Failure"
+      );
     });
   });
 
@@ -353,13 +352,13 @@ describe("Token", function () {
 
     it("can't redeem if canIssue fails on custodian contract", async () => {
       const { nonSubscriber } = await getNamedAccounts();
+      const redeemHandler = TokenContract.redeem(nonSubscriber, 1);
 
-      await expect(TokenContract.redeem(nonSubscriber, 1)).to.be.revertedWith(
-        "custodian contract validation fail"
+      await expect(redeemHandler).to.emit(TokenContract, "RedeemFailed");
+      await expect(TokenContract.redeemBatch([nonSubscriber], [1])).to.emit(
+        TokenContract,
+        "RedeemFailed"
       );
-      await expect(
-        TokenContract.redeemBatch([nonSubscriber], [1])
-      ).to.be.revertedWith("custodian contract validation fail");
     });
 
     it("can redeem if all conditions are met", async () => {

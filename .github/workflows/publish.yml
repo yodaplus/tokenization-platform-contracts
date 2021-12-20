@@ -51,4 +51,4 @@ jobs:
           git add .
           git commit -m "Update contracts data"
           git push origin ${{ env.PR_BRANCH_NAME }}
-          hub pull-request -b master -h ${{ env.PR_BRANCH_NAME }} --no-edit
+          hub pull-request -b master -h ${{ env.PR_BRANCH_NAME }} -m "[AUTO] Update contracts" -m "contracts repo commit: yodaplus/tokenization-platform-contracts@${{ github.sha }}"  --no-edit

@@ -40,6 +40,20 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     address address_;
   }
 
+  struct InvestorData {
+    string countryCode;
+    bool LEI_check;
+    bool bank_check;
+    bool address_check;
+    bool citizenship_check;
+    bool accredated;
+    bool affiliated;
+    bool exempted;
+    bool pep_check;
+    bool gol_check;
+    bool fatf_compliance_check;
+  }
+  mapping(string => InvestorData) public _investors;
   mapping(address => RoleData) public _issuers;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
@@ -161,6 +175,13 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
         "unknown error condition"
       );
     }
+  }
+
+  function updateKyc(
+    string calldata lei,
+    InvestorData calldata investor_kyc_data
+  ) external onlyKycProvider {
+    _investors[lei] = investor_kyc_data;
   }
 
   function isIssuer(address addr) public view returns (bool) {

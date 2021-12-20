@@ -13,6 +13,8 @@ jobs:
     env:
       MNEMONIC: ${{ secrets.SHARED_WALLET_MNEMONIC }}
       PR_BRANCH_NAME: contracts-${{ github.run_id }}
+      GITHUB_USER: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.PAT }}
     steps:
       - name: checkout contracts
         uses: actions/checkout@v2

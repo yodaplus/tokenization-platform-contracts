@@ -4,30 +4,23 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  publish:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: contracts
+    env:
+      MNEMONIC: ${{ secrets.SHARED_WALLET_MNEMONIC }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          path: contracts
       - uses: actions/setup-node@v2
         with:
           node-version: "16.10.0"
       - run: npm ci
       - run: npm test
-
-  publish:
-    runs-on: ubuntu-latest
-
-    needs: test
-
-    env:
-      MNEMONIC: ${{ secrets.SHARED_WALLET_MNEMONIC }}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "16.10.0"
-      - run: npm ci
       - name: publish apothem
         if: github.ref == 'refs/heads/automation'
         run: npx hardhat --network apothem deploy

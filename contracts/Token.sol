@@ -142,8 +142,9 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   }
 
   function redeem(address subscriber, uint256 value) public onlyOwner {
-    bytes1 reasonCode = _custodianContract.canIssue(
+    bytes1 reasonCode = _custodianContract.canRedeem(
       address(this),
+      owner(),
       subscriber,
       value
     );

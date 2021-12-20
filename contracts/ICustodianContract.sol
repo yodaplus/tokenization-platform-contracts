@@ -7,4 +7,11 @@ interface ICustodianContract {
     address to,
     uint256 value
   ) external view returns (bytes1);
+
+  function canRedeem(
+    address tokenAddress,
+    address owner,
+    address to,
+    uint256 value
+  ) external view returns (bytes1);
 }

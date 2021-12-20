@@ -177,21 +177,11 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     }
   }
 
-  function update_kyc(
+  function updateKyc(
     string calldata lei,
     InvestorData calldata investor_kyc_data
   ) external onlyKycProvider {
-    _investors[lei].countryCode = investor_kyc_data.countryCode;
-    _investors[lei].bank_check = investor_kyc_data.bank_check;
-    _investors[lei].address_check = investor_kyc_data.address_check;
-    _investors[lei].citizenship_check = investor_kyc_data.citizenship_check;
-    _investors[lei].accredated = investor_kyc_data.accredated;
-    _investors[lei].affiliated = investor_kyc_data.affiliated;
-    _investors[lei].exempted = investor_kyc_data.exempted;
-    _investors[lei].pep_check = investor_kyc_data.pep_check;
-    _investors[lei].gol_check = investor_kyc_data.gol_check;
-    _investors[lei].fatf_compliance_check = investor_kyc_data
-      .fatf_compliance_check;
+    _investors[lei] = investor_kyc_data;
   }
 
   function isIssuer(address addr) public view returns (bool) {

@@ -41,6 +41,7 @@ jobs:
           npm run deploy-mainnet
           cp ./deployments/mainnet.json ../app/dapps-lib/contracts
       - name: push app changes
+        working-directory: app
         run: |
           git config --global user.name 'Yodaplus Bot'
           git config --global user.email 'bot@yodaplus.com'

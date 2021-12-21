@@ -185,11 +185,11 @@ describe("Token", function () {
       await TokenContract.pause();
 
       await expect(TokenContract.issue(subscriber, 1)).to.be.revertedWith(
-        "ERC20Pausable: token transfer while paused"
+        "Pausable: paused"
       );
       await expect(
         TokenContract.issueBatch([subscriber], [1])
-      ).to.be.revertedWith("ERC20Pausable: token transfer while paused");
+      ).to.be.revertedWith("Pausable: paused");
     });
 
     it("can issue if it's unpaused", async () => {

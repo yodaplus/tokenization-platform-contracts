@@ -585,7 +585,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       return ReasonCodes.APP_SPECIFIC_FAILURE;
     }
 
-    if (_token.allowance(from, owner) <= value) {
+    if (_token.allowance(from, owner) < value) {
       return ReasonCodes.APP_SPECIFIC_FAILURE;
     }
     return ReasonCodes.TRANSFER_SUCCESS;

@@ -2,13 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ICustodianContract.sol";
 import "./ReasonCodes.sol";
 
-contract Token is ERC20, Pausable, ERC20Burnable, Ownable, ReasonCodes {
+contract Token is ERC20, Pausable, Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
   uint8 internal _decimals;
   bool internal _isFinalized;
@@ -162,7 +161,9 @@ contract Token is ERC20, Pausable, ERC20Burnable, Ownable, ReasonCodes {
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
       emit RedeemFailed(subscriber, value, reasonCode);
     } else {
-      burnFrom(subscriber, value);
+      uint256 currentAllowance = allowance(subscriber, owner());
+      _approve(subscriber, owner(), currentAllowance - value);
+      _burn(subscriber, value);
       emit Redeemed(subscriber, value, reasonCode);
     }
   }

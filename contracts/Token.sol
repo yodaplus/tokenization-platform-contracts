@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "./ICustodianContract.sol";
 import "./ReasonCodes.sol";
 
-contract Token is ERC20, Pausable, Ownable, ReasonCodes {
+contract Token is ERC20Pausable, Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
   uint8 internal _decimals;
   bool internal _isFinalized;
@@ -33,14 +33,6 @@ contract Token is ERC20, Pausable, Ownable, ReasonCodes {
 
   function unpause() public onlyOwner {
     _unpause();
-  }
-
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override whenNotPaused {
-    super._beforeTokenTransfer(from, to, amount);
   }
 
   event SupplyIncreased(uint256 oldValue, uint256 newValue);

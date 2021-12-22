@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./ICustodianContract.sol";
 import "./ReasonCodes.sol";
 import "./TokenCreator.sol";
@@ -601,6 +602,29 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       return ReasonCodes.APP_SPECIFIC_FAILURE;
     }
 
+    return ReasonCodes.TRANSFER_SUCCESS;
+  }
+
+  function canRedeem(
+    address tokenAddress,
+    address owner,
+    address from,
+    uint256 value
+  ) external view override returns (bytes1) {
+    if (_whitelist[tokenAddress][from] != true) {
+      return ReasonCodes.INVALID_RECEIVER;
+    }
+    if (value == 0) {
+      return ReasonCodes.APP_SPECIFIC_FAILURE;
+    }
+    IERC20 _token = IERC20(tokenAddress);
+    if (_token.balanceOf(from) == 0) {
+      return ReasonCodes.APP_SPECIFIC_FAILURE;
+    }
+
+    if (_token.allowance(from, owner) < value) {
+      return ReasonCodes.APP_SPECIFIC_FAILURE;
+    }
     return ReasonCodes.TRANSFER_SUCCESS;
   }
 }

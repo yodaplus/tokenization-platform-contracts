@@ -12,6 +12,7 @@ describe("Token", function () {
   let CustodianContractKycProvider;
   let TokenContract;
   let TokenContractNonIssuer;
+  let TokenContractSubscriber;
 
   beforeEach(async () => {
     await deployments.fixture(["CustodianContract", "TokenCreator"]);
@@ -54,6 +55,11 @@ describe("Token", function () {
       "Token",
       tokens[0].address_,
       custodianContractOwner
+    );
+    TokenContractSubscriber = await ethers.getContractAt(
+      "Token",
+      tokens[0].address_,
+      subscriber
     );
     await CustodianContractKycProvider.addWhitelist(tokens[0].address_, [
       subscriber,
@@ -300,24 +306,27 @@ describe("Token", function () {
 
     it(`can't redeem if tokens were not issued`, async () => {
       const { subscriber2 } = await getNamedAccounts();
-
-      await expect(TokenContract.redeem(subscriber2, 1)).to.be.revertedWith(
-        "ERC20: burn amount exceeds balance"
+      await expect(TokenContract.redeem(subscriber2, 1)).to.emit(
+        TokenContract,
+        "RedeemFailed"
       );
-      await expect(
-        TokenContract.redeemBatch([subscriber2], [1])
-      ).to.be.revertedWith("ERC20: burn amount exceeds balance");
+      await expect(TokenContract.redeemBatch([subscriber2], [1])).to.emit(
+        TokenContract,
+        "RedeemFailed"
+      );
     });
 
     it(`can't redeem more tokens than were issued`, async () => {
       const { subscriber } = await getNamedAccounts();
 
-      await expect(TokenContract.redeem(subscriber, 3)).to.be.revertedWith(
-        "ERC20: burn amount exceeds balance"
+      await expect(TokenContract.redeem(subscriber, 3)).to.emit(
+        TokenContract,
+        "RedeemFailed"
       );
-      await expect(
-        TokenContract.redeemBatch([subscriber], [3])
-      ).to.be.revertedWith("ERC20: burn amount exceeds balance");
+      await expect(TokenContract.redeemBatch([subscriber], [3])).to.emit(
+        TokenContract,
+        "RedeemFailed"
+      );
     });
 
     it("can't redeem if it's paused", async () => {
@@ -325,23 +334,33 @@ describe("Token", function () {
 
       await TokenContract.pause();
 
-      await expect(TokenContract.redeem(subscriber, 1)).to.be.revertedWith(
-        "ERC20Pausable: token transfer while paused"
+      await expect(TokenContract.redeem(subscriber, 1)).to.emit(
+        TokenContract,
+        "RedeemFailed"
       );
-      await expect(
-        TokenContract.redeemBatch([subscriber], [1])
-      ).to.be.revertedWith("ERC20Pausable: token transfer while paused");
+      await expect(TokenContract.redeemBatch([subscriber], [1])).to.emit(
+        TokenContract,
+        "RedeemFailed"
+      );
     });
 
     it("can redeem if it's unpaused", async () => {
-      const { subscriber } = await getNamedAccounts();
+      const { subscriber, issuer } = await getNamedAccounts();
 
       await TokenContract.pause();
       await TokenContract.unpause();
-
-      await expect(TokenContract.redeem(subscriber, 1)).not.to.be.reverted;
-      await expect(TokenContract.redeemBatch([subscriber], [1])).not.to.be
-        .reverted;
+      expect(await TokenContractSubscriber.approve(issuer, 2))
+        .to.emit(TokenContract, "Approval")
+        .withArgs(subscriber, issuer, 2);
+      const allowed = await TokenContract.allowance(subscriber, issuer);
+      await expect(TokenContract.redeem(subscriber, 1)).to.emit(
+        TokenContract,
+        "Redeemed"
+      );
+      await expect(TokenContract.redeemBatch([subscriber], [1])).to.emit(
+        TokenContract,
+        "Redeemed"
+      );
     });
 
     it("reverts on wrong batch input", async () => {
@@ -350,7 +369,7 @@ describe("Token", function () {
       );
     });
 
-    it("can't redeem if canIssue fails on custodian contract", async () => {
+    it("can't redeem if canRedeem fails on custodian contract", async () => {
       const { nonSubscriber } = await getNamedAccounts();
       const redeemHandler = TokenContract.redeem(nonSubscriber, 1);
 
@@ -362,11 +381,18 @@ describe("Token", function () {
     });
 
     it("can redeem if all conditions are met", async () => {
-      const { subscriber } = await getNamedAccounts();
-
-      await expect(TokenContract.redeem(subscriber, 1)).not.to.be.reverted;
-      await expect(TokenContract.redeemBatch([subscriber], [1])).not.to.be
-        .reverted;
+      const { subscriber, issuer } = await getNamedAccounts();
+      await expect(TokenContractSubscriber.approve(issuer, 2))
+        .to.emit(TokenContract, "Approval")
+        .withArgs(subscriber, issuer, 2);
+      await expect(TokenContract.redeem(subscriber, 1)).to.emit(
+        TokenContract,
+        "Redeemed"
+      );
+      await expect(TokenContract.redeemBatch([subscriber], [1])).to.emit(
+        TokenContract,
+        "Redeemed"
+      );
     });
 
     it("can redeem if it's finalized", async () => {

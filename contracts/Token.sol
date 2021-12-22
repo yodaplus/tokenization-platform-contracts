@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
 import "./ICustodianContract.sol";
 import "./ReasonCodes.sol";
 
@@ -26,11 +27,11 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     _custodianContract = ICustodianContract(custodianContract_);
   }
 
-  function pause() external onlyOwner {
+  function pause() public onlyOwner {
     _pause();
   }
 
-  function unpause() external onlyOwner {
+  function unpause() public onlyOwner {
     _unpause();
   }
 
@@ -142,8 +143,9 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   }
 
   function redeem(address subscriber, uint256 value) public onlyOwner {
-    bytes1 reasonCode = _custodianContract.canIssue(
+    bytes1 reasonCode = _custodianContract.canRedeem(
       address(this),
+      owner(),
       subscriber,
       value
     );
@@ -151,6 +153,8 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
       emit RedeemFailed(subscriber, value, reasonCode);
     } else {
+      uint256 currentAllowance = allowance(subscriber, owner());
+      _approve(subscriber, owner(), currentAllowance - value);
       _burn(subscriber, value);
       emit Redeemed(subscriber, value, reasonCode);
     }

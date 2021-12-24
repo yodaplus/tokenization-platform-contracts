@@ -104,7 +104,7 @@ describe("Token", function () {
 
       await expect(
         TokenContractNonIssuer.issue(subscriber, 1)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("caller is not issuer");
       await expect(TokenContract.issue(subscriber, 1)).not.to.be.reverted;
     });
     it("issueBatch", async () => {
@@ -112,7 +112,7 @@ describe("Token", function () {
 
       await expect(
         TokenContractNonIssuer.issueBatch([subscriber], [1])
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("caller is not issuer");
       await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be
         .reverted;
     });
@@ -123,7 +123,7 @@ describe("Token", function () {
 
       await expect(
         TokenContractNonIssuer.redeem(subscriber, 1)
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("caller is not issuer");
       await expect(TokenContract.redeem(subscriber, 1)).not.to.be.reverted;
     });
     it("redeemBatch", async () => {
@@ -133,7 +133,7 @@ describe("Token", function () {
 
       await expect(
         TokenContractNonIssuer.redeemBatch([subscriber], [1])
-      ).to.be.revertedWith("Ownable: caller is not the owner");
+      ).to.be.revertedWith("caller is not issuer");
       await expect(TokenContract.redeemBatch([subscriber], [1])).not.to.be
         .reverted;
     });

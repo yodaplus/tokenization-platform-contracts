@@ -14,4 +14,9 @@ interface ICustodianContract {
     address from,
     uint256 value
   ) external view returns (bytes1);
+
+  function isIssuerOwnerOrEmployee(address primaryIssuer, address issuer)
+    external
+    view
+    returns (bool);
 }

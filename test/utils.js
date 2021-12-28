@@ -7,6 +7,11 @@ const TOKEN_EXAMPLE = {
   currency: "USD",
   earlyRedemption: true,
   minSubscription: 1,
+  paymentTokens: [],
+  issuanceSwapMultiple: [],
+  redemptionSwapMultiple: [],
+  maturityPeriod: 0,
+  collateral: 0,
 };
 
 module.exports = {

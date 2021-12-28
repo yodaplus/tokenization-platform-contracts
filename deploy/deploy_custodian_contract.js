@@ -2,9 +2,15 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { custodianContractOwner } = await getNamedAccounts();
 
-  const { address: tokenCreatorAddress } = await deploy("TokenCreator", {
+  const { address: escrowManagerAddress } = await deploy("EscrowManager", {
     from: custodianContractOwner,
     args: [],
+    log: true,
+  });
+
+  const { address: tokenCreatorAddress } = await deploy("TokenCreator", {
+    from: custodianContractOwner,
+    args: [escrowManagerAddress],
     log: true,
   });
 

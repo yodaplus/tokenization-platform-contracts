@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-import "./ICustodianContract.sol";
+import "./CustodianContract.sol";
 import "./ReasonCodes.sol";
 
 contract Token is ERC20Pausable, Ownable, ReasonCodes {
@@ -13,7 +13,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   bool internal _isFinalized;
   uint256 internal _maxTotalSupply;
 
-  ICustodianContract internal _custodianContract;
+  CustodianContract internal _custodianContract;
 
   constructor(
     string memory name,
@@ -24,7 +24,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   ) ERC20(name, symbol) {
     _decimals = decimals_;
     _maxTotalSupply = maxTotalSupply_;
-    _custodianContract = ICustodianContract(custodianContract_);
+    _custodianContract = CustodianContract(custodianContract_);
   }
 
   function pause() public onlyOwner {
@@ -38,7 +38,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   event SupplyIncreased(uint256 oldValue, uint256 newValue);
   event SupplyDecreased(uint256 oldValue, uint256 newValue);
   event Issued(address _to, uint256 _value, bytes1 _data);
-  event Issuance_Failure(address _to, uint256 _value, bytes1 _data);
+  event IssuanceFailure(address _to, uint256 _value, bytes1 _data);
   event Redeemed(address _from, uint256 _value, bytes1 _data);
   event RedeemFailed(address _from, uint256 _value, bytes1 _data);
 
@@ -122,7 +122,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     _maxTotalSupply = maxTotalSupply_;
   }
 
-  function issue(address subscriber, uint256 value) public onlyIssuer {
+  function issue(address subscriber, uint256 value) public virtual onlyIssuer {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }
@@ -138,8 +138,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     );
 
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
-      // throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
-      emit Issuance_Failure(subscriber, value, reasonCode);
+      emit IssuanceFailure(subscriber, value, reasonCode);
     } else {
       _mint(subscriber, value);
       emit Issued(subscriber, value, reasonCode);
@@ -159,19 +158,28 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     }
   }
 
-  function redeem(address subscriber, uint256 value) public onlyIssuer {
+  function redeem(address subscriber, uint256 value) public virtual onlyIssuer {
     bytes1 reasonCode = _custodianContract.canRedeem(
       address(this),
-      owner(),
       subscriber,
       value
     );
 
+    address tokenOwner = owner();
+
+    if (balanceOf(subscriber) < value) {
+      reasonCode = ReasonCodes.INSUFFICIENT_BALANCE;
+    }
+
+    if (allowance(subscriber, tokenOwner) < value) {
+      reasonCode = ReasonCodes.INSUFFICIENT_ALLOWANCE;
+    }
+
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
       emit RedeemFailed(subscriber, value, reasonCode);
     } else {
-      uint256 currentAllowance = allowance(subscriber, owner());
-      _approve(subscriber, owner(), currentAllowance - value);
+      uint256 currentAllowance = allowance(subscriber, tokenOwner);
+      _approve(subscriber, tokenOwner, currentAllowance - value);
       _burn(subscriber, value);
       emit Redeemed(subscriber, value, reasonCode);
     }

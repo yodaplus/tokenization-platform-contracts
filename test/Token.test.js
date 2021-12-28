@@ -242,7 +242,7 @@ describe("Token", function () {
       const { nonSubscriber } = await getNamedAccounts();
       const issueHandler = TokenContract.issue(nonSubscriber, 1);
       const batchIssueHandler = TokenContract.issueBatch([nonSubscriber], [1]);
-      await expect(issueHandler).to.emit(TokenContract, "Issuance_Failure");
+      await expect(issueHandler).to.emit(TokenContract, "IssuanceFailure");
       await expect(batchIssueHandler).not.to.be.reverted;
     });
 
@@ -288,11 +288,11 @@ describe("Token", function () {
       ).not.to.be.reverted;
       await expect(TokenContract.issue(subscriber, 1)).to.emit(
         TokenContract,
-        "Issuance_Failure"
+        "IssuanceFailure"
       );
       await expect(TokenContract.issueBatch([subscriber], [1])).to.emit(
         TokenContract,
-        "Issuance_Failure"
+        "IssuanceFailure"
       );
     });
   });

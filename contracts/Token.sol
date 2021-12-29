@@ -45,6 +45,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   error ERC1066Error(bytes1 errorCode, string message);
 
   enum ErrorCondition {
+    WRONG_CALLER,
     TOKEN_IS_FINALIZED,
     MAX_TOTAL_SUPPLY_MINT,
     CUSTODIAN_VALIDATION_FAIL,
@@ -54,7 +55,12 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   }
 
   function throwError(ErrorCondition condition) internal pure {
-    if (condition == ErrorCondition.TOKEN_IS_FINALIZED) {
+    if (condition == ErrorCondition.WRONG_CALLER) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "caller is not issuer"
+      );
+    } else if (condition == ErrorCondition.TOKEN_IS_FINALIZED) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "token issuance is finalized"
@@ -77,6 +83,17 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
         "can't set less than total supply"
       );
     }
+  }
+
+  modifier onlyIssuer() {
+    if (owner() != msg.sender) {
+      if (
+        _custodianContract.isIssuerOwnerOrEmployee(owner(), msg.sender) == false
+      ) {
+        throwError(ErrorCondition.WRONG_CALLER);
+      }
+    }
+    _;
   }
 
   function decimals() public view override returns (uint8) {
@@ -105,7 +122,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     _maxTotalSupply = maxTotalSupply_;
   }
 
-  function issue(address subscriber, uint256 value) public onlyOwner {
+  function issue(address subscriber, uint256 value) public onlyIssuer {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }
@@ -131,7 +148,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
 
   function issueBatch(address[] calldata subscribers, uint256[] calldata value)
     external
-    onlyOwner
+    onlyIssuer
   {
     if (subscribers.length != value.length) {
       throwError(ErrorCondition.WRONG_INPUT);
@@ -142,7 +159,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     }
   }
 
-  function redeem(address subscriber, uint256 value) public onlyOwner {
+  function redeem(address subscriber, uint256 value) public onlyIssuer {
     bytes1 reasonCode = _custodianContract.canRedeem(
       address(this),
       owner(),
@@ -162,7 +179,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
 
   function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
     external
-    onlyOwner
+    onlyIssuer
   {
     if (subscribers.length != value.length) {
       throwError(ErrorCondition.WRONG_INPUT);

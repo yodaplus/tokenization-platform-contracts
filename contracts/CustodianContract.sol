@@ -189,6 +189,15 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     return _isIssuer[_addressToIssuerPrimaryAddress[addr]];
   }
 
+  function isIssuerOwnerOrEmployee(address primaryIssuer, address issuer)
+    public
+    view
+    override
+    returns (bool)
+  {
+    return _addressToIssuerPrimaryAddress[issuer] == primaryIssuer;
+  }
+
   function isCustodian(address addr) public view returns (bool) {
     return _isCustodian[_addressToCustodianPrimaryAddress[addr]];
   }

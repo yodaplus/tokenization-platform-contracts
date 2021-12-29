@@ -23,10 +23,12 @@ contract CustodianContract is Ownable, ReasonCodes {
   }
 
   enum TokenStatus {
+    NonExistent,
     Published
   }
 
   enum PaymentTokenStatus {
+    Inactive,
     Active
   }
 

@@ -10,7 +10,7 @@ exports[`CustodianContract 1`] = [
     "0xBcd4042DE499D14e55001CcbB24a551F3b954096",
     true,
     1,
-    0,
+    1,
     "0xCafac3dD18aC6c6e92c921884f9E4176737C052c"
   ]
 ];

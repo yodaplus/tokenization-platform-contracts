@@ -5,8 +5,8 @@ import "./Token.sol";
 import "./TokenTvTTypes.sol";
 import "./EscrowManager.sol";
 
-uint256 constant ISSUANCE_ESCROW_TIMEOUT = 2 * 24 * 60 * 60 * 1000;
-uint256 constant REDEMPTION_ESCROW_TIMEOUT = 2 * 24 * 60 * 60 * 1000;
+uint256 constant ISSUANCE_ESCROW_TIMEOUT = 2 * 24 * 60 * 60;
+uint256 constant REDEMPTION_ESCROW_TIMEOUT = 2 * 24 * 60 * 60;
 
 contract TokenTvT is Token {
   address[] internal _paymentTokens;
@@ -140,6 +140,29 @@ contract TokenTvT is Token {
       (maturityBuckets[i] + _maturityPeriod < block.timestamp)
     ) {
       result += _issuedTokensByMaturityBucket[subscriber][maturityBuckets[i]];
+
+      i += 1;
+    }
+  }
+
+  function matureBalancePending(address subscriber)
+    public
+    view
+    returns (uint256 result)
+  {
+    uint256 i = 0;
+    uint256[] storage maturityBuckets = _issuedTokensMaturityBuckets[
+      subscriber
+    ];
+
+    while (
+      i < maturityBuckets.length &&
+      (maturityBuckets[maturityBuckets.length - i - 1] + _maturityPeriod >=
+        block.timestamp)
+    ) {
+      result += _issuedTokensByMaturityBucket[subscriber][
+        maturityBuckets[maturityBuckets.length - i - 1]
+      ];
 
       i += 1;
     }

@@ -67,6 +67,14 @@ contract EscrowManager is Ownable {
     return _collateralBalance[account];
   }
 
+  function lockedCollateralBalance(address account)
+    external
+    view
+    returns (uint256)
+  {
+    return _collateralBalanceLocked[account];
+  }
+
   function withdrawCollateral(uint256 value) external {
     require(value <= _collateralBalance[msg.sender], "Insufficient funds");
 

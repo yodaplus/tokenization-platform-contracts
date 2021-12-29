@@ -36,6 +36,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   );
 
   await EscrowManager.setCustodianContract(custodianContractAddress);
+
+  await deploy("PaymentToken", {
+    from: custodianContractOwner,
+    args: [],
+    log: true,
+  });
 };
 
 module.exports.tags = ["CustodianContract", "TokenCreator"];

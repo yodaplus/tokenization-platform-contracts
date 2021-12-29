@@ -10,7 +10,7 @@ const TOKEN_EXAMPLE = {
   paymentTokens: [],
   issuanceSwapMultiple: [],
   redemptionSwapMultiple: [],
-  maturityPeriod: 0,
+  maturityPeriod: 30 * 24 * 60 * 60,
   collateral: 0,
 };
 

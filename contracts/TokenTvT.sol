@@ -94,7 +94,33 @@ contract TokenTvT is Token {
   function onRedeem(address subscriber, uint256 value) external {
     require(msg.sender == address(escrowManager), "access error");
 
-    _issuedTokensByMaturityBucket[subscriber][block.timestamp] -= value;
+    uint256 i = 0;
+    uint256 remainingValue = value;
+    uint256[] storage maturityBuckets = _issuedTokensMaturityBuckets[
+      subscriber
+    ];
+
+    while (
+      i < maturityBuckets.length &&
+      remainingValue > 0 &&
+      (maturityBuckets[i] + _maturityPeriod < block.timestamp)
+    ) {
+      uint256 currentBucketBalance = _issuedTokensByMaturityBucket[subscriber][
+        maturityBuckets[i]
+      ];
+
+      if (currentBucketBalance > remainingValue) {
+        _issuedTokensByMaturityBucket[subscriber][maturityBuckets[i]] =
+          currentBucketBalance -
+          remainingValue;
+        remainingValue = 0;
+      } else {
+        _issuedTokensByMaturityBucket[subscriber][maturityBuckets[i]] = 0;
+        remainingValue = remainingValue - currentBucketBalance;
+      }
+
+      i += 1;
+    }
 
     emit Redeemed(subscriber, value, ReasonCodes.TRANSFER_SUCCESS);
   }

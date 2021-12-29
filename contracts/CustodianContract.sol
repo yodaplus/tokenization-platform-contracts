@@ -699,4 +699,8 @@ contract CustodianContract is Ownable, ReasonCodes {
 
     return ReasonCodes.TRANSFER_SUCCESS;
   }
+
+  function tokenExists(address tokenAddress) external view returns (bool) {
+    return _tokens[tokenAddress].status == TokenStatus.Published;
+  }
 }

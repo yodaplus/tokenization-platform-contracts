@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 import {TokenTvT as TokenTvTContract} from "./TokenTvT.sol";
+import "./CustodianContract.sol";
 
 enum EscrowType {
   Issuance,
@@ -41,6 +42,22 @@ contract EscrowManager is Ownable {
   mapping(uint256 => uint256) internal _escrowStartTimestamp;
 
   uint256 internal _nextEscrowOrderId = 0;
+
+  CustodianContract custodianContract;
+
+  function setCustodianContract(address custodianContractAddress)
+    external
+    onlyOwner
+  {
+    custodianContract = CustodianContract(custodianContractAddress);
+  }
+
+  modifier onlyToken() {
+    if (custodianContract.tokenExists(msg.sender) == false) {
+      revert("access error");
+    }
+    _;
+  }
 
   function depositCollateral(address account) external payable {
     _collateralBalance[account] += msg.value;
@@ -207,6 +224,7 @@ contract EscrowManager is Ownable {
 
   function startIssuanceEscrow(EscrowOrder calldata escrowOrder)
     external
+    onlyToken
     returns (uint256 orderId)
   {
     orderId = _nextEscrowOrderId;
@@ -220,6 +238,7 @@ contract EscrowManager is Ownable {
 
   function startRedemptionEscrow(EscrowOrder calldata escrowOrder)
     external
+    onlyToken
     returns (uint256 orderId)
   {
     // This should never happen,

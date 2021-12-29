@@ -29,6 +29,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   );
 
   await TokenCreator.transferOwnership(custodianContractAddress);
+
+  const EscrowManager = await ethers.getContract(
+    "EscrowManager",
+    custodianContractOwner
+  );
+
+  await EscrowManager.setCustodianContract(custodianContractAddress);
 };
 
 module.exports.tags = ["CustodianContract", "TokenCreator"];

@@ -199,7 +199,7 @@ describe("TvT", function () {
     expect(await TokenContract1.escrowManager()).to.matchSnapshot(this);
   });
 
-  it("publishes a regular token if payment tokens list is not empty", async () => {
+  it("publishes a regular token if payment tokens list is empty", async () => {
     const { issuer, custodian, kycProvider } = await getNamedAccounts();
 
     await expect(
@@ -326,7 +326,7 @@ describe("TvT", function () {
     });
 
     describe("issuance", async () => {
-      it("only allows issuers start issuance", async () => {
+      it("only allows issuers to start issuance", async () => {
         const { issuer, subscriber } = await getNamedAccounts();
 
         await expect(

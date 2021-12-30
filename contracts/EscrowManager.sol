@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
+import "./ReasonCodes.sol";
 import {TokenTvT as TokenTvTContract} from "./TokenTvT.sol";
 import "./CustodianContract.sol";
 
@@ -29,7 +30,7 @@ struct EscrowOrder {
   uint256 timeout;
 }
 
-contract EscrowManager is Ownable {
+contract EscrowManager is Ownable, ReasonCodes {
   using Address for address payable;
 
   string public constant VERSION = "0.0.1";
@@ -44,6 +45,75 @@ contract EscrowManager is Ownable {
   uint256 internal _nextEscrowOrderId = 0;
 
   CustodianContract custodianContract;
+
+  error ERC1066Error(bytes1 errorCode, string message);
+
+  enum ErrorCondition {
+    ACCESS_ERROR,
+    INSUFFICIENT_COLLATERAL_BALANCE,
+    INSUFFICIENT_LOCKED_COLLATERAL_BALANCE,
+    INVALID_ESCROW_ORDER_ID,
+    INVALID_ESCROW_ORDER_TYPE,
+    ESCROW_ORDER_ALREADY_COMPLETE,
+    ESCROW_CONDITIONS_NOT_MET,
+    FULL_ESCROW_CONDITIONS_NOT_MET_BEFORE_EXPIRY,
+    INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY
+  }
+
+  function throwError(ErrorCondition condition) internal pure {
+    if (condition == ErrorCondition.ACCESS_ERROR) {
+      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "access error");
+    } else if (condition == ErrorCondition.INSUFFICIENT_COLLATERAL_BALANCE) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "Insufficient funds"
+      );
+    } else if (
+      condition == ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE
+    ) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "Insufficient funds"
+      );
+    } else if (condition == ErrorCondition.INVALID_ESCROW_ORDER_ID) {
+      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "invalid order id");
+    } else if (condition == ErrorCondition.INVALID_ESCROW_ORDER_TYPE) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "invalid order type"
+      );
+    } else if (condition == ErrorCondition.ESCROW_ORDER_ALREADY_COMPLETE) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "escrow is completed"
+      );
+    } else if (condition == ErrorCondition.ESCROW_CONDITIONS_NOT_MET) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "escrow conditions are not met"
+      );
+    } else if (
+      condition == ErrorCondition.FULL_ESCROW_CONDITIONS_NOT_MET_BEFORE_EXPIRY
+    ) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "full escrow conditions are not met before expiry"
+      );
+    } else if (
+      condition ==
+      ErrorCondition.INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY
+    ) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "escrow expired, but investor conditions are not met"
+      );
+    } else {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "unknown error condition"
+      );
+    }
+  }
 
   function setCustodianContract(address custodianContractAddress)
     external
@@ -76,21 +146,27 @@ contract EscrowManager is Ownable {
   }
 
   function withdrawCollateral(uint256 value) external {
-    require(value <= _collateralBalance[msg.sender], "Insufficient funds");
+    if (value > _collateralBalance[msg.sender]) {
+      throwError(ErrorCondition.INSUFFICIENT_COLLATERAL_BALANCE);
+    }
 
     payable(msg.sender).transfer(value);
     _collateralBalance[msg.sender] -= value;
   }
 
   function lockCollateral(address account, uint256 value) internal {
-    require(value <= _collateralBalance[account], "Insufficient funds");
+    if (value > _collateralBalance[account]) {
+      throwError(ErrorCondition.INSUFFICIENT_COLLATERAL_BALANCE);
+    }
 
     _collateralBalanceLocked[account] += value;
     _collateralBalance[account] -= value;
   }
 
   function unlockCollateral(address account, uint256 value) internal {
-    require(value <= _collateralBalanceLocked[account], "Insufficient funds");
+    if (value > _collateralBalanceLocked[account]) {
+      throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
+    }
 
     _collateralBalanceLocked[account] -= value;
     _collateralBalance[account] += value;
@@ -101,7 +177,9 @@ contract EscrowManager is Ownable {
     address payable destination,
     uint256 value
   ) internal {
-    require(value <= _collateralBalanceLocked[account], "Insufficient funds");
+    if (value > _collateralBalanceLocked[account]) {
+      throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
+    }
 
     _collateralBalanceLocked[account] -= value;
     destination.sendValue(value);
@@ -112,11 +190,13 @@ contract EscrowManager is Ownable {
     view
     returns (bool)
   {
-    require(_escrowStartTimestamp[orderId] > 0, "invalid order id");
-    require(
-      _escrowOrdersType[orderId] == EscrowType.Issuance,
-      "invalid order type"
-    );
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != EscrowType.Issuance) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
 
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
@@ -140,11 +220,13 @@ contract EscrowManager is Ownable {
     view
     returns (bool)
   {
-    require(_escrowStartTimestamp[orderId] > 0, "invalid order id");
-    require(
-      _escrowOrdersType[orderId] == EscrowType.Redemption,
-      "invalid order type"
-    );
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != EscrowType.Redemption) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
 
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
@@ -165,11 +247,13 @@ contract EscrowManager is Ownable {
     view
     returns (bool)
   {
-    require(_escrowStartTimestamp[orderId] > 0, "invalid order id");
-    require(
-      _escrowOrdersType[orderId] == EscrowType.Issuance,
-      "invalid order type"
-    );
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != EscrowType.Issuance) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
 
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
@@ -190,11 +274,13 @@ contract EscrowManager is Ownable {
     view
     returns (bool)
   {
-    require(_escrowStartTimestamp[orderId] > 0, "invalid order id");
-    require(
-      _escrowOrdersType[orderId] == EscrowType.Redemption,
-      "invalid order type"
-    );
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != EscrowType.Redemption) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
 
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
@@ -267,15 +353,17 @@ contract EscrowManager is Ownable {
   }
 
   function swapIssuance(uint256 orderId) external {
-    require(_escrowStartTimestamp[orderId] > 0, "invalid order id");
-    require(
-      _escrowOrdersType[orderId] == EscrowType.Issuance,
-      "invalid order type"
-    );
-    require(
-      _escrowOrdersStatus[orderId] != EscrowStatus.Done,
-      "escrow is completed"
-    );
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != EscrowType.Issuance) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
+
+    if (_escrowOrdersStatus[orderId] == EscrowStatus.Done) {
+      throwError(ErrorCondition.ESCROW_ORDER_ALREADY_COMPLETE);
+    }
 
     assert(_escrowOrdersStatus[orderId] == EscrowStatus.Pending);
 
@@ -284,7 +372,7 @@ contract EscrowManager is Ownable {
     bool escrowConditionsFlag = checkIssuanceEscrowConditions(orderId);
 
     if (!escrowConditionsFlag) {
-      revert("escrow conditions are not met");
+      throwError(ErrorCondition.ESCROW_CONDITIONS_NOT_MET);
     }
 
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
@@ -310,15 +398,17 @@ contract EscrowManager is Ownable {
   }
 
   function swapRedemption(uint256 orderId) external {
-    require(_escrowStartTimestamp[orderId] > 0, "invalid order id");
-    require(
-      _escrowOrdersType[orderId] == EscrowType.Redemption,
-      "invalid order type"
-    );
-    require(
-      _escrowOrdersStatus[orderId] != EscrowStatus.Done,
-      "Escrow is completed"
-    );
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != EscrowType.Redemption) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
+
+    if (_escrowOrdersStatus[orderId] == EscrowStatus.Done) {
+      throwError(ErrorCondition.ESCROW_ORDER_ALREADY_COMPLETE);
+    }
 
     assert(_escrowOrdersStatus[orderId] == EscrowStatus.Pending);
 
@@ -334,7 +424,7 @@ contract EscrowManager is Ownable {
       escrowOrder.timeout;
 
     if (!escrowConditionsFlag && !timeoutFlag) {
-      revert("full escrow conditions are not met before expiry");
+      throwError(ErrorCondition.FULL_ESCROW_CONDITIONS_NOT_MET_BEFORE_EXPIRY);
     }
 
     assert(escrowConditionsFlag || timeoutFlag);
@@ -356,10 +446,11 @@ contract EscrowManager is Ownable {
     } else {
       assert(timeoutFlag);
 
-      require(
-        escrowConditionsInvestorFlag,
-        "escrow expired, but investor conditions are not met"
-      );
+      if (!escrowConditionsInvestorFlag) {
+        throwError(
+          ErrorCondition.INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY
+        );
+      }
 
       IERC20(escrowOrder.tradeToken).transferFrom(
         escrowOrder.investorAddress,

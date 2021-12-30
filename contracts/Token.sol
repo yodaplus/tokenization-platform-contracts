@@ -58,7 +58,7 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     if (condition == ErrorCondition.WRONG_CALLER) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
-        "caller is not issuer"
+        "caller is not allowed"
       );
     } else if (condition == ErrorCondition.TOKEN_IS_FINALIZED) {
       revert ERC1066Error(

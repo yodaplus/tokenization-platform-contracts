@@ -83,7 +83,9 @@ contract TokenTvT is Token {
   }
 
   function onIssue(address subscriber, uint256 value) external {
-    require(msg.sender == address(escrowManager), "access error");
+    if (msg.sender != address(escrowManager)) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
 
     _issuedTokensByMaturityBucket[subscriber][block.timestamp] += value;
     _issuedTokensMaturityBuckets[subscriber].push(block.timestamp);
@@ -92,7 +94,9 @@ contract TokenTvT is Token {
   }
 
   function onRedeem(address subscriber, uint256 value) external {
-    require(msg.sender == address(escrowManager), "access error");
+    if (msg.sender != address(escrowManager)) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
 
     uint256 i = 0;
     uint256 remainingValue = value;
@@ -169,7 +173,9 @@ contract TokenTvT is Token {
   }
 
   function redeem(address subscriber, uint256 value) public override {
-    require(msg.sender == subscriber, "only token owners can redeem");
+    if (msg.sender != subscriber) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
 
     bytes1 reasonCode = _custodianContract.canRedeem(
       address(this),

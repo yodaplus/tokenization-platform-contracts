@@ -331,11 +331,11 @@ describe("TvT", function () {
 
         await expect(
           TokenContractSubscriber.issue(subscriber, 1)
-        ).to.be.revertedWith("caller is not issuer");
+        ).to.be.revertedWith("caller is not allowed");
 
         await expect(
           TokenContractSubscriber.issueBatch([subscriber], [1])
-        ).to.be.revertedWith("caller is not issuer");
+        ).to.be.revertedWith("caller is not allowed");
 
         await expect(TokenContract.issue(subscriber, 1)).not.to.be.reverted;
         await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be
@@ -549,7 +549,7 @@ describe("TvT", function () {
         const { issuer, subscriber } = await getNamedAccounts();
 
         await expect(TokenContract.redeem(subscriber, 1)).to.be.revertedWith(
-          "only token owners can redeem"
+          "caller is not allowed"
         );
 
         await expect(TokenContract.redeem(issuer, 1))

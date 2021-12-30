@@ -82,6 +82,11 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "can't set less than total supply"
       );
+    } else {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "unknown error condition"
+      );
     }
   }
 

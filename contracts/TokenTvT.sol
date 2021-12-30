@@ -45,7 +45,7 @@ contract TokenTvT is Token {
     escrowManager = EscrowManager(escrowManagerAddress);
   }
 
-  function issue(address subscriber, uint256 value) public override onlyOwner {
+  function issue(address subscriber, uint256 value) public override onlyIssuer {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }

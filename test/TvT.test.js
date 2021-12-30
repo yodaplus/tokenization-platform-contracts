@@ -331,11 +331,11 @@ describe("TvT", function () {
 
         await expect(
           TokenContractSubscriber.issue(subscriber, 1)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWith("caller is not issuer");
 
         await expect(
           TokenContractSubscriber.issueBatch([subscriber], [1])
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWith("caller is not issuer");
 
         await expect(TokenContract.issue(subscriber, 1)).not.to.be.reverted;
         await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be

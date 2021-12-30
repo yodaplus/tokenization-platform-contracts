@@ -10,6 +10,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   const { address: tokenCreatorAddress } = await deploy("TokenCreator", {
     from: custodianContractOwner,
+    args: [],
+    log: true,
+  });
+
+  const { address: tokenCreatorTvTAddress } = await deploy("TokenCreatorTvT", {
+    from: custodianContractOwner,
     args: [escrowManagerAddress],
     log: true,
   });
@@ -18,7 +24,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     "CustodianContract",
     {
       from: custodianContractOwner,
-      args: [tokenCreatorAddress],
+      args: [tokenCreatorAddress, tokenCreatorTvTAddress],
       log: true,
     }
   );
@@ -27,8 +33,13 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     "TokenCreator",
     custodianContractOwner
   );
+  const TokenCreatorTvT = await ethers.getContract(
+    "TokenCreatorTvT",
+    custodianContractOwner
+  );
 
   await TokenCreator.transferOwnership(custodianContractAddress);
+  await TokenCreatorTvT.transferOwnership(custodianContractAddress);
 
   const EscrowManager = await ethers.getContract(
     "EscrowManager",

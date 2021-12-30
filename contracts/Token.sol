@@ -86,12 +86,11 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
   }
 
   modifier onlyIssuer() {
-    if (owner() != msg.sender) {
-      if (
-        _custodianContract.isIssuerOwnerOrEmployee(owner(), msg.sender) == false
-      ) {
-        throwError(ErrorCondition.WRONG_CALLER);
-      }
+    if (
+      owner() != msg.sender &&
+      _custodianContract.isIssuerOwnerOrEmployee(owner(), msg.sender) == false
+    ) {
+      throwError(ErrorCondition.WRONG_CALLER);
     }
     _;
   }

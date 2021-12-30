@@ -5,15 +5,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./ReasonCodes.sol";
 import "./TokenCreator.sol";
+import "./TokenCreatorTvT.sol";
 import "./TokenTvTTypes.sol";
 
 contract CustodianContract is Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
   TokenCreator public tokenCreator;
+  TokenCreatorTvT public tokenCreatorTvT;
 
-  constructor(address tokenCreatorAddr) {
+  constructor(address tokenCreatorAddr, address tokenCreatorTvTAddr) {
     tokenCreator = TokenCreator(tokenCreatorAddr);
+    tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
   }
 
   struct RoleData {
@@ -216,7 +219,6 @@ contract CustodianContract is Ownable, ReasonCodes {
   function isIssuerOwnerOrEmployee(address primaryIssuer, address issuer)
     public
     view
-    override
     returns (bool)
   {
     return _addressToIssuerPrimaryAddress[issuer] == primaryIssuer;
@@ -580,7 +582,7 @@ contract CustodianContract is Ownable, ReasonCodes {
         token.maxTotalSupply,
         msg.sender
       )
-      : tokenCreator.publishTokenTvT(
+      : tokenCreatorTvT.publishToken(
         TokenTvTInput({
           name: token.name,
           symbol: token.symbol,

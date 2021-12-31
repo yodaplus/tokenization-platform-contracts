@@ -22,9 +22,11 @@ enum EscrowStatus {
 struct EscrowOrder {
   address tradeToken;
   uint256 tradeTokenAmount;
+  address tradeTokenDestination;
   address issuerAddress;
   address paymentToken;
   uint256 paymentTokenAmount;
+  address paymentTokenDestination;
   address investorAddress;
   uint256 collateral;
   uint256 timeout;
@@ -379,20 +381,20 @@ contract EscrowManager is Ownable, ReasonCodes {
 
     IERC20(escrowOrder.tradeToken).transferFrom(
       escrowOrder.issuerAddress,
-      escrowOrder.investorAddress,
+      escrowOrder.tradeTokenDestination,
       escrowOrder.tradeTokenAmount
     );
 
     IERC20(escrowOrder.paymentToken).transferFrom(
       escrowOrder.investorAddress,
-      escrowOrder.issuerAddress,
+      escrowOrder.paymentTokenDestination,
       escrowOrder.paymentTokenAmount
     );
 
     lockCollateral(escrowOrder.issuerAddress, escrowOrder.collateral);
 
     TokenTvTContract(escrowOrder.tradeToken).onIssue(
-      escrowOrder.investorAddress,
+      escrowOrder.tradeTokenDestination,
       escrowOrder.tradeTokenAmount
     );
   }
@@ -432,13 +434,13 @@ contract EscrowManager is Ownable, ReasonCodes {
     if (escrowConditionsFlag) {
       IERC20(escrowOrder.tradeToken).transferFrom(
         escrowOrder.investorAddress,
-        escrowOrder.issuerAddress,
+        escrowOrder.tradeTokenDestination,
         escrowOrder.tradeTokenAmount
       );
 
       IERC20(escrowOrder.paymentToken).transferFrom(
         escrowOrder.issuerAddress,
-        escrowOrder.investorAddress,
+        escrowOrder.paymentTokenDestination,
         escrowOrder.paymentTokenAmount
       );
 
@@ -454,13 +456,13 @@ contract EscrowManager is Ownable, ReasonCodes {
 
       IERC20(escrowOrder.tradeToken).transferFrom(
         escrowOrder.investorAddress,
-        escrowOrder.issuerAddress,
+        escrowOrder.tradeTokenDestination,
         escrowOrder.tradeTokenAmount
       );
 
       spendCollateral(
         escrowOrder.issuerAddress,
-        payable(escrowOrder.investorAddress),
+        payable(escrowOrder.paymentTokenDestination),
         escrowOrder.collateral
       );
     }

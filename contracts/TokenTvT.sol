@@ -49,6 +49,15 @@ contract TokenTvT is TokenBase {
   }
 
   function issue(address subscriber, uint256 value) public override onlyIssuer {
+    return issue(subscriber, owner(), subscriber, value);
+  }
+
+  function issue(
+    address subscriber,
+    address paymentTokenDestination,
+    address tradeTokenDestination,
+    uint256 value
+  ) public onlyIssuer {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }
@@ -73,9 +82,11 @@ contract TokenTvT is TokenBase {
       EscrowOrder memory escrowOrder = EscrowOrder({
         tradeToken: address(this),
         tradeTokenAmount: value,
+        tradeTokenDestination: tradeTokenDestination,
         issuerAddress: tokenOwner,
         paymentToken: _paymentTokens[0],
         paymentTokenAmount: _issuanceSwapMultiple[0] * value,
+        paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,
         timeout: ISSUANCE_ESCROW_TIMEOUT
@@ -176,6 +187,15 @@ contract TokenTvT is TokenBase {
   }
 
   function redeem(address subscriber, uint256 value) public override {
+    return redeem(subscriber, subscriber, owner(), value);
+  }
+
+  function redeem(
+    address subscriber,
+    address paymentTokenDestination,
+    address tradeTokenDestination,
+    uint256 value
+  ) public {
     if (msg.sender != subscriber) {
       throwError(ErrorCondition.WRONG_CALLER);
     }
@@ -197,9 +217,11 @@ contract TokenTvT is TokenBase {
       EscrowOrder memory escrowOrder = EscrowOrder({
         tradeToken: address(this),
         tradeTokenAmount: value,
+        tradeTokenDestination: tradeTokenDestination,
         issuerAddress: owner(),
         paymentToken: _paymentTokens[0],
         paymentTokenAmount: _redemptionSwapMultiple[0] * value,
+        paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,
         timeout: REDEMPTION_ESCROW_TIMEOUT

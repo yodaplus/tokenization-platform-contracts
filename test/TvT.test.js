@@ -284,7 +284,7 @@ describe("TvT", function () {
     const prepareIssuanceSwap = async () => {
       const { issuer, subscriber } = await getNamedAccounts();
 
-      await TokenContract.issue(subscriber, 1);
+      await TokenContract["issue(address,uint256)"](subscriber, 1);
       await EscrowManagerIssuer.depositCollateral(issuer, {
         value: 3,
       });
@@ -304,7 +304,7 @@ describe("TvT", function () {
 
       const { issuer, subscriber } = await getNamedAccounts();
 
-      await TokenContractSubscriber.redeem(subscriber, 1);
+      await TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1);
 
       const PaymentTokenIssuer = await ethers.getContract(
         "PaymentToken",
@@ -323,14 +323,15 @@ describe("TvT", function () {
         const { issuer, subscriber } = await getNamedAccounts();
 
         await expect(
-          TokenContractSubscriber.issue(subscriber, 1)
+          TokenContractSubscriber["issue(address,uint256)"](subscriber, 1)
         ).to.be.revertedWith("caller is not allowed");
 
         await expect(
           TokenContractSubscriber.issueBatch([subscriber], [1])
         ).to.be.revertedWith("caller is not allowed");
 
-        await expect(TokenContract.issue(subscriber, 1)).not.to.be.reverted;
+        await expect(TokenContract["issue(address,uint256)"](subscriber, 1)).not
+          .to.be.reverted;
         await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be
           .reverted;
       });
@@ -338,7 +339,7 @@ describe("TvT", function () {
       it("mints requested amount of tokens for the issuer", async () => {
         const { issuer, subscriber } = await getNamedAccounts();
 
-        await TokenContract.issue(subscriber, 1);
+        await TokenContract["issue(address,uint256)"](subscriber, 1);
 
         expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
       });
@@ -348,7 +349,7 @@ describe("TvT", function () {
 
         const escrowManager = await TokenContract.escrowManager();
 
-        await TokenContract.issue(subscriber, 1);
+        await TokenContract["issue(address,uint256)"](subscriber, 1);
 
         expect(
           await TokenContract.allowance(issuer, escrowManager)
@@ -358,15 +359,17 @@ describe("TvT", function () {
       it("creates an escrow order with properly calculated parameters", async () => {
         const { issuer, subscriber } = await getNamedAccounts();
 
-        await expect(TokenContract.issue(subscriber, 1))
+        await expect(TokenContract["issue(address,uint256)"](subscriber, 1))
           .to.emit(TokenContract, "IssuanceEscrowInitiated")
           .withArgs(
             [
               TokenContract.address,
               1,
+              subscriber,
               issuer,
               PaymentToken.address,
               2,
+              issuer,
               subscriber,
               3,
               172800,
@@ -381,9 +384,11 @@ describe("TvT", function () {
           const escrowOrder = [
             TokenContract.address,
             1,
+            subscriber,
             issuer,
             PaymentToken.address,
             2,
+            issuer,
             subscriber,
             3,
             172800,
@@ -405,7 +410,7 @@ describe("TvT", function () {
         it("checks escrow order status according to necessary conditions", async () => {
           const { issuer, subscriber } = await getNamedAccounts();
 
-          await TokenContract.issue(subscriber, 1);
+          await TokenContract["issue(address,uint256)"](subscriber, 1);
 
           expect(
             await EscrowManager.checkIssuanceEscrowConditionsIssuer(0)
@@ -454,7 +459,7 @@ describe("TvT", function () {
         it("cannot swap the order if escrow conditions are not met", async () => {
           const { subscriber } = await getNamedAccounts();
 
-          await TokenContract.issue(subscriber, 1);
+          await TokenContract["issue(address,uint256)"](subscriber, 1);
 
           await expect(EscrowManagerIssuer.swapIssuance(0)).to.be.revertedWith(
             "escrow conditions are not met"
@@ -541,17 +546,19 @@ describe("TvT", function () {
       it("allows any token holders to redeem their tokens", async () => {
         const { issuer, subscriber } = await getNamedAccounts();
 
-        await expect(TokenContract.redeem(subscriber, 1)).to.be.revertedWith(
-          "caller is not allowed"
-        );
+        await expect(
+          TokenContract["redeem(address,uint256)"](subscriber, 1)
+        ).to.be.revertedWith("caller is not allowed");
 
-        await expect(TokenContract.redeem(issuer, 1))
+        await expect(TokenContract["redeem(address,uint256)"](issuer, 1))
           .to.emit(TokenContract, "RedeemFailed")
           .withArgs(issuer, 1, "0x52");
 
         expect(await TokenContract.matureBalance(subscriber)).to.be.equal(0);
 
-        await expect(TokenContractSubscriber.redeem(subscriber, 1))
+        await expect(
+          TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
+        )
           .to.emit(TokenContract, "RedeemFailed")
           .withArgs(subscriber, 1, "0x52");
       });
@@ -559,7 +566,9 @@ describe("TvT", function () {
       it("can only redeem matured tokens", async () => {
         const { subscriber } = await getNamedAccounts();
 
-        await expect(TokenContractSubscriber.redeem(subscriber, 1))
+        await expect(
+          TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
+        )
           .to.emit(TokenContract, "RedeemFailed")
           .withArgs(subscriber, 1, "0x52");
 
@@ -567,10 +576,9 @@ describe("TvT", function () {
 
         expect(await TokenContract.matureBalance(subscriber)).to.be.equal(1);
 
-        await expect(TokenContractSubscriber.redeem(subscriber, 1)).to.emit(
-          TokenContract,
-          "RedemptionEscrowInitiated"
-        );
+        await expect(
+          TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
+        ).to.emit(TokenContract, "RedemptionEscrowInitiated");
       });
 
       it("gives escrow manager allowance for the tokens", async () => {
@@ -578,7 +586,7 @@ describe("TvT", function () {
 
         await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS);
 
-        await TokenContractSubscriber.redeem(subscriber, 1);
+        await TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1);
 
         const escrowManager = await TokenContract.escrowManager();
 
@@ -592,15 +600,19 @@ describe("TvT", function () {
 
         await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS);
 
-        await expect(TokenContractSubscriber.redeem(subscriber, 1))
+        await expect(
+          TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
+        )
           .to.emit(TokenContract, "RedemptionEscrowInitiated")
           .withArgs(
             [
               TokenContract.address,
               1,
               issuer,
+              issuer,
               PaymentToken.address,
               3,
+              subscriber,
               subscriber,
               3,
               172800,
@@ -624,8 +636,10 @@ describe("TvT", function () {
             TokenContract.address,
             1,
             issuer,
+            issuer,
             PaymentToken.address,
-            3,
+            2,
+            subscriber,
             subscriber,
             3,
             172800,
@@ -647,7 +661,10 @@ describe("TvT", function () {
         it("checks escrow order status according to necessary conditions", async () => {
           const { issuer, subscriber } = await getNamedAccounts();
 
-          await TokenContractSubscriber.redeem(subscriber, 1);
+          await TokenContractSubscriber["redeem(address,uint256)"](
+            subscriber,
+            1
+          );
 
           expect(
             await EscrowManager.checkRedemptionEscrowConditionsInvestor(1)
@@ -672,7 +689,10 @@ describe("TvT", function () {
         it("cannot swap the order if conditions are not met before expiry", async () => {
           const { subscriber } = await getNamedAccounts();
 
-          await TokenContractSubscriber.redeem(subscriber, 1);
+          await TokenContractSubscriber["redeem(address,uint256)"](
+            subscriber,
+            1
+          );
 
           await expect(
             EscrowManagerIssuer.swapRedemption(1)
@@ -684,7 +704,10 @@ describe("TvT", function () {
         it("cannot swap the order if investor conditions are not met after expiry", async () => {
           const { subscriber } = await getNamedAccounts();
 
-          await TokenContractSubscriber.redeem(subscriber, 1);
+          await TokenContractSubscriber["redeem(address,uint256)"](
+            subscriber,
+            1
+          );
 
           await TokenContractSubscriber.approve(EscrowManager.address, 0);
           await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);

@@ -85,7 +85,7 @@ contract EscrowManager is Ownable, ReasonCodes {
     } else if (condition == ErrorCondition.ESCROW_ORDER_ALREADY_COMPLETE) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
-        "escrow is completed"
+        "escrow is complete"
       );
     } else if (condition == ErrorCondition.ESCROW_CONDITIONS_NOT_MET) {
       revert ERC1066Error(

@@ -526,7 +526,7 @@ describe("TvT", function () {
 
             await expect(
               EscrowManagerIssuer.swapIssuance(0)
-            ).to.be.revertedWith("escrow is completed");
+            ).to.be.revertedWith("escrow is complete");
           });
         });
       });

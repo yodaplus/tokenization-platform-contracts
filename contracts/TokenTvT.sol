@@ -1,14 +1,17 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./Token.sol";
+import "./TokenBase.sol";
 import "./TokenTvTTypes.sol";
 import "./EscrowManager.sol";
 
 uint256 constant ISSUANCE_ESCROW_TIMEOUT = 2 * 24 * 60 * 60;
 uint256 constant REDEMPTION_ESCROW_TIMEOUT = 2 * 24 * 60 * 60;
 
-contract TokenTvT is Token {
+contract TokenTvT is TokenBase {
+  string public constant VERSION = "0.0.1";
+  string public constant TYPE = "TokenTvT";
+
   address[] internal _paymentTokens;
   uint256[] internal _issuanceSwapMultiple;
   uint256[] internal _redemptionSwapMultiple;
@@ -29,7 +32,7 @@ contract TokenTvT is Token {
     address custodianContract,
     address escrowManagerAddress
   )
-    Token(
+    TokenBase(
       input.name,
       input.symbol,
       input.decimals,

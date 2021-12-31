@@ -196,7 +196,7 @@ describe("TvT", function () {
       issuer
     );
 
-    expect(await TokenContract1.escrowManager()).to.matchSnapshot(this);
+    expect(await TokenContract1.TYPE()).to.be.equal("TokenTvT");
   });
 
   it("publishes a regular token if payment tokens list is empty", async () => {
@@ -222,19 +222,12 @@ describe("TvT", function () {
     expect(tokens[1].symbol).to.be.equal("TT2");
 
     const TokenContract1 = await ethers.getContractAt(
-      "TokenTvT",
+      "Token",
       tokens[1].address_,
       issuer
     );
 
-    let failed = false;
-    try {
-      await TokenContract1.escrowManager();
-    } catch {
-      failed = true;
-    }
-
-    expect(failed).to.be.equal(true);
+    expect(await TokenContract1.TYPE()).to.be.equal("Token");
   });
 
   describe("EscrowManager", async () => {

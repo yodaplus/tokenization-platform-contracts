@@ -3,17 +3,20 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./ICustodianContract.sol";
 import "./ReasonCodes.sol";
 import "./TokenCreator.sol";
+import "./TokenCreatorTvT.sol";
+import "./TokenTvTTypes.sol";
 
-contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
+contract CustodianContract is Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
-  address public tokenCreatorAddr;
+  TokenCreator public tokenCreator;
+  TokenCreatorTvT public tokenCreatorTvT;
 
-  constructor(address tokenCreatorAddr_) {
-    tokenCreatorAddr = tokenCreatorAddr_;
+  constructor(address tokenCreatorAddr, address tokenCreatorTvTAddr) {
+    tokenCreator = TokenCreator(tokenCreatorAddr);
+    tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
   }
 
   struct RoleData {
@@ -23,7 +26,13 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   }
 
   enum TokenStatus {
+    NonExistent,
     Published
+  }
+
+  enum PaymentTokenStatus {
+    Inactive,
+    Active
   }
 
   struct Token {
@@ -54,6 +63,7 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     bool gol_check;
     bool fatf_compliance_check;
   }
+
   mapping(string => InvestorData) public _investors;
   mapping(address => RoleData) public _issuers;
   mapping(address => RoleData) public _custodians;
@@ -78,6 +88,8 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   mapping(string => bool) internal _tokenWithSymbolExists;
 
   mapping(address => mapping(address => bool)) internal _whitelist;
+
+  mapping(address => PaymentTokenStatus) internal _paymentTokensStatus;
 
   event TokenPublished(string symbol, address address_);
   event AddWhitelist(address tokenAddress, address address_);
@@ -111,7 +123,10 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     TOKEN_WRONG_CUSTODIAN,
     TOKEN_WRONG_KYCPROVIDER,
     TOKEN_SAME_NAME_EXISTS,
-    TOKEN_SAME_SYMBOL_EXISTS
+    TOKEN_SAME_SYMBOL_EXISTS,
+    TOKEN_WRONG_PAYMENT_TOKEN,
+    TOKEN_EARLY_REDEMPTION_NOT_ALLOWED,
+    WRONG_INPUT
   }
 
   function throwError(ErrorCondition condition) internal pure {
@@ -170,6 +185,18 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "token with the same symbol already exists"
       );
+    } else if (condition == ErrorCondition.TOKEN_WRONG_PAYMENT_TOKEN) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "payment token is not active"
+      );
+    } else if (condition == ErrorCondition.TOKEN_EARLY_REDEMPTION_NOT_ALLOWED) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "early redemption is not allowed for TvT tokens"
+      );
+    } else if (condition == ErrorCondition.WRONG_INPUT) {
+      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "wrong input");
     } else {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
@@ -192,7 +219,6 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
   function isIssuerOwnerOrEmployee(address primaryIssuer, address issuer)
     public
     view
-    override
     returns (bool)
   {
     return _addressToIssuerPrimaryAddress[issuer] == primaryIssuer;
@@ -500,6 +526,11 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     address kycProviderPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
+    address[] paymentTokens;
+    uint256[] issuanceSwapMultiple;
+    uint256[] redemptionSwapMultiple;
+    uint256 maturityPeriod;
+    uint256 collateral;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
@@ -523,13 +554,48 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
       throwError(ErrorCondition.TOKEN_SAME_SYMBOL_EXISTS);
     }
 
-    address tokenAddress = TokenCreator(tokenCreatorAddr).publishToken(
-      token.name,
-      token.symbol,
-      token.decimals,
-      token.maxTotalSupply,
-      msg.sender
-    );
+    if (
+      token.paymentTokens.length != token.issuanceSwapMultiple.length ||
+      token.paymentTokens.length != token.redemptionSwapMultiple.length
+    ) {
+      throwError(ErrorCondition.WRONG_INPUT);
+    }
+
+    if (token.paymentTokens.length > 0 && token.earlyRedemption) {
+      throwError(ErrorCondition.TOKEN_EARLY_REDEMPTION_NOT_ALLOWED);
+    }
+
+    for (uint256 i = 0; i < token.paymentTokens.length; i += 1) {
+      if (
+        _paymentTokensStatus[token.paymentTokens[i]] !=
+        PaymentTokenStatus.Active
+      ) {
+        throwError(ErrorCondition.TOKEN_WRONG_PAYMENT_TOKEN);
+      }
+    }
+
+    address tokenAddress = token.paymentTokens.length == 0
+      ? tokenCreator.publishToken(
+        token.name,
+        token.symbol,
+        token.decimals,
+        token.maxTotalSupply,
+        msg.sender
+      )
+      : tokenCreatorTvT.publishToken(
+        TokenTvTInput({
+          name: token.name,
+          symbol: token.symbol,
+          decimals: token.decimals,
+          maxTotalSupply: token.maxTotalSupply,
+          paymentTokens: token.paymentTokens,
+          issuanceSwapMultiple: token.issuanceSwapMultiple,
+          redemptionSwapMultiple: token.redemptionSwapMultiple,
+          maturityPeriod: token.maturityPeriod,
+          collateral: token.collateral
+        }),
+        msg.sender
+      );
 
     _tokens[tokenAddress].name = token.name;
     _tokens[tokenAddress].symbol = token.symbol;
@@ -598,12 +664,20 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
     }
   }
 
+  function addPaymentToken(address tokenAddress) external onlyOwner {
+    _paymentTokensStatus[tokenAddress] = PaymentTokenStatus.Active;
+  }
+
+  function removePaymentToken(address tokenAddress) external onlyOwner {
+    delete _paymentTokensStatus[tokenAddress];
+  }
+
   function canIssue(
     address tokenAddress,
-    address to,
+    address investor,
     uint256 value
-  ) external view override returns (bytes1) {
-    if (_whitelist[tokenAddress][to] != true) {
+  ) external view returns (bytes1) {
+    if (_whitelist[tokenAddress][investor] != true) {
       return ReasonCodes.INVALID_RECEIVER;
     }
 
@@ -616,24 +690,21 @@ contract CustodianContract is Ownable, ICustodianContract, ReasonCodes {
 
   function canRedeem(
     address tokenAddress,
-    address owner,
-    address from,
+    address investor,
     uint256 value
-  ) external view override returns (bytes1) {
-    if (_whitelist[tokenAddress][from] != true) {
+  ) external view returns (bytes1) {
+    if (_whitelist[tokenAddress][investor] != true) {
       return ReasonCodes.INVALID_RECEIVER;
     }
+
     if (value == 0) {
       return ReasonCodes.APP_SPECIFIC_FAILURE;
     }
-    IERC20 _token = IERC20(tokenAddress);
-    if (_token.balanceOf(from) == 0) {
-      return ReasonCodes.APP_SPECIFIC_FAILURE;
-    }
 
-    if (_token.allowance(from, owner) < value) {
-      return ReasonCodes.APP_SPECIFIC_FAILURE;
-    }
     return ReasonCodes.TRANSFER_SUCCESS;
+  }
+
+  function tokenExists(address tokenAddress) external view returns (bool) {
+    return _tokens[tokenAddress].status == TokenStatus.Published;
   }
 }

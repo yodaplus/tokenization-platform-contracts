@@ -34,7 +34,7 @@ describe("CustodianContract", function () {
 
   describe("token creator", () => {
     it("has a token creator contract", async () => {
-      expect(await CustodianContract.tokenCreatorAddr()).to.equal(
+      expect(await CustodianContract.tokenCreator()).to.equal(
         TokenCreator.address
       );
     });
@@ -84,7 +84,7 @@ describe("CustodianContract", function () {
     });
 
     it("has a token creator address", async () => {
-      expect(await CustodianContract.tokenCreatorAddr()).to.equal(
+      expect(await CustodianContract.tokenCreator()).to.equal(
         TokenCreator.address
       );
     });

@@ -3,18 +3,18 @@ pragma solidity ^0.8.0;
 
 import {Token as TokenContract} from "./Token.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./ITokenCreator.sol";
+import "./TokenTvTTypes.sol";
 
-contract TokenCreator is Ownable, ITokenCreator {
+contract TokenCreator is Ownable {
   string public constant VERSION = "0.0.1";
 
   function publishToken(
-    string memory name,
-    string memory symbol,
+    string calldata name,
+    string calldata symbol,
     uint8 decimals_,
     uint256 maxTotalSupply_,
     address issuer
-  ) external override onlyOwner returns (address tokenAddress) {
+  ) external onlyOwner returns (address tokenAddress) {
     TokenContract deployedToken = new TokenContract(
       name,
       symbol,

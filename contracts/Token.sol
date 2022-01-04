@@ -1,128 +1,21 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-import "./ICustodianContract.sol";
-import "./ReasonCodes.sol";
+import "./TokenBase.sol";
 
-contract Token is ERC20Pausable, Ownable, ReasonCodes {
+contract Token is TokenBase {
   string public constant VERSION = "0.0.1";
-  uint8 internal _decimals;
-  bool internal _isFinalized;
-  uint256 internal _maxTotalSupply;
-
-  ICustodianContract internal _custodianContract;
+  string public constant TYPE = "Token";
 
   constructor(
     string memory name,
     string memory symbol,
-    uint8 decimals_,
-    uint256 maxTotalSupply_,
-    address custodianContract_
-  ) ERC20(name, symbol) {
-    _decimals = decimals_;
-    _maxTotalSupply = maxTotalSupply_;
-    _custodianContract = ICustodianContract(custodianContract_);
-  }
+    uint8 decimals,
+    uint256 maxTotalSupply,
+    address custodianContract
+  ) TokenBase(name, symbol, decimals, maxTotalSupply, custodianContract) {}
 
-  function pause() public onlyOwner {
-    _pause();
-  }
-
-  function unpause() public onlyOwner {
-    _unpause();
-  }
-
-  event SupplyIncreased(uint256 oldValue, uint256 newValue);
-  event SupplyDecreased(uint256 oldValue, uint256 newValue);
-  event Issued(address _to, uint256 _value, bytes1 _data);
-  event Issuance_Failure(address _to, uint256 _value, bytes1 _data);
-  event Redeemed(address _from, uint256 _value, bytes1 _data);
-  event RedeemFailed(address _from, uint256 _value, bytes1 _data);
-
-  error ERC1066Error(bytes1 errorCode, string message);
-
-  enum ErrorCondition {
-    WRONG_CALLER,
-    TOKEN_IS_FINALIZED,
-    MAX_TOTAL_SUPPLY_MINT,
-    CUSTODIAN_VALIDATION_FAIL,
-    WRONG_INPUT,
-    MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY,
-    TOKEN_IS_PAUSED
-  }
-
-  function throwError(ErrorCondition condition) internal pure {
-    if (condition == ErrorCondition.WRONG_CALLER) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "caller is not issuer"
-      );
-    } else if (condition == ErrorCondition.TOKEN_IS_FINALIZED) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "token issuance is finalized"
-      );
-    } else if (condition == ErrorCondition.MAX_TOTAL_SUPPLY_MINT) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "can't mint more than max total supply"
-      );
-    } else if (condition == ErrorCondition.CUSTODIAN_VALIDATION_FAIL) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "custodian contract validation fail"
-      );
-    } else if (condition == ErrorCondition.WRONG_INPUT) {
-      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "wrong input");
-    } else if (condition == ErrorCondition.MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "can't set less than total supply"
-      );
-    }
-  }
-
-  modifier onlyIssuer() {
-    if (owner() != msg.sender) {
-      if (
-        _custodianContract.isIssuerOwnerOrEmployee(owner(), msg.sender) == false
-      ) {
-        throwError(ErrorCondition.WRONG_CALLER);
-      }
-    }
-    _;
-  }
-
-  function decimals() public view override returns (uint8) {
-    return _decimals;
-  }
-
-  function maxTotalSupply() public view returns (uint256) {
-    return _maxTotalSupply;
-  }
-
-  function finalizeIssuance() external onlyOwner {
-    _isFinalized = true;
-  }
-
-  function setMaxSupply(uint256 maxTotalSupply_) external onlyOwner {
-    if (maxTotalSupply_ < totalSupply()) {
-      throwError(ErrorCondition.MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY);
-    }
-
-    if (maxTotalSupply_ > _maxTotalSupply) {
-      emit SupplyIncreased(_maxTotalSupply, maxTotalSupply_);
-    } else if (maxTotalSupply_ < _maxTotalSupply) {
-      emit SupplyDecreased(_maxTotalSupply, maxTotalSupply_);
-    }
-
-    _maxTotalSupply = maxTotalSupply_;
-  }
-
-  function issue(address subscriber, uint256 value) public onlyIssuer {
+  function issue(address subscriber, uint256 value) public override onlyIssuer {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }
@@ -138,55 +31,41 @@ contract Token is ERC20Pausable, Ownable, ReasonCodes {
     );
 
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
-      // throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
-      emit Issuance_Failure(subscriber, value, reasonCode);
+      emit IssuanceFailure(subscriber, value, reasonCode);
     } else {
       _mint(subscriber, value);
       emit Issued(subscriber, value, reasonCode);
     }
   }
 
-  function issueBatch(address[] calldata subscribers, uint256[] calldata value)
-    external
+  function redeem(address subscriber, uint256 value)
+    public
+    override
     onlyIssuer
   {
-    if (subscribers.length != value.length) {
-      throwError(ErrorCondition.WRONG_INPUT);
-    }
-
-    for (uint256 i = 0; i < subscribers.length; i++) {
-      issue(subscribers[i], value[i]);
-    }
-  }
-
-  function redeem(address subscriber, uint256 value) public onlyIssuer {
     bytes1 reasonCode = _custodianContract.canRedeem(
       address(this),
-      owner(),
       subscriber,
       value
     );
 
+    address tokenOwner = owner();
+
+    if (balanceOf(subscriber) < value) {
+      reasonCode = ReasonCodes.INSUFFICIENT_BALANCE;
+    }
+
+    if (allowance(subscriber, tokenOwner) < value) {
+      reasonCode = ReasonCodes.INSUFFICIENT_ALLOWANCE;
+    }
+
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
       emit RedeemFailed(subscriber, value, reasonCode);
     } else {
-      uint256 currentAllowance = allowance(subscriber, owner());
-      _approve(subscriber, owner(), currentAllowance - value);
+      uint256 currentAllowance = allowance(subscriber, tokenOwner);
+      _approve(subscriber, tokenOwner, currentAllowance - value);
       _burn(subscriber, value);
       emit Redeemed(subscriber, value, reasonCode);
-    }
-  }
-
-  function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
-    external
-    onlyIssuer
-  {
-    if (subscribers.length != value.length) {
-      throwError(ErrorCondition.WRONG_INPUT);
-    }
-
-    for (uint256 i = 0; i < subscribers.length; i++) {
-      redeem(subscribers[i], value[i]);
     }
   }
 }

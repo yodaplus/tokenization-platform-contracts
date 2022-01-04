@@ -134,7 +134,6 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
     if (subscribers.length != value.length) {
       throwError(ErrorCondition.WRONG_INPUT);
     }
-
     for (uint256 i = 0; i < subscribers.length; i++) {
       issue(subscribers[i], value[i]);
     }

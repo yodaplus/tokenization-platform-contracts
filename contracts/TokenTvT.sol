@@ -143,7 +143,7 @@ contract TokenTvT is TokenBase {
     emit Redeemed(subscriber, value, ReasonCodes.TRANSFER_SUCCESS);
   }
 
-  function matureBalance(address subscriber)
+  function matureBalanceOf(address subscriber)
     public
     view
     returns (uint256 result)
@@ -163,7 +163,7 @@ contract TokenTvT is TokenBase {
     }
   }
 
-  function matureBalancePending(address subscriber)
+  function matureBalanceOfPending(address subscriber)
     public
     view
     returns (uint256 result)
@@ -186,6 +186,10 @@ contract TokenTvT is TokenBase {
     }
   }
 
+  function balanceOf(address account) public view override returns (uint256) {
+    return super.balanceOf(account);
+  }
+
   function redeem(address subscriber, uint256 value) public override {
     return redeem(subscriber, subscriber, owner(), value);
   }
@@ -206,7 +210,7 @@ contract TokenTvT is TokenBase {
       value
     );
 
-    if (matureBalance(subscriber) < value) {
+    if (matureBalanceOf(subscriber) < value || balanceOf(subscriber) < value) {
       reasonCode = ReasonCodes.INSUFFICIENT_BALANCE;
     }
 

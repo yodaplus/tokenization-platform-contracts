@@ -337,7 +337,7 @@ contract EscrowManager is Ownable, ReasonCodes {
     onlyToken
     returns (uint256 orderId)
   {
-    // This should never happen,
+    // This should never break,
     // as locked collateral must be enough to compensate all
     // tokens, transferred to investors via escrow
     assert(

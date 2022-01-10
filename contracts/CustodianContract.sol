@@ -530,6 +530,7 @@ contract CustodianContract is Ownable, ReasonCodes {
     uint256[] issuanceSwapMultiple;
     uint256[] redemptionSwapMultiple;
     uint256 maturityPeriod;
+    uint256 settlementPeriod;
     uint256 collateral;
   }
 
@@ -592,6 +593,7 @@ contract CustodianContract is Ownable, ReasonCodes {
           issuanceSwapMultiple: token.issuanceSwapMultiple,
           redemptionSwapMultiple: token.redemptionSwapMultiple,
           maturityPeriod: token.maturityPeriod,
+          settlementPeriod: token.settlementPeriod,
           collateral: token.collateral
         }),
         msg.sender

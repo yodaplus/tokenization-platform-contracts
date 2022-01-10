@@ -11,6 +11,7 @@ const TOKEN_EXAMPLE = {
   issuanceSwapMultiple: [],
   redemptionSwapMultiple: [],
   maturityPeriod: 30 * 24 * 60 * 60,
+  settlementPeriod: 2 * 24 * 60 * 60,
   collateral: 0,
 };
 

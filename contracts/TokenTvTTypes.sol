@@ -10,5 +10,6 @@ struct TokenTvTInput {
   uint256[] issuanceSwapMultiple;
   uint256[] redemptionSwapMultiple;
   uint256 maturityPeriod;
+  uint256 settlementPeriod;
   uint256 collateral;
 }

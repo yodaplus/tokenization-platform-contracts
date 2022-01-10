@@ -5,9 +5,6 @@ import "./TokenBase.sol";
 import "./TokenTvTTypes.sol";
 import "./EscrowManager.sol";
 
-uint256 constant ISSUANCE_ESCROW_TIMEOUT = 2 * 24 * 60 * 60;
-uint256 constant REDEMPTION_ESCROW_TIMEOUT = 2 * 24 * 60 * 60;
-
 contract TokenTvT is TokenBase {
   string public constant VERSION = "0.0.1";
   string public constant TYPE = "TokenTvT";
@@ -16,6 +13,7 @@ contract TokenTvT is TokenBase {
   uint256[] internal _issuanceSwapMultiple;
   uint256[] internal _redemptionSwapMultiple;
   uint256 internal _maturityPeriod;
+  uint256 internal _settlementPeriod;
   uint256 internal _collateral;
 
   mapping(address => mapping(uint256 => uint256))
@@ -44,6 +42,7 @@ contract TokenTvT is TokenBase {
     _issuanceSwapMultiple = input.issuanceSwapMultiple;
     _redemptionSwapMultiple = input.redemptionSwapMultiple;
     _maturityPeriod = input.maturityPeriod;
+    _settlementPeriod = input.settlementPeriod;
     _collateral = input.collateral;
     escrowManager = EscrowManager(escrowManagerAddress);
   }
@@ -89,7 +88,7 @@ contract TokenTvT is TokenBase {
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,
-        timeout: ISSUANCE_ESCROW_TIMEOUT
+        timeout: _settlementPeriod
       });
       uint256 orderId = escrowManager.startIssuanceEscrow(escrowOrder);
       emit IssuanceEscrowInitiated(escrowOrder, orderId);
@@ -228,7 +227,7 @@ contract TokenTvT is TokenBase {
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,
-        timeout: REDEMPTION_ESCROW_TIMEOUT
+        timeout: _settlementPeriod
       });
       uint256 orderId = escrowManager.startRedemptionEscrow(escrowOrder);
       emit RedemptionEscrowInitiated(escrowOrder, orderId);

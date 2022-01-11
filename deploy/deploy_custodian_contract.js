@@ -1,3 +1,8 @@
+const deployOptions = {
+  log: true,
+  gasPrice: ethers.utils.parseUnits("1", "gwei"),
+};
+
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { custodianContractOwner } = await getNamedAccounts();
@@ -5,19 +10,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const { address: escrowManagerAddress } = await deploy("EscrowManager", {
     from: custodianContractOwner,
     args: [],
-    log: true,
+    ...deployOptions,
   });
 
   const { address: tokenCreatorAddress } = await deploy("TokenCreator", {
     from: custodianContractOwner,
     args: [],
-    log: true,
+    ...deployOptions,
   });
 
   const { address: tokenCreatorTvTAddress } = await deploy("TokenCreatorTvT", {
     from: custodianContractOwner,
     args: [escrowManagerAddress],
-    log: true,
+    ...deployOptions,
   });
 
   const { address: custodianContractAddress } = await deploy(
@@ -25,7 +30,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     {
       from: custodianContractOwner,
       args: [tokenCreatorAddress, tokenCreatorTvTAddress],
-      log: true,
+      ...deployOptions,
     }
   );
 
@@ -51,7 +56,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   await deploy("PaymentToken", {
     from: custodianContractOwner,
     args: [],
-    log: true,
+    ...deployOptions,
   });
 };
 

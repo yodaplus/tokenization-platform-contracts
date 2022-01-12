@@ -90,10 +90,13 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
   }
 
   modifier onlyIssuer() {
-    if (
-      owner() != msg.sender &&
-      _custodianContract.isIssuerOwnerOrEmployee(owner(), msg.sender) == false
-    ) {
+    bool isOwner = owner() == msg.sender;
+    bool isIssuerOwnerOrEmployee = _custodianContract.isIssuerOwnerOrEmployee(
+      owner(),
+      msg.sender
+    );
+
+    if (!isOwner && !isIssuerOwnerOrEmployee) {
       throwError(ErrorCondition.WRONG_CALLER);
     }
     _;

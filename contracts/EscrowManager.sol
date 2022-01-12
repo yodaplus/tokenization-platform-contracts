@@ -328,7 +328,7 @@ contract EscrowManager is Ownable, ReasonCodes {
 
     _escrowOrders[orderId] = escrowOrder;
     _escrowOrdersType[orderId] = EscrowType.Issuance;
-    _escrowStartTimestamp[orderId] = block.timestamp;
+    _escrowStartTimestamp[orderId] = custodianContract.getTimestamp();
     _escrowOrdersStatus[orderId] = EscrowStatus.Pending;
   }
 
@@ -350,7 +350,7 @@ contract EscrowManager is Ownable, ReasonCodes {
 
     _escrowOrders[orderId] = escrowOrder;
     _escrowOrdersType[orderId] = EscrowType.Redemption;
-    _escrowStartTimestamp[orderId] = block.timestamp;
+    _escrowStartTimestamp[orderId] = custodianContract.getTimestamp();
     _escrowOrdersStatus[orderId] = EscrowStatus.Pending;
   }
 
@@ -422,7 +422,8 @@ contract EscrowManager is Ownable, ReasonCodes {
     bool escrowConditionsInvestorFlag = checkRedemptionEscrowConditionsInvestor(
       orderId
     );
-    bool timeoutFlag = block.timestamp - _escrowStartTimestamp[orderId] >
+    bool timeoutFlag = custodianContract.getTimestamp() -
+      _escrowStartTimestamp[orderId] >
       escrowOrder.timeout;
 
     if (!escrowConditionsFlag && !timeoutFlag) {

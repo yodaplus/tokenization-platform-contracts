@@ -3,9 +3,18 @@ const deployOptions = {
   gasPrice: ethers.utils.parseUnits("1", "gwei"),
 };
 
-module.exports = async ({ getNamedAccounts, deployments }) => {
+module.exports = async ({ getNamedAccounts, deployments, network }) => {
   const { deploy } = deployments;
   const { custodianContractOwner } = await getNamedAccounts();
+
+  const { address: timeOracleBlockAddress } = await deploy(
+    network.name === "apothem" ? "TimeOracleManual" : "TimeOracleBlock",
+    {
+      from: custodianContractOwner,
+      args: [],
+      ...deployOptions,
+    }
+  );
 
   const { address: escrowManagerAddress } = await deploy("EscrowManager", {
     from: custodianContractOwner,
@@ -29,7 +38,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     "CustodianContract",
     {
       from: custodianContractOwner,
-      args: [tokenCreatorAddress, tokenCreatorTvTAddress],
+      args: [
+        tokenCreatorAddress,
+        tokenCreatorTvTAddress,
+        timeOracleBlockAddress,
+      ],
       ...deployOptions,
     }
   );

@@ -7,16 +7,23 @@ import "./ReasonCodes.sol";
 import "./TokenCreator.sol";
 import "./TokenCreatorTvT.sol";
 import "./TokenTvTTypes.sol";
+import "./TimeOracle.sol";
 
 contract CustodianContract is Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
   TokenCreator public tokenCreator;
   TokenCreatorTvT public tokenCreatorTvT;
+  TimeOracle public timeOracle;
 
-  constructor(address tokenCreatorAddr, address tokenCreatorTvTAddr) {
+  constructor(
+    address tokenCreatorAddr,
+    address tokenCreatorTvTAddr,
+    address timeOracleAddr
+  ) {
     tokenCreator = TokenCreator(tokenCreatorAddr);
     tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
+    timeOracle = TimeOracle(timeOracleAddr);
   }
 
   struct RoleData {
@@ -127,6 +134,10 @@ contract CustodianContract is Ownable, ReasonCodes {
     TOKEN_WRONG_PAYMENT_TOKEN,
     TOKEN_EARLY_REDEMPTION_NOT_ALLOWED,
     WRONG_INPUT
+  }
+
+  function getTimestamp() external view returns (uint256) {
+    return timeOracle.getTimestamp();
   }
 
   function throwError(ErrorCondition condition) internal pure {

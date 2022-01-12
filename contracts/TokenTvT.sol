@@ -100,8 +100,10 @@ contract TokenTvT is TokenBase {
       throwError(ErrorCondition.WRONG_CALLER);
     }
 
-    _issuedTokensByMaturityBucket[subscriber][block.timestamp] += value;
-    _issuedTokensMaturityBuckets[subscriber].push(block.timestamp);
+    uint256 timestamp = _custodianContract.getTimestamp();
+
+    _issuedTokensByMaturityBucket[subscriber][timestamp] += value;
+    _issuedTokensMaturityBuckets[subscriber].push(timestamp);
 
     emit Issued(subscriber, value, ReasonCodes.TRANSFER_SUCCESS);
   }
@@ -120,7 +122,7 @@ contract TokenTvT is TokenBase {
     while (
       i < maturityBuckets.length &&
       remainingValue > 0 &&
-      (maturityBuckets[i] + _maturityPeriod < block.timestamp)
+      (maturityBuckets[i] + _maturityPeriod < _custodianContract.getTimestamp())
     ) {
       uint256 currentBucketBalance = _issuedTokensByMaturityBucket[subscriber][
         maturityBuckets[i]
@@ -154,7 +156,7 @@ contract TokenTvT is TokenBase {
 
     while (
       i < maturityBuckets.length &&
-      (maturityBuckets[i] + _maturityPeriod < block.timestamp)
+      (maturityBuckets[i] + _maturityPeriod < _custodianContract.getTimestamp())
     ) {
       result += _issuedTokensByMaturityBucket[subscriber][maturityBuckets[i]];
 
@@ -175,7 +177,7 @@ contract TokenTvT is TokenBase {
     while (
       i < maturityBuckets.length &&
       (maturityBuckets[maturityBuckets.length - i - 1] + _maturityPeriod >=
-        block.timestamp)
+        _custodianContract.getTimestamp())
     ) {
       result += _issuedTokensByMaturityBucket[subscriber][
         maturityBuckets[maturityBuckets.length - i - 1]

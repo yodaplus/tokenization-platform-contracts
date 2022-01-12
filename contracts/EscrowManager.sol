@@ -121,6 +121,10 @@ contract EscrowManager is Ownable, ReasonCodes {
     external
     onlyOwner
   {
+    if (address(custodianContract) != address(0x00)) {
+      revert("custodian contract is already registered");
+    }
+
     custodianContract = CustodianContract(custodianContractAddress);
   }
 

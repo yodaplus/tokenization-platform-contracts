@@ -22,8 +22,32 @@ contract TokenTvT is TokenBase {
 
   EscrowManager public escrowManager;
 
-  event IssuanceEscrowInitiated(EscrowOrder order, uint256 orderId);
-  event RedemptionEscrowInitiated(EscrowOrder order, uint256 orderId);
+  event IssuanceEscrowInitiated(
+    uint256 orderId,
+    address tradeToken,
+    uint256 tradeTokenAmount,
+    address tradeTokenDestination,
+    address issuerAddress,
+    address paymentToken,
+    uint256 paymentTokenAmount,
+    address paymentTokenDestination,
+    address investorAddress,
+    uint256 collateral,
+    uint256 timeout
+  );
+  event RedemptionEscrowInitiated(
+    uint256 orderId,
+    address tradeToken,
+    uint256 tradeTokenAmount,
+    address tradeTokenDestination,
+    address issuerAddress,
+    address paymentToken,
+    uint256 paymentTokenAmount,
+    address paymentTokenDestination,
+    address investorAddress,
+    uint256 collateral,
+    uint256 timeout
+  );
 
   constructor(
     TokenTvTInput memory input,
@@ -91,7 +115,19 @@ contract TokenTvT is TokenBase {
         timeout: _settlementPeriod
       });
       uint256 orderId = escrowManager.startIssuanceEscrow(escrowOrder);
-      emit IssuanceEscrowInitiated(escrowOrder, orderId);
+      emit IssuanceEscrowInitiated(
+        orderId,
+        escrowOrder.tradeToken,
+        escrowOrder.tradeTokenAmount,
+        escrowOrder.tradeTokenDestination,
+        escrowOrder.issuerAddress,
+        escrowOrder.paymentToken,
+        escrowOrder.paymentTokenAmount,
+        escrowOrder.paymentTokenDestination,
+        escrowOrder.investorAddress,
+        escrowOrder.collateral,
+        escrowOrder.timeout
+      );
     }
   }
 
@@ -232,7 +268,19 @@ contract TokenTvT is TokenBase {
         timeout: _settlementPeriod
       });
       uint256 orderId = escrowManager.startRedemptionEscrow(escrowOrder);
-      emit RedemptionEscrowInitiated(escrowOrder, orderId);
+      emit RedemptionEscrowInitiated(
+        orderId,
+        escrowOrder.tradeToken,
+        escrowOrder.tradeTokenAmount,
+        escrowOrder.tradeTokenDestination,
+        escrowOrder.issuerAddress,
+        escrowOrder.paymentToken,
+        escrowOrder.paymentTokenAmount,
+        escrowOrder.paymentTokenDestination,
+        escrowOrder.investorAddress,
+        escrowOrder.collateral,
+        escrowOrder.timeout
+      );
     }
   }
 }

@@ -362,19 +362,17 @@ describe("TvT", function () {
         await expect(TokenContract["issue(address,uint256)"](subscriber, 1))
           .to.emit(TokenContract, "IssuanceEscrowInitiated")
           .withArgs(
-            [
-              TokenContract.address,
-              1,
-              subscriber,
-              issuer,
-              PaymentToken.address,
-              2,
-              issuer,
-              subscriber,
-              3,
-              172800,
-            ],
-            0
+            0,
+            TokenContract.address,
+            1,
+            subscriber,
+            issuer,
+            PaymentToken.address,
+            2,
+            issuer,
+            subscriber,
+            3,
+            172800
           );
       });
 
@@ -688,19 +686,17 @@ describe("TvT", function () {
         )
           .to.emit(TokenContract, "RedemptionEscrowInitiated")
           .withArgs(
-            [
-              TokenContract.address,
-              1,
-              issuer,
-              issuer,
-              PaymentToken.address,
-              3,
-              subscriber,
-              subscriber,
-              3,
-              172800,
-            ],
-            1
+            1,
+            TokenContract.address,
+            1,
+            issuer,
+            issuer,
+            PaymentToken.address,
+            3,
+            subscriber,
+            subscriber,
+            3,
+            172800
           );
       });
 

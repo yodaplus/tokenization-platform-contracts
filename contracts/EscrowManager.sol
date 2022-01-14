@@ -117,6 +117,18 @@ contract EscrowManager is Ownable, ReasonCodes {
     }
   }
 
+  modifier onlyOrderType(EscrowType type_, uint256 orderId) {
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != type_) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
+
+    _;
+  }
+
   function setCustodianContract(address custodianContractAddress)
     external
     onlyOwner
@@ -191,19 +203,12 @@ contract EscrowManager is Ownable, ReasonCodes {
     destination.sendValue(value);
   }
 
-  function checkIssuanceEscrowConditionsIssuer(uint256 orderId)
+  function checkIssuanceEscrowConditionsIssuerToken(uint256 orderId)
     public
     view
+    onlyOrderType(EscrowType.Issuance, orderId)
     returns (bool)
   {
-    if (_escrowStartTimestamp[orderId] == 0) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
-    }
-
-    if (_escrowOrdersType[orderId] != EscrowType.Issuance) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
-    }
-
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
     uint256 allowanceIssuer = IERC20(escrowOrder.tradeToken).allowance(
@@ -215,52 +220,38 @@ contract EscrowManager is Ownable, ReasonCodes {
     );
     uint256 tokenAmount = escrowOrder.tradeTokenAmount;
 
+    return allowanceIssuer >= tokenAmount && balanceIssuer >= tokenAmount;
+  }
+
+  function checkIssuanceEscrowConditionsIssuerCollateral(uint256 orderId)
+    public
+    view
+    onlyOrderType(EscrowType.Issuance, orderId)
+    returns (bool)
+  {
+    EscrowOrder storage escrowOrder = _escrowOrders[orderId];
+
     return
-      allowanceIssuer >= tokenAmount &&
-      balanceIssuer >= tokenAmount &&
       escrowOrder.collateral <= _collateralBalance[escrowOrder.issuerAddress];
   }
 
-  function checkRedemptionEscrowConditionsInvestor(uint256 orderId)
+  function checkIssuanceEscrowConditionsIssuer(uint256 orderId)
     public
     view
+    onlyOrderType(EscrowType.Issuance, orderId)
     returns (bool)
   {
-    if (_escrowStartTimestamp[orderId] == 0) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
-    }
-
-    if (_escrowOrdersType[orderId] != EscrowType.Redemption) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
-    }
-
-    EscrowOrder storage escrowOrder = _escrowOrders[orderId];
-
-    uint256 allowanceInvestor = IERC20(escrowOrder.tradeToken).allowance(
-      escrowOrder.investorAddress,
-      address(this)
-    );
-    uint256 balanceInvestor = IERC20(escrowOrder.tradeToken).balanceOf(
-      escrowOrder.investorAddress
-    );
-    uint256 tokenAmount = escrowOrder.tradeTokenAmount;
-
-    return allowanceInvestor >= tokenAmount && balanceInvestor >= tokenAmount;
+    return
+      checkIssuanceEscrowConditionsIssuerToken(orderId) &&
+      checkIssuanceEscrowConditionsIssuerCollateral(orderId);
   }
 
   function checkIssuanceEscrowConditionsInvestor(uint256 orderId)
     public
     view
+    onlyOrderType(EscrowType.Issuance, orderId)
     returns (bool)
   {
-    if (_escrowStartTimestamp[orderId] == 0) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
-    }
-
-    if (_escrowOrdersType[orderId] != EscrowType.Issuance) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
-    }
-
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
     uint256 allowanceInvestor = IERC20(escrowOrder.paymentToken).allowance(
@@ -278,16 +269,9 @@ contract EscrowManager is Ownable, ReasonCodes {
   function checkRedemptionEscrowConditionsIssuer(uint256 orderId)
     public
     view
+    onlyOrderType(EscrowType.Redemption, orderId)
     returns (bool)
   {
-    if (_escrowStartTimestamp[orderId] == 0) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
-    }
-
-    if (_escrowOrdersType[orderId] != EscrowType.Redemption) {
-      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
-    }
-
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
     uint256 allowanceIssuer = IERC20(escrowOrder.paymentToken).allowance(
@@ -302,6 +286,26 @@ contract EscrowManager is Ownable, ReasonCodes {
     return allowanceIssuer >= tokenAmount && balanceIssuer >= tokenAmount;
   }
 
+  function checkRedemptionEscrowConditionsInvestor(uint256 orderId)
+    public
+    view
+    onlyOrderType(EscrowType.Redemption, orderId)
+    returns (bool)
+  {
+    EscrowOrder storage escrowOrder = _escrowOrders[orderId];
+
+    uint256 allowanceInvestor = IERC20(escrowOrder.tradeToken).allowance(
+      escrowOrder.investorAddress,
+      address(this)
+    );
+    uint256 balanceInvestor = IERC20(escrowOrder.tradeToken).balanceOf(
+      escrowOrder.investorAddress
+    );
+    uint256 tokenAmount = escrowOrder.tradeTokenAmount;
+
+    return allowanceInvestor >= tokenAmount && balanceInvestor >= tokenAmount;
+  }
+
   function checkIssuanceEscrowConditions(uint256 orderId)
     public
     view
@@ -312,6 +316,16 @@ contract EscrowManager is Ownable, ReasonCodes {
       checkIssuanceEscrowConditionsInvestor(orderId);
   }
 
+  function getIssuanceEscrowConditions(uint256 orderId)
+    public
+    view
+    returns (bool[3] memory flags)
+  {
+    flags[0] = checkIssuanceEscrowConditionsIssuerToken(orderId);
+    flags[1] = checkIssuanceEscrowConditionsIssuerCollateral(orderId);
+    flags[2] = checkIssuanceEscrowConditionsInvestor(orderId);
+  }
+
   function checkRedemptionEscrowConditions(uint256 orderId)
     public
     view
@@ -320,6 +334,15 @@ contract EscrowManager is Ownable, ReasonCodes {
     return
       checkRedemptionEscrowConditionsIssuer(orderId) &&
       checkRedemptionEscrowConditionsInvestor(orderId);
+  }
+
+  function getRedemptionEscrowConditions(uint256 orderId)
+    public
+    view
+    returns (bool[2] memory flags)
+  {
+    flags[0] = checkRedemptionEscrowConditionsIssuer(orderId);
+    flags[1] = checkRedemptionEscrowConditionsInvestor(orderId);
   }
 
   function startIssuanceEscrow(EscrowOrder calldata escrowOrder)

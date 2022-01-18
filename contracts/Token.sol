@@ -10,10 +10,9 @@ contract Token is TokenBase {
   constructor(
     string memory name,
     string memory symbol,
-    uint8 decimals,
     uint256 maxTotalSupply,
     address custodianContract
-  ) TokenBase(name, symbol, decimals, maxTotalSupply, custodianContract) {}
+  ) TokenBase(name, symbol, maxTotalSupply, custodianContract) {}
 
   function issue(address subscriber, uint256 value) public override onlyIssuer {
     if (_isFinalized == true) {

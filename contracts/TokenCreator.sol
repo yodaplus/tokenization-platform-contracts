@@ -11,14 +11,12 @@ contract TokenCreator is Ownable {
   function publishToken(
     string calldata name,
     string calldata symbol,
-    uint8 decimals_,
     uint256 maxTotalSupply_,
     address issuer
   ) external onlyOwner returns (address tokenAddress) {
     TokenContract deployedToken = new TokenContract(
       name,
       symbol,
-      decimals_,
       maxTotalSupply_,
       msg.sender
     );

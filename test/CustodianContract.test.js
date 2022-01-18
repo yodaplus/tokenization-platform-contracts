@@ -46,7 +46,6 @@ describe("CustodianContract", function () {
         TokenCreator.publishToken(
           TOKEN_EXAMPLE.name,
           TOKEN_EXAMPLE.symbol,
-          TOKEN_EXAMPLE.decimals,
           TOKEN_EXAMPLE.maxTotalSupply,
           issuer
         )
@@ -61,7 +60,6 @@ describe("CustodianContract", function () {
         TokenCreatorCustodianContract.publishToken(
           TOKEN_EXAMPLE.name,
           TOKEN_EXAMPLE.symbol,
-          TOKEN_EXAMPLE.decimals,
           TOKEN_EXAMPLE.maxTotalSupply,
           issuer
         )
@@ -249,9 +247,7 @@ describe("CustodianContract", function () {
 
       expect(await TokenContract.symbol()).to.be.equal(TOKEN_EXAMPLE.symbol);
       expect(await TokenContract.name()).to.be.equal(TOKEN_EXAMPLE.name);
-      expect(await TokenContract.decimals()).to.be.equal(
-        TOKEN_EXAMPLE.decimals
-      );
+      expect(await TokenContract.decimals()).to.be.equal(0);
     });
 
     it(`sets proper owner for the published token`, async () => {

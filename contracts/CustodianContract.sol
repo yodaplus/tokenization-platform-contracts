@@ -45,7 +45,6 @@ contract CustodianContract is Ownable, ReasonCodes {
   struct Token {
     string name;
     string symbol;
-    uint8 decimals;
     uint256 value;
     string currency;
     address issuerPrimaryAddress;
@@ -528,7 +527,6 @@ contract CustodianContract is Ownable, ReasonCodes {
   struct TokenInput {
     string name;
     string symbol;
-    uint8 decimals;
     uint256 maxTotalSupply;
     uint256 value;
     string currency;
@@ -590,7 +588,6 @@ contract CustodianContract is Ownable, ReasonCodes {
       ? tokenCreator.publishToken(
         token.name,
         token.symbol,
-        token.decimals,
         token.maxTotalSupply,
         msg.sender
       )
@@ -598,7 +595,6 @@ contract CustodianContract is Ownable, ReasonCodes {
         TokenTvTInput({
           name: token.name,
           symbol: token.symbol,
-          decimals: token.decimals,
           maxTotalSupply: token.maxTotalSupply,
           paymentTokens: token.paymentTokens,
           issuanceSwapMultiple: token.issuanceSwapMultiple,
@@ -612,7 +608,6 @@ contract CustodianContract is Ownable, ReasonCodes {
 
     _tokens[tokenAddress].name = token.name;
     _tokens[tokenAddress].symbol = token.symbol;
-    _tokens[tokenAddress].decimals = token.decimals;
     _tokens[tokenAddress].value = token.value;
     _tokens[tokenAddress].currency = token.currency;
     _tokens[tokenAddress].issuerPrimaryAddress = token.issuerPrimaryAddress;

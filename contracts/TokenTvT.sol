@@ -55,13 +55,7 @@ contract TokenTvT is TokenBase {
     address custodianContract,
     address escrowManagerAddress
   )
-    TokenBase(
-      input.name,
-      input.symbol,
-      input.decimals,
-      input.maxTotalSupply,
-      custodianContract
-    )
+    TokenBase(input.name, input.symbol, input.maxTotalSupply, custodianContract)
   {
     _paymentTokens = input.paymentTokens;
     _issuanceSwapMultiple = input.issuanceSwapMultiple;

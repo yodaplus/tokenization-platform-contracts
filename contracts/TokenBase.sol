@@ -8,7 +8,6 @@ import "./CustodianContract.sol";
 import "./ReasonCodes.sol";
 
 abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
-  uint8 internal _decimals;
   bool internal _isFinalized;
   uint256 internal _maxTotalSupply;
 
@@ -17,11 +16,9 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
   constructor(
     string memory name,
     string memory symbol,
-    uint8 decimals_,
     uint256 maxTotalSupply_,
     address custodianContract_
   ) ERC20(name, symbol) {
-    _decimals = decimals_;
     _maxTotalSupply = maxTotalSupply_;
     _custodianContract = CustodianContract(custodianContract_);
   }
@@ -102,8 +99,8 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
     _;
   }
 
-  function decimals() public view override returns (uint8) {
-    return _decimals;
+  function decimals() public pure override returns (uint8) {
+    return 0;
   }
 
   function maxTotalSupply() public view returns (uint256) {

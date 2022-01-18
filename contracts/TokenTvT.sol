@@ -35,6 +35,7 @@ contract TokenTvT is TokenBase {
     uint256 collateral,
     uint256 timeout
   );
+
   event RedemptionEscrowInitiated(
     uint256 orderId,
     address tradeToken,

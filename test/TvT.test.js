@@ -464,7 +464,7 @@ describe("TvT", function () {
           );
         });
 
-        describe("success", async () => {
+        describe("executing swap", async () => {
           beforeEach(async () => {
             await prepareIssuanceSwap();
           });
@@ -521,6 +521,14 @@ describe("TvT", function () {
             expect(
               await TokenContract.matureBalanceOfPending(subscriber)
             ).to.be.equal(1);
+          });
+
+          it("on success: emits IssuanceEscrowComplete", async () => {
+            const { issuer, subscriber } = await getNamedAccounts();
+
+            await expect(EscrowManagerIssuer.swapIssuance(0))
+              .to.emit(EscrowManagerIssuer, "IssuanceEscrowComplete")
+              .withArgs(0);
           });
 
           it("cannot swap the order that was already swapped", async () => {
@@ -956,6 +964,16 @@ describe("TvT", function () {
               .reverted;
           });
 
+          it("on success: emits RedemptionEscrowComplete", async () => {
+            const { issuer, subscriber } = await getNamedAccounts();
+
+            await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
+
+            await expect(EscrowManagerIssuer.swapRedemption(2))
+              .to.emit(EscrowManagerIssuer, "RedemptionEscrowComplete")
+              .withArgs(2);
+          });
+
           it("on success: swaps tokens", async () => {
             const { issuer, subscriber } = await getNamedAccounts();
 
@@ -1002,7 +1020,10 @@ describe("TvT", function () {
             ).to.be.equal(6);
 
             await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
-            await EscrowManagerIssuer.swapRedemption(2);
+            await expect(EscrowManagerIssuer.swapRedemption(2)).to.emit(
+              EscrowManagerIssuer,
+              "RedemptionEscrowComplete"
+            );
 
             const subscriberXdcBalanceAfter = await ethers.provider.getBalance(
               subscriber

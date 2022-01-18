@@ -62,6 +62,9 @@ contract EscrowManager is Ownable, ReasonCodes {
     INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY
   }
 
+  event IssuanceEscrowComplete(uint256 orderId);
+  event RedemptionEscrowComplete(uint256 orderId);
+
   function throwError(ErrorCondition condition) internal pure {
     if (condition == ErrorCondition.ACCESS_ERROR) {
       revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "access error");
@@ -424,6 +427,8 @@ contract EscrowManager is Ownable, ReasonCodes {
       escrowOrder.tradeTokenDestination,
       escrowOrder.tradeTokenAmount
     );
+
+    emit IssuanceEscrowComplete(orderId);
   }
 
   function swapRedemption(uint256 orderId) external {
@@ -499,5 +504,7 @@ contract EscrowManager is Ownable, ReasonCodes {
       escrowOrder.investorAddress,
       escrowOrder.tradeTokenAmount
     );
+
+    emit RedemptionEscrowComplete(orderId);
   }
 }

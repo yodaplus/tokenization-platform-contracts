@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "./ReasonCodes.sol";
 import "./TokenCreator.sol";
 import "./TokenCreatorTvT.sol";
@@ -132,6 +133,8 @@ contract CustodianContract is Ownable, ReasonCodes {
     TOKEN_SAME_SYMBOL_EXISTS,
     TOKEN_WRONG_PAYMENT_TOKEN,
     TOKEN_EARLY_REDEMPTION_NOT_ALLOWED,
+    TOKEN_DOES_NOT_EXIST,
+    TOKEN_PAUSED,
     WRONG_INPUT
   }
 
@@ -207,6 +210,13 @@ contract CustodianContract is Ownable, ReasonCodes {
       );
     } else if (condition == ErrorCondition.WRONG_INPUT) {
       revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "wrong input");
+    } else if (condition == ErrorCondition.TOKEN_DOES_NOT_EXIST) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "token does not exist"
+      );
+    } else if (condition == ErrorCondition.TOKEN_PAUSED) {
+      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "token is paused");
     } else {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
@@ -258,6 +268,13 @@ contract CustodianContract is Ownable, ReasonCodes {
 
   modifier onlyKycProvider() {
     if (isKycProvider(msg.sender) == false) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
+    _;
+  }
+
+  modifier onlyIssuerOrKycProvider() {
+    if (isIssuer(msg.sender) == false && isKycProvider(msg.sender) == false) {
       throwError(ErrorCondition.WRONG_CALLER);
     }
     _;
@@ -652,10 +669,27 @@ contract CustodianContract is Ownable, ReasonCodes {
     }
   }
 
+  function assertTokenExists(address tokenAddress) internal view {
+    if (_tokens[tokenAddress].address_ == address(0x0)) {
+      throwError(ErrorCondition.TOKEN_DOES_NOT_EXIST);
+    }
+  }
+
+  function assertTokenNotPaused(address tokenAddress) internal view {
+    bool isPaused = Pausable(tokenAddress).paused();
+
+    if (isPaused) {
+      throwError(ErrorCondition.TOKEN_PAUSED);
+    }
+  }
+
   function addWhitelist(address tokenAddress, address[] calldata addresses)
     external
-    onlyKycProvider
+    onlyIssuerOrKycProvider
   {
+    assertTokenExists(tokenAddress);
+    assertTokenNotPaused(tokenAddress);
+
     for (uint256 i = 0; i < addresses.length; i++) {
       _whitelist[tokenAddress][addresses[i]] = true;
       emit AddWhitelist(tokenAddress, addresses[i]);
@@ -664,8 +698,11 @@ contract CustodianContract is Ownable, ReasonCodes {
 
   function removeWhitelist(address tokenAddress, address[] calldata addresses)
     external
-    onlyKycProvider
+    onlyIssuerOrKycProvider
   {
+    assertTokenExists(tokenAddress);
+    assertTokenNotPaused(tokenAddress);
+
     for (uint256 i = 0; i < addresses.length; i++) {
       delete _whitelist[tokenAddress][addresses[i]];
       emit RemoveWhitelist(tokenAddress, addresses[i]);

@@ -69,6 +69,7 @@ describe("CustodianContract", function () {
 
   describe("tokens", () => {
     let CustodianContractIssuer;
+    let CustodianContractKycProvider;
 
     beforeEach(async () => {
       const { issuer, custodian, kycProvider } = await getNamedAccounts();
@@ -79,6 +80,114 @@ describe("CustodianContract", function () {
         "CustodianContract",
         issuer
       );
+      CustodianContractKycProvider = await ethers.getContract(
+        "CustodianContract",
+        kycProvider
+      );
+    });
+
+    describe("whitelisting", () => {
+      let tokenAddress;
+
+      beforeEach(async () => {
+        const { custodian, issuer, kycProvider } = await getNamedAccounts();
+
+        await expect(
+          CustodianContractIssuer.publishToken({
+            ...TOKEN_EXAMPLE,
+            issuerPrimaryAddress: issuer,
+            custodianPrimaryAddress: custodian,
+            kycProviderPrimaryAddress: kycProvider,
+          })
+        ).not.to.be.reverted;
+
+        const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+        tokenAddress = tokens[0].address_;
+      });
+
+      it("only issuers and KYC providers can add/remove whitelisted addresses", async () => {
+        const { subscriber } = await getNamedAccounts();
+
+        await expect(
+          CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber])
+        ).not.to.be.reverted;
+
+        await expect(
+          CustodianContractKycProvider.addWhitelist(tokenAddress, [subscriber])
+        ).not.to.be.reverted;
+
+        await expect(
+          CustodianContract.addWhitelist(tokenAddress, [subscriber])
+        ).to.be.revertedWith("caller is not allowed");
+
+        await expect(
+          CustodianContractIssuer.removeWhitelist(tokenAddress, [subscriber])
+        ).not.to.be.reverted;
+
+        await expect(
+          CustodianContractKycProvider.removeWhitelist(tokenAddress, [
+            subscriber,
+          ])
+        ).not.to.be.reverted;
+
+        await expect(
+          CustodianContract.removeWhitelist(tokenAddress, [subscriber])
+        ).to.be.revertedWith("caller is not allowed");
+      });
+
+      it("cannot whitelist for non-existent tokens", async () => {
+        const { subscriber } = await getNamedAccounts();
+
+        await expect(
+          CustodianContractIssuer.addWhitelist(subscriber, [subscriber])
+        ).to.be.revertedWith("token does not exist");
+
+        await expect(
+          CustodianContractIssuer.removeWhitelist(subscriber, [subscriber])
+        ).to.be.revertedWith("token does not exist");
+      });
+
+      it("cannot whitelist for paused tokens", async () => {
+        const { issuer, subscriber } = await getNamedAccounts();
+
+        const TokenContract = await ethers.getContractAt(
+          "Token",
+          tokenAddress,
+          issuer
+        );
+
+        await TokenContract.pause();
+
+        await expect(
+          CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber])
+        ).to.be.revertedWith("token is paused");
+
+        await expect(
+          CustodianContractIssuer.removeWhitelist(tokenAddress, [subscriber])
+        ).to.be.revertedWith("token is paused");
+      });
+
+      it("can whitelist if token is unpaused", async () => {
+        const { issuer, subscriber } = await getNamedAccounts();
+
+        const TokenContract = await ethers.getContractAt(
+          "Token",
+          tokenAddress,
+          issuer
+        );
+
+        await TokenContract.pause();
+        await TokenContract.unpause();
+
+        await expect(
+          CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber])
+        ).not.to.be.reverted;
+
+        await expect(
+          CustodianContractIssuer.removeWhitelist(tokenAddress, [subscriber])
+        ).not.to.be.reverted;
+      });
     });
 
     it("has a token creator address", async () => {

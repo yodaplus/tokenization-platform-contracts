@@ -9,8 +9,9 @@ import "./TokenCreator.sol";
 import "./TokenCreatorTvT.sol";
 import "./TokenTvTTypes.sol";
 import "./TimeOracle.sol";
+import "./interfaces/ICustodianContractQuery.sol";
 
-contract CustodianContract is Ownable, ReasonCodes {
+contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
   TokenCreator public tokenCreator;
@@ -138,7 +139,7 @@ contract CustodianContract is Ownable, ReasonCodes {
     WRONG_INPUT
   }
 
-  function getTimestamp() external view returns (uint256) {
+  function getTimestamp() external view override returns (uint256) {
     return timeOracle.getTimestamp();
   }
 
@@ -239,6 +240,7 @@ contract CustodianContract is Ownable, ReasonCodes {
   function isIssuerOwnerOrEmployee(address primaryIssuer, address issuer)
     public
     view
+    override
     returns (bool)
   {
     return _addressToIssuerPrimaryAddress[issuer] == primaryIssuer;
@@ -721,7 +723,7 @@ contract CustodianContract is Ownable, ReasonCodes {
     address tokenAddress,
     address investor,
     uint256 value
-  ) external view returns (bytes1) {
+  ) external view override returns (bytes1) {
     if (_whitelist[tokenAddress][investor] != true) {
       return ReasonCodes.INVALID_RECEIVER;
     }
@@ -737,7 +739,7 @@ contract CustodianContract is Ownable, ReasonCodes {
     address tokenAddress,
     address investor,
     uint256 value
-  ) external view returns (bytes1) {
+  ) external view override returns (bytes1) {
     if (_whitelist[tokenAddress][investor] != true) {
       return ReasonCodes.INVALID_RECEIVER;
     }

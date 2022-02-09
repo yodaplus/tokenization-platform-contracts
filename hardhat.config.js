@@ -41,9 +41,8 @@ const namedAccounts = Object.fromEntries(
  */
 module.exports = {
   solidity: {
-    version: "0.8.4",
+    version: "0.8.11",
     settings: {
-      evmVersion: "byzantium",
       optimizer: { enabled: true, runs: 200 },
     },
   },

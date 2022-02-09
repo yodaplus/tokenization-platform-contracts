@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-import "./CustodianContract.sol";
+import "./interfaces/ICustodianContractQuery.sol";
 import "./ReasonCodes.sol";
 
 abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
   bool internal _isFinalized;
   uint256 internal _maxTotalSupply;
 
-  CustodianContract internal _custodianContract;
+  ICustodianContractQuery internal _custodianContract;
 
   constructor(
     string memory name,
@@ -20,7 +20,7 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
     address custodianContract_
   ) ERC20(name, symbol) {
     _maxTotalSupply = maxTotalSupply_;
-    _custodianContract = CustodianContract(custodianContract_);
+    _custodianContract = ICustodianContractQuery(custodianContract_);
   }
 
   function pause() public onlyOwner {

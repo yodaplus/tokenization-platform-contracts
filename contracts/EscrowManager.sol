@@ -6,8 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 import "./ReasonCodes.sol";
-import {TokenTvT as TokenTvTContract} from "./TokenTvT.sol";
+import "./interfaces/ITokenHooks.sol";
+import "./interfaces/IEscrowInitiate.sol";
 import "./CustodianContract.sol";
+import "./EscrowTypes.sol";
 
 enum EscrowType {
   Issuance,
@@ -19,20 +21,7 @@ enum EscrowStatus {
   Done
 }
 
-struct EscrowOrder {
-  address tradeToken;
-  uint256 tradeTokenAmount;
-  address tradeTokenDestination;
-  address issuerAddress;
-  address paymentToken;
-  uint256 paymentTokenAmount;
-  address paymentTokenDestination;
-  address investorAddress;
-  uint256 collateral;
-  uint256 timeout;
-}
-
-contract EscrowManager is Ownable, ReasonCodes {
+contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   using Address for address payable;
 
   string public constant VERSION = "0.0.1";
@@ -350,6 +339,7 @@ contract EscrowManager is Ownable, ReasonCodes {
 
   function startIssuanceEscrow(EscrowOrder calldata escrowOrder)
     external
+    override
     onlyToken
     returns (uint256 orderId)
   {
@@ -364,6 +354,7 @@ contract EscrowManager is Ownable, ReasonCodes {
 
   function startRedemptionEscrow(EscrowOrder calldata escrowOrder)
     external
+    override
     onlyToken
     returns (uint256 orderId)
   {
@@ -423,7 +414,7 @@ contract EscrowManager is Ownable, ReasonCodes {
 
     lockCollateral(escrowOrder.issuerAddress, escrowOrder.collateral);
 
-    TokenTvTContract(escrowOrder.tradeToken).onIssue(
+    ITokenHooks(escrowOrder.tradeToken).onIssue(
       escrowOrder.tradeTokenDestination,
       escrowOrder.tradeTokenAmount
     );
@@ -500,7 +491,7 @@ contract EscrowManager is Ownable, ReasonCodes {
       );
     }
 
-    TokenTvTContract(escrowOrder.tradeToken).onRedeem(
+    ITokenHooks(escrowOrder.tradeToken).onRedeem(
       escrowOrder.investorAddress,
       escrowOrder.tradeTokenAmount
     );

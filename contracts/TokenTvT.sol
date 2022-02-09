@@ -3,9 +3,10 @@ pragma solidity ^0.8.0;
 
 import "./TokenBase.sol";
 import "./TokenTvTTypes.sol";
-import "./EscrowManager.sol";
+import "./interfaces/ITokenHooks.sol";
+import "./interfaces/IEscrowInitiate.sol";
 
-contract TokenTvT is TokenBase {
+contract TokenTvT is TokenBase, ITokenHooks {
   string public constant VERSION = "0.0.1";
   string public constant TYPE = "TokenTvT";
 
@@ -20,7 +21,7 @@ contract TokenTvT is TokenBase {
     internal _issuedTokensByMaturityBucket;
   mapping(address => uint256[]) internal _issuedTokensMaturityBuckets;
 
-  EscrowManager public escrowManager;
+  IEscrowInitiate public escrowManager;
 
   event IssuanceEscrowInitiated(
     uint256 orderId,
@@ -63,7 +64,7 @@ contract TokenTvT is TokenBase {
     _maturityPeriod = input.maturityPeriod;
     _settlementPeriod = input.settlementPeriod;
     _collateral = input.collateral;
-    escrowManager = EscrowManager(escrowManagerAddress);
+    escrowManager = IEscrowInitiate(escrowManagerAddress);
   }
 
   function issue(address subscriber, uint256 value) public override onlyIssuer {
@@ -126,7 +127,7 @@ contract TokenTvT is TokenBase {
     }
   }
 
-  function onIssue(address subscriber, uint256 value) external {
+  function onIssue(address subscriber, uint256 value) external override {
     if (msg.sender != address(escrowManager)) {
       throwError(ErrorCondition.WRONG_CALLER);
     }
@@ -139,7 +140,7 @@ contract TokenTvT is TokenBase {
     emit Issued(subscriber, value, ReasonCodes.TRANSFER_SUCCESS);
   }
 
-  function onRedeem(address subscriber, uint256 value) external {
+  function onRedeem(address subscriber, uint256 value) external override {
     if (msg.sender != address(escrowManager)) {
       throwError(ErrorCondition.WRONG_CALLER);
     }

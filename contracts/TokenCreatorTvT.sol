@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import {TokenTvT as TokenContractTvT} from "./TokenTvT.sol";
+import {TokenTvT} from "./TokenTvT.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./TokenTvTTypes.sol";
 
@@ -19,7 +19,7 @@ contract TokenCreatorTvT is Ownable {
     onlyOwner
     returns (address tokenAddress)
   {
-    TokenContractTvT deployedToken = new TokenContractTvT(
+    TokenTvT deployedToken = new TokenTvT(
       input,
       msg.sender,
       escrowManagerAddress

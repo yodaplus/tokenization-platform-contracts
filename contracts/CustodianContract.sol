@@ -44,7 +44,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     Active
   }
 
-  struct Token {
+  struct TokenData {
     string name;
     string symbol;
     uint256 value;
@@ -85,7 +85,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   mapping(address => bool) internal _isCustodian;
   mapping(address => bool) internal _isKycProvider;
 
-  mapping(address => Token) internal _tokens;
+  mapping(address => TokenData) internal _tokens;
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
   mapping(address => address[])
     internal _tokenAddressesByCustodianPrimaryAddress;
@@ -654,9 +654,9 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   function getTokens(address issuerPrimaryAddress)
     external
     view
-    returns (Token[] memory result)
+    returns (TokenData[] memory result)
   {
-    result = new Token[](
+    result = new TokenData[](
       _tokenAddressesByIssuerPrimaryAddress[issuerPrimaryAddress].length
     );
 

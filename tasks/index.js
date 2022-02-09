@@ -224,16 +224,22 @@ task("publishToken").setAction(async (taskArgs) => {
   try {
     const receipt = await processTransaction(
       contract.methods.publishToken({
-        name: "Test Token 12",
-        symbol: "TT12",
-        decimals: 18,
+        name: "Token 1",
+        symbol: "TT1",
         maxTotalSupply: 10,
         value: 1000,
         currency: "USD",
+        issuerPrimaryAddress: "0xfd46a9707ed1f6eb7d7cfe0c6a2bac72d6aa57d4",
+        custodianPrimaryAddress: "0xe119ab1bd914f9370d39fd9a761165f2115b4d9e",
+        kycProviderPrimaryAddress: "0x821ab84ce0ac467b3e30f462059577b2cecd8b76",
         earlyRedemption: true,
         minSubscription: 1,
-        issuerPrimaryAddress: issuer,
-        custodianPrimaryAddress: custodian,
+        paymentTokens: [],
+        issuanceSwapMultiple: [],
+        redemptionSwapMultiple: [],
+        maturityPeriod: 0,
+        settlementPeriod: 0,
+        collateral: 0,
       }),
       {
         abi,

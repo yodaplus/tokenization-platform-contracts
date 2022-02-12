@@ -96,12 +96,15 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   mapping(string => bool) internal _tokenWithSymbolExists;
 
   mapping(address => mapping(address => bool)) internal _whitelist;
+  mapping(address => mapping(address => bool)) internal _issuerWhitelist;
 
   mapping(address => PaymentTokenStatus) internal _paymentTokensStatus;
 
   event TokenPublished(string symbol, address address_);
   event AddWhitelist(address tokenAddress, address address_);
   event RemoveWhitelist(address tokenAddress, address address_);
+  event AddIssuerWhitelist(address issuerAddress, address address_);
+  event RemoveIssuerWhitelist(address issuerAddress, address address_);
 
   event AddIssuer(address PrimaryAddress);
   event RemoveIssuer(address primaryAddress);
@@ -711,6 +714,26 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     }
   }
 
+  function addIssuerWhitelist(
+    address issuerAddress,
+    address[] calldata addresses
+  ) external onlyIssuer {
+    for (uint256 i = 0; i < addresses.length; i++) {
+      _issuerWhitelist[issuerAddress][addresses[i]] = true;
+      emit AddIssuerWhitelist(issuerAddress, addresses[i]);
+    }
+  }
+
+  function removeIssuerWhitelist(
+    address issuerAddress,
+    address[] calldata addresses
+  ) external onlyIssuer {
+    for (uint256 i = 0; i < addresses.length; i++) {
+      delete _issuerWhitelist[issuerAddress][addresses[i]];
+      emit RemoveIssuerWhitelist(issuerAddress, addresses[i]);
+    }
+  }
+
   function addPaymentToken(address tokenAddress) external onlyOwner {
     _paymentTokensStatus[tokenAddress] = PaymentTokenStatus.Active;
   }
@@ -724,7 +747,11 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     address investor,
     uint256 value
   ) external view override returns (bytes1) {
-    if (_whitelist[tokenAddress][investor] != true) {
+    address tokenOwner = _tokens[tokenAddress].issuerPrimaryAddress;
+    if (
+      _whitelist[tokenAddress][investor] != true ||
+      _issuerWhitelist[tokenOwner][investor] != true
+    ) {
       return ReasonCodes.INVALID_RECEIVER;
     }
 

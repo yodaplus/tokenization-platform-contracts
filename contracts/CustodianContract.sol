@@ -767,7 +767,11 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     address investor,
     uint256 value
   ) external view override returns (bytes1) {
-    if (_whitelist[tokenAddress][investor] != true) {
+    address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
+    if (
+      (_whitelist[tokenAddress][investor] != true) &&
+      (_issuerWhitelist[tokenIssuer][investor] != true)
+    ) {
       return ReasonCodes.INVALID_RECEIVER;
     }
 

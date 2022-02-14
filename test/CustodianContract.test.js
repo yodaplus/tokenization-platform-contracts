@@ -189,6 +189,46 @@ describe("CustodianContract", function () {
         ).not.to.be.reverted;
       });
     });
+    describe("issuer whitelisting", () => {
+      let tokenAddress;
+
+      beforeEach(async () => {
+        const { custodian, issuer, kycProvider } = await getNamedAccounts();
+
+        await expect(
+          CustodianContractIssuer.publishToken({
+            ...TOKEN_EXAMPLE,
+            issuerPrimaryAddress: issuer,
+            custodianPrimaryAddress: custodian,
+            kycProviderPrimaryAddress: kycProvider,
+          })
+        ).not.to.be.reverted;
+
+        const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+        tokenAddress = tokens[0].address_;
+      });
+
+      it("only issuers  can add/remove whitelisted addresses", async () => {
+        const { subscriber, issuer } = await getNamedAccounts();
+
+        await expect(
+          CustodianContractIssuer.addIssuerWhitelist(issuer, [subscriber])
+        ).not.to.be.reverted;
+
+        await expect(
+          CustodianContract.addIssuerWhitelist(issuer, [subscriber])
+        ).to.be.revertedWith("caller is not allowed");
+
+        await expect(
+          CustodianContractIssuer.removeIssuerWhitelist(issuer, [subscriber])
+        ).not.to.be.reverted;
+
+        await expect(
+          CustodianContract.removeIssuerWhitelist(issuer, [subscriber])
+        ).to.be.revertedWith("caller is not allowed");
+      });
+    });
 
     it("has a token creator address", async () => {
       expect(await CustodianContract.tokenCreator()).to.equal(

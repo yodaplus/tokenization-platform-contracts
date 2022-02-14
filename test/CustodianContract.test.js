@@ -821,6 +821,17 @@ describe("CustodianContract", function () {
         userAddressName: "kycProvider",
       });
     });
+    // describe("insurer", async () => {
+    //   createTests({
+    //     roleName: "insurer",
+    //     addUser: "addInsurer",
+    //     removeUser: "removeInsurer",
+    //     isUser: "isInsurer",
+    //     userAddressName: "insurer",
+    //     addUserAccounts: "addInsurerAccounts",
+    //     removeUserAccounts: "removeInsurerAccounts",
+    //   });
+    // });
 
     it("can add multiple roles for the same primary address", async () => {
       const { issuer } = await getNamedAccounts();

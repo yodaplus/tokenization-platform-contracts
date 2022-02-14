@@ -76,14 +76,17 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   mapping(address => RoleData) public _issuers;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
+  mapping(address => RoleData) public _insurers;
 
   mapping(address => address) public _addressToIssuerPrimaryAddress;
   mapping(address => address) public _addressToCustodianPrimaryAddress;
   mapping(address => address) public _addressToKycProviderPrimaryAddress;
+  mapping(address => address) public _addressToInsurerPrimaryAddress;
 
   mapping(address => bool) internal _isIssuer;
   mapping(address => bool) internal _isCustodian;
   mapping(address => bool) internal _isKycProvider;
+  mapping(address => bool) internal _isInsurer;
 
   mapping(address => TokenData) internal _tokens;
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
@@ -91,6 +94,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     internal _tokenAddressesByCustodianPrimaryAddress;
   mapping(address => address[])
     internal _tokenAddressesByKycProviderPrimaryAddress;
+  mapping(address => address[]) internal _tokenAddressesByInsurerPrimaryAddress;
 
   mapping(string => bool) internal _tokenWithNameExists;
   mapping(string => bool) internal _tokenWithSymbolExists;
@@ -121,6 +125,11 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   event AddKYCProviderAddress(address primaryAddress, address[] addresses);
   event RemoveKYCProviderAddress(address primaryAddress, address[] addresses);
 
+  event AddInsurer(address primaryAddress);
+  event RemoveInsurer(address primaryAddress);
+  event AddInsurerAddress(address primaryAddress, address[] addresses);
+  event RemoveInsurerAddress(address primaryAddress, address[] addresses);
+
   error ERC1066Error(bytes1 errorCode, string message);
 
   enum ErrorCondition {
@@ -139,7 +148,8 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     TOKEN_EARLY_REDEMPTION_NOT_ALLOWED,
     TOKEN_DOES_NOT_EXIST,
     TOKEN_PAUSED,
-    WRONG_INPUT
+    WRONG_INPUT,
+    REMOVED_INSURER_HAS_TOKENS
   }
 
   function getTimestamp() external view override returns (uint256) {
@@ -176,6 +186,11 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "removed KYC provider must not have tokens"
+      );
+    } else if (condition == ErrorCondition.REMOVED_INSURER_HAS_TOKENS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "removed insurer must not have tokens"
       );
     } else if (condition == ErrorCondition.TOKEN_WRONG_ISSUER) {
       revert ERC1066Error(
@@ -238,6 +253,10 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
 
   function isIssuer(address addr) public view returns (bool) {
     return _isIssuer[_addressToIssuerPrimaryAddress[addr]];
+  }
+
+  function isInsurer(address addr) public view returns (bool) {
+    return _isInsurer[_addressToInsurerPrimaryAddress[addr]];
   }
 
   function isIssuerOwnerOrEmployee(address primaryIssuer, address issuer)
@@ -423,6 +442,20 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     emit AddKYCProvider(primaryAddress);
   }
 
+  function addInsurer(string calldata countryCode, address primaryAddress)
+    external
+    onlyOwner
+  {
+    _addRole(
+      _isInsurer,
+      _insurers,
+      _addressToInsurerPrimaryAddress,
+      countryCode,
+      primaryAddress
+    );
+    emit AddInsurer(primaryAddress);
+  }
+
   function removeIssuer(address primaryAddress) external onlyOwner {
     if (_tokenAddressesByIssuerPrimaryAddress[primaryAddress].length > 0) {
       throwError(ErrorCondition.REMOVED_ISSUER_HAS_TOKENS);
@@ -460,6 +493,19 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       primaryAddress
     );
     emit RemoveKYCProvider(primaryAddress);
+  }
+
+  function removeInsurer(address primaryAddress) external onlyOwner {
+    if (_tokenAddressesByInsurerPrimaryAddress[primaryAddress].length > 0) {
+      throwError(ErrorCondition.REMOVED_INSURER_HAS_TOKENS);
+    }
+    _removeRole(
+      _isInsurer,
+      _insurers,
+      _addressToInsurerPrimaryAddress,
+      primaryAddress
+    );
+    emit RemoveInsurer(primaryAddress);
   }
 
   function addIssuerAccounts(
@@ -504,6 +550,20 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     emit AddKYCProviderAddress(primaryAddress, addresses);
   }
 
+  function addInsurerAccounts(
+    address primaryAddress,
+    address[] calldata addresses
+  ) external {
+    _addRoleAddresses(
+      _isInsurer,
+      _insurers,
+      _addressToInsurerPrimaryAddress,
+      primaryAddress,
+      addresses
+    );
+    emit AddInsurerAddress(primaryAddress, addresses);
+  }
+
   function removeIssuerAccounts(
     address primaryAddress,
     address[] calldata addresses
@@ -530,6 +590,20 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       addresses
     );
     emit RemoveCustodianAddress(primaryAddress, addresses);
+  }
+
+  function removeInsurerAccounts(
+    address primaryAddress,
+    address[] calldata addresses
+  ) external {
+    _removeRoleAddresses(
+      _isInsurer,
+      _insurers,
+      _addressToInsurerPrimaryAddress,
+      primaryAddress,
+      addresses
+    );
+    emit RemoveInsurerAddress(primaryAddress, addresses);
   }
 
   function removeKycProviderAccounts(

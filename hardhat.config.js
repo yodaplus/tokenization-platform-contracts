@@ -33,6 +33,7 @@ const namedAccounts = Object.fromEntries(
     "subscriber2",
     "kycProvider",
     "nonSubscriber",
+    "insurer",
   ].map((name, i) => [name, i])
 );
 

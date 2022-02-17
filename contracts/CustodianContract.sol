@@ -276,6 +276,22 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     return _isKycProvider[_addressToKycProviderPrimaryAddress[addr]];
   }
 
+  function isWhitelisted(address tokenAddress, address investorAddress)
+    public
+    view
+    returns (bool)
+  {
+    return _whitelist[tokenAddress][investorAddress];
+  }
+
+  function isIssuerWhitelisted(address issuerAddress, address investorAddress)
+    public
+    view
+    returns (bool)
+  {
+    return _issuerWhitelist[issuerAddress][investorAddress];
+  }
+
   modifier onlyIssuer() {
     if (isIssuer(msg.sender) == false) {
       throwError(ErrorCondition.WRONG_CALLER);

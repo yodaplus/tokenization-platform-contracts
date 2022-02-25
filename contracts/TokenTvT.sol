@@ -21,6 +21,8 @@ contract TokenTvT is TokenBase, ITokenHooks {
     internal _issuedTokensByMaturityBucket;
   mapping(address => uint256[]) internal _issuedTokensMaturityBuckets;
 
+  event TokenIssuanceSwapRatioUpdated(uint256 ratio);
+
   IEscrowInitiate public escrowManager;
 
   event IssuanceEscrowInitiated(
@@ -65,6 +67,19 @@ contract TokenTvT is TokenBase, ITokenHooks {
     _settlementPeriod = input.settlementPeriod;
     _collateral = input.collateral;
     escrowManager = IEscrowInitiate(escrowManagerAddress);
+  }
+
+  function updateTokenIssuanceSwapRatio(uint256 ratio) external onlyIssuer {
+    if (ratio < 0) {
+      throwError(ErrorCondition.WRONG_INPUT);
+    }
+
+    _issuanceSwapMultiple[0] = ratio;
+    emit TokenIssuanceSwapRatioUpdated(ratio);
+  }
+
+  function getIssuanceSwapRatio() external view returns (uint256) {
+    return _issuanceSwapMultiple[0];
   }
 
   function issue(address subscriber, uint256 value) public override onlyIssuer {

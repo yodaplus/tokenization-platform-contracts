@@ -355,6 +355,15 @@ describe("TvT", function () {
           await TokenContract.allowance(issuer, escrowManager)
         ).to.be.equal(1);
       });
+      it("gives allows to change swap issuance ratio", async () => {
+        const { issuer, subscriber } = await getNamedAccounts();
+
+        const escrowManager = await TokenContract.escrowManager();
+
+        await TokenContract["updateTokenIssuanceSwapRatio(uint256)"](2);
+
+        expect(await TokenContract.getIssuanceSwapRatio()).to.be.equal(2);
+      });
 
       it("creates an escrow order with properly calculated parameters", async () => {
         const { issuer, subscriber } = await getNamedAccounts();

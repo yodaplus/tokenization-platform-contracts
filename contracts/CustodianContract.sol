@@ -58,21 +58,31 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     address address_;
   }
 
-  struct InvestorData {
-    string countryCode;
-    bool LEI_check;
-    bool bank_check;
-    bool address_check;
-    bool citizenship_check;
-    bool accredated;
-    bool affiliated;
-    bool exempted;
-    bool pep_check;
-    bool gol_check;
-    bool fatf_compliance_check;
+  struct KycBasicDetails {
+    string leiCheck;
+    string bankCheck;
+    string citizenshipCheck;
+    string addressCheck;
   }
 
-  mapping(string => InvestorData) public _investors;
+  struct KycAMLCTF {
+    string pepCheck;
+    string sanctionScreening;
+    string suspiciousActivityReport;
+    string cddReport;
+    string fatfComplianceCheck;
+  }
+
+  struct KycData {
+    string countryCode;
+    string accredation;
+    string affiliation;
+    string exempted;
+    KycBasicDetails kycBasicDetails;
+    KycAMLCTF kycAmlCtf;
+  }
+
+  mapping(address => mapping(string => KycData)) public kycVerifications;
   mapping(address => RoleData) public _issuers;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
@@ -245,10 +255,11 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   }
 
   function updateKyc(
+    address issuerAddress,
     string calldata lei,
-    InvestorData calldata investor_kyc_data
-  ) external onlyKycProvider {
-    _investors[lei] = investor_kyc_data;
+    KycData calldata investorKycData
+  ) external onlyIssuerOrKycProvider {
+    kycVerifications[issuerAddress][lei] = investorKycData;
   }
 
   function isIssuer(address addr) public view returns (bool) {

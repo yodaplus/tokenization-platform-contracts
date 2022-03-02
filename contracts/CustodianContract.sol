@@ -84,6 +84,12 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   }
 
   mapping(address => mapping(string => KycData)) public kycVerifications;
+
+  struct TokenRestrictions {
+    bytes32[] allowedCountries;
+    bytes32[] allowedInvestorClassifications;
+    bool useIssuerWhitelist;
+  }
   mapping(address => RoleData) public _issuers;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
@@ -100,6 +106,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   mapping(address => bool) internal _isInsurer;
 
   mapping(address => TokenData) internal _tokens;
+  mapping(address => TokenRestrictions) internal _tokenRestrictions;
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
   mapping(address => address[])
     internal _tokenAddressesByCustodianPrimaryAddress;
@@ -112,6 +119,9 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
 
   mapping(address => mapping(address => bool)) internal _whitelist;
   mapping(address => mapping(address => bool)) internal _issuerWhitelist;
+  mapping(address => string) internal allowedCountries;
+  mapping(address => string[]) internal allowedClassifications;
+  mapping(address => bool) internal useIssuerWhitelist;
 
   mapping(address => PaymentTokenStatus) internal _paymentTokensStatus;
 
@@ -665,6 +675,9 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     uint256 maturityPeriod;
     uint256 settlementPeriod;
     uint256 collateral;
+    bytes32[] countries;
+    bytes32[] investorClassifications;
+    bool useIssuerWhitelist;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
@@ -752,6 +765,11 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       .push(tokenAddress);
     _tokenAddressesByKycProviderPrimaryAddress[token.kycProviderPrimaryAddress]
       .push(tokenAddress);
+    _tokenRestrictions[tokenAddress].allowedCountries = token.countries;
+    _tokenRestrictions[tokenAddress].allowedInvestorClassifications = token
+      .investorClassifications;
+    _tokenRestrictions[tokenAddress].useIssuerWhitelist = token
+      .useIssuerWhitelist;
 
     emit TokenPublished(token.symbol, tokenAddress);
   }

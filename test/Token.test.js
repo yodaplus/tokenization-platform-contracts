@@ -3,7 +3,7 @@ const chai = require("chai");
 const chaiSnapshot = require("mocha-chai-snapshot");
 const { ethers, deployments, getNamedAccounts } = require("hardhat");
 const { expect } = chai;
-const { TOKEN_EXAMPLE } = require("./utils");
+const { TOKEN_EXAMPLE, KYC_DATA } = require("./utils");
 chai.use(chaiSnapshot);
 
 describe("Token", function () {
@@ -61,6 +61,8 @@ describe("Token", function () {
       tokens[0].address_,
       subscriber
     );
+    await CustodianContractKycProvider.updateKyc(issuer, subscriber, KYC_DATA);
+    await CustodianContractKycProvider.updateKyc(issuer, subscriber2, KYC_DATA);
     await CustodianContractKycProvider.addWhitelist(tokens[0].address_, [
       subscriber,
       subscriber2,
@@ -247,13 +249,17 @@ describe("Token", function () {
     });
 
     it("can issue if subscriber is whitelisted", async () => {
-      const { kycProvider, nonSubscriber } = await getNamedAccounts();
+      const { issuer, kycProvider, nonSubscriber } = await getNamedAccounts();
 
       const CustodianContractKycProvider = await ethers.getContract(
         "CustodianContract",
         kycProvider
       );
-
+      await CustodianContractKycProvider.updateKyc(
+        issuer,
+        nonSubscriber,
+        KYC_DATA
+      );
       await expect(
         CustodianContractKycProvider.addWhitelist(TokenContract.address, [
           nonSubscriber,

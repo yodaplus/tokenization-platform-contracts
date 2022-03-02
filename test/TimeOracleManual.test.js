@@ -2,7 +2,7 @@ const _ = require("lodash/fp");
 const chai = require("chai");
 const { ethers, deployments, getNamedAccounts } = require("hardhat");
 const { expect } = chai;
-const { TOKEN_EXAMPLE } = require("./utils");
+const { TOKEN_EXAMPLE, stringToBytes32, KYC_DATA } = require("./utils");
 
 const setupTest = deployments.createFixture(
   async ({ deployments, getNamedAccounts, ethers }) => {
@@ -181,6 +181,8 @@ describe("TimeOracleManual", function () {
       tokens[0].address_,
       subscriber
     );
+    await CustodianContractKycProvider.updateKyc(issuer, subscriber, KYC_DATA);
+    await CustodianContractKycProvider.updateKyc(issuer, subscriber2, KYC_DATA);
     await CustodianContractKycProvider.addWhitelist(tokens[0].address_, [
       subscriber,
       subscriber2,

@@ -83,11 +83,15 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     KycAMLCTF kycAmlCtf;
   }
 
-  mapping(address => mapping(string => KycData)) public kycVerifications;
-
+  mapping(address => mapping(address => KycData)) public kycVerifications;
+  struct InvestorClassificationRules {
+    bool isExempted;
+    bool isAccredited;
+    bool isAffiliated;
+  }
   struct TokenRestrictions {
     bytes32[] allowedCountries;
-    bytes32[] allowedInvestorClassifications;
+    InvestorClassificationRules allowedInvestorClassifications;
     bool useIssuerWhitelist;
   }
   mapping(address => RoleData) public _issuers;
@@ -267,10 +271,10 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
 
   function updateKyc(
     address issuerAddress,
-    string calldata lei,
+    address investorAddress,
     KycData calldata investorKycData
   ) external onlyIssuerOrKycProvider {
-    kycVerifications[issuerAddress][lei] = investorKycData;
+    kycVerifications[issuerAddress][investorAddress] = investorKycData;
   }
 
   function isIssuer(address addr) public view returns (bool) {
@@ -676,7 +680,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     uint256 settlementPeriod;
     uint256 collateral;
     bytes32[] countries;
-    bytes32[] investorClassifications;
+    InvestorClassificationRules investorClassifications;
     bool useIssuerWhitelist;
   }
 
@@ -867,7 +871,64 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     address investor,
     uint256 value
   ) external view override returns (bytes1) {
+    assertTokenExists(tokenAddress);
+
     address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
+
+    // Check if KYC is Complete.
+    if (!kycVerifications[tokenIssuer][investor].kycStatus) {
+      return ReasonCodes.KYC_INCOMPLETE;
+    }
+
+    // Check if investorCountry is allowed using token restrictions.
+    bool isInvestorCountryAllowed = false;
+    for (
+      uint256 i = 0;
+      i < _tokenRestrictions[tokenAddress].allowedCountries.length;
+      i++
+    ) {
+      if (
+        _tokenRestrictions[tokenAddress].allowedCountries[i] ==
+        kycVerifications[tokenIssuer][investor].countryCode
+      ) {
+        isInvestorCountryAllowed = true;
+        break;
+      }
+    }
+    if (
+      !isInvestorCountryAllowed &&
+      _tokenRestrictions[tokenAddress].allowedCountries.length > 0
+    ) {
+      return ReasonCodes.COUNTRY_NOT_ALLOWED;
+    }
+
+    // Check if investorClassification is allowed using token restrictions.
+    if (
+      _tokenRestrictions[tokenAddress].allowedInvestorClassifications.isExempted
+    ) {
+      if (!kycVerifications[tokenIssuer][investor].exempted) {
+        return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+      }
+    }
+    if (
+      _tokenRestrictions[tokenAddress]
+        .allowedInvestorClassifications
+        .isAccredited
+    ) {
+      if (!kycVerifications[tokenIssuer][investor].affiliation) {
+        return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+      }
+    }
+    if (
+      _tokenRestrictions[tokenAddress]
+        .allowedInvestorClassifications
+        .isAffiliated
+    ) {
+      if (!kycVerifications[tokenIssuer][investor].affiliation) {
+        return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+      }
+    }
+
     if (
       (_whitelist[tokenAddress][investor] != true) &&
       (_issuerWhitelist[tokenIssuer][investor] != true)
@@ -888,6 +949,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     uint256 value
   ) external view override returns (bytes1) {
     address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
+
     if (
       (_whitelist[tokenAddress][investor] != true) &&
       (_issuerWhitelist[tokenIssuer][investor] != true)

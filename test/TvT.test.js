@@ -3,7 +3,7 @@ const chai = require("chai");
 const chaiSnapshot = require("mocha-chai-snapshot");
 const { ethers, deployments, getNamedAccounts } = require("hardhat");
 const { expect } = chai;
-const { TOKEN_EXAMPLE } = require("./utils");
+const { TOKEN_EXAMPLE, KYC_DATA } = require("./utils");
 chai.use(chaiSnapshot);
 
 const UNREGISTERED_PAYMENT_TOKEN_ADDRESS =
@@ -96,6 +96,8 @@ describe("TvT", function () {
       tokens[0].address_,
       subscriber
     );
+    await CustodianContractKycProvider.updateKyc(issuer, subscriber, KYC_DATA);
+    await CustodianContractKycProvider.updateKyc(issuer, subscriber2, KYC_DATA);
     await CustodianContractKycProvider.addWhitelist(tokens[0].address_, [
       subscriber,
       subscriber2,
@@ -751,6 +753,16 @@ describe("TvT", function () {
           "TokenTvT",
           tokens[1].address_,
           subscriber
+        );
+        await CustodianContractKycProvider.updateKyc(
+          issuer,
+          subscriber,
+          KYC_DATA
+        );
+        await CustodianContractKycProvider.updateKyc(
+          issuer,
+          subscriber2,
+          KYC_DATA
         );
 
         await CustodianContractKycProvider.addWhitelist(tokens[1].address_, [

@@ -59,25 +59,26 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   }
 
   struct KycBasicDetails {
-    string leiCheck;
-    string bankCheck;
-    string citizenshipCheck;
-    string addressCheck;
+    bool leiCheck;
+    bool bankCheck;
+    bool citizenshipCheck;
+    bool addressCheck;
   }
 
   struct KycAMLCTF {
-    string pepCheck;
-    string sanctionScreening;
-    string suspiciousActivityReport;
-    string cddReport;
-    string fatfComplianceCheck;
+    bool pepCheck;
+    bool sanctionScreening;
+    bool suspiciousActivityReport;
+    bool cddReport;
+    bool fatfComplianceCheck;
   }
 
   struct KycData {
-    string countryCode;
-    string accredation;
-    string affiliation;
-    string exempted;
+    bool countryCode;
+    bool kycStatus;
+    bool accredation;
+    bool affiliation;
+    bool exempted;
     KycBasicDetails kycBasicDetails;
     KycAMLCTF kycAmlCtf;
   }

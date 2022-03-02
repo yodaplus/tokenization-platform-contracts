@@ -74,7 +74,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   }
 
   struct KycData {
-    bool countryCode;
+    bytes32 countryCode;
     bool kycStatus;
     bool accredation;
     bool affiliation;

@@ -24,7 +24,7 @@ const TOKEN_EXAMPLE = {
     isAccredited: true,
     isAffiliated: true,
   },
-  useIssuerWhitelist: true,
+  useIssuerWhitelist: false,
 };
 const KYC_DATA = {
   countryCode: stringToBytes32("USA"),

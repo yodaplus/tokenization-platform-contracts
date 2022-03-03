@@ -915,7 +915,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
         .allowedInvestorClassifications
         .isAccredited
     ) {
-      if (!kycVerifications[tokenIssuer][investor].affiliation) {
+      if (!kycVerifications[tokenIssuer][investor].accredation) {
         return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
       }
     }
@@ -929,11 +929,17 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       }
     }
 
-    if (
-      (_whitelist[tokenAddress][investor] != true) &&
-      (_issuerWhitelist[tokenIssuer][investor] != true)
-    ) {
-      return ReasonCodes.INVALID_RECEIVER;
+    if (_tokenRestrictions[tokenAddress].useIssuerWhitelist) {
+      if (!_issuerWhitelist[tokenIssuer][investor]) {
+        return ReasonCodes.INVALID_RECEIVER;
+      }
+    } else {
+      if (
+        (_whitelist[tokenAddress][investor] != true) &&
+        (_issuerWhitelist[tokenIssuer][investor] != true)
+      ) {
+        return ReasonCodes.INVALID_RECEIVER;
+      }
     }
 
     if (value == 0) {

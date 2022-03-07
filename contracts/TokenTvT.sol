@@ -109,7 +109,17 @@ contract TokenTvT is TokenBase, ITokenHooks {
     address tokenOwner = owner();
 
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
-      emit IssuanceFailure(subscriber, value, reasonCode);
+      if (reasonCode == ReasonCodes.KYC_INCOMPLETE) {
+        throwError(ErrorCondition.KYC_INCOMPLETE);
+      } else if (reasonCode == ReasonCodes.COUNTRY_NOT_ALLOWED) {
+        throwError(ErrorCondition.COUNTRY_NOT_ALLOWED);
+      } else if (
+        reasonCode == ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED
+      ) {
+        throwError(ErrorCondition.INVESTOR_CLASSIFICATION_NOT_ALLOWED);
+      } else {
+        throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
+      }
     } else {
       _mint(tokenOwner, value);
       increaseAllowance(address(escrowManager), value);

@@ -3,7 +3,7 @@ const chai = require("chai");
 const chaiSnapshot = require("mocha-chai-snapshot");
 const { ethers, deployments, getNamedAccounts } = require("hardhat");
 const { expect } = chai;
-const { TOKEN_EXAMPLE } = require("./utils");
+const { TOKEN_EXAMPLE, KYC_DATA, stringToBytes32 } = require("./utils");
 chai.use(chaiSnapshot);
 
 const normalizeOutput = (output) =>
@@ -861,6 +861,309 @@ describe("CustodianContract", function () {
       expect(await CustodianContract.isIssuer(issuer)).to.be.equal(true);
       expect(await CustodianContract.isCustodian(issuer)).to.be.equal(true);
       expect(await CustodianContract.isKycProvider(issuer)).to.be.equal(true);
+    });
+  });
+  describe("TransferRestrictions", () => {
+    let CustodianContractIssuer;
+    let PaymentToken;
+
+    beforeEach(async () => {
+      const {
+        issuer,
+        custodian,
+        kycProvider,
+        custodianContractOwner,
+        subscriber,
+      } = await getNamedAccounts();
+      await CustodianContract.addIssuer("countryCode", issuer);
+      await CustodianContract.addCustodian("countryCode", custodian);
+      await CustodianContract.addKycProvider("countryCode", kycProvider);
+      CustodianContractIssuer = await ethers.getContract(
+        "CustodianContract",
+        issuer
+      );
+      PaymentToken = await ethers.getContract(
+        "PaymentToken",
+        custodianContractOwner
+      );
+      await PaymentToken.transfer(subscriber, 1000);
+      await CustodianContract.addPaymentToken(PaymentToken.address);
+    });
+    it("can't issue if issuer not in allowed countries", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        countryCode: stringToBytes32("PAK"),
+      });
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(
+        TokenTvT["issue(address,uint256)"](subscriber, 2)
+      ).to.be.revertedWith("country is not allowed");
+    });
+    it("issue if issuer in allowed countries", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        countryCode: stringToBytes32("IND"),
+      });
+      await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
+        .reverted;
+    });
+    it("should not issue if kyc is complete", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+
+      await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(
+        TokenTvT["issue(address,uint256)"](subscriber, 2)
+      ).to.be.revertedWith("KYC is incomplete");
+    });
+    it("should revert if investor is not isAccredited else issue", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+        investorClassifications: {
+          isExempted: false,
+          isAccredited: true,
+          isAffiliated: false,
+        },
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        accredation: false,
+      });
+      await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(
+        TokenTvT["issue(address,uint256)"](subscriber, 2)
+      ).to.be.revertedWith("investor classification is not allowed");
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        accredation: true,
+      });
+      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
+        .reverted;
+    });
+    it("should revert if investor is not isExempted else issue", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+        investorClassifications: {
+          isExempted: true,
+          isAccredited: false,
+          isAffiliated: false,
+        },
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        exempted: false,
+      });
+      await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(
+        TokenTvT["issue(address,uint256)"](subscriber, 2)
+      ).to.be.revertedWith("investor classification is not allowed");
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        exempted: true,
+      });
+      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
+        .reverted;
+    });
+    it("should revert if investor is not isAffiliated else issue", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+        investorClassifications: {
+          isExempted: false,
+          isAccredited: false,
+          isAffiliated: true,
+        },
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        affiliation: false,
+      });
+      await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(
+        TokenTvT["issue(address,uint256)"](subscriber, 2)
+      ).to.be.revertedWith("investor classification is not allowed");
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+        affiliation: true,
+      });
+      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
+        .reverted;
+    });
+    it("should not issue if investor not in issuer whitelist", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+        useIssuerWhitelist: true,
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+      });
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(
+        TokenTvT["issue(address,uint256)"](subscriber, 2)
+      ).to.be.revertedWith("custodian contract validation fail");
+    });
+    it("should issue if investor in issuer whitelist", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+        useIssuerWhitelist: true,
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+      await CustodianContractIssuer.updateKyc(issuer, subscriber, {
+        ...KYC_DATA,
+      });
+      await CustodianContractIssuer.addIssuerWhitelist(issuer, [subscriber]);
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
+        .reverted;
     });
   });
 });

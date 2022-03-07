@@ -47,7 +47,10 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
     CUSTODIAN_VALIDATION_FAIL,
     WRONG_INPUT,
     MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY,
-    TOKEN_IS_PAUSED
+    TOKEN_IS_PAUSED,
+    KYC_INCOMPLETE,
+    COUNTRY_NOT_ALLOWED,
+    INVESTOR_CLASSIFICATION_NOT_ALLOWED
   }
 
   function throwError(ErrorCondition condition) internal pure {
@@ -78,11 +81,27 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "can't set less than total supply"
       );
-    } else {
+    } else if (condition == ErrorCondition.KYC_INCOMPLETE) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
-        "unknown error condition"
+        "KYC is incomplete"
       );
+    } else if (condition == ErrorCondition.COUNTRY_NOT_ALLOWED) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "country is not allowed"
+      );
+    } else if (
+      condition == ErrorCondition.INVESTOR_CLASSIFICATION_NOT_ALLOWED
+    ) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "investor classification is not allowed"
+      );
+    } else if (condition == ErrorCondition.TOKEN_IS_PAUSED) {
+      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "token is paused");
+    } else {
+      revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "unknown error");
     }
   }
 

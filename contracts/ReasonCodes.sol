@@ -18,4 +18,5 @@ contract ReasonCodes {
   bytes1 public constant KYC_INCOMPLETE = hex"A1";
   bytes1 public constant COUNTRY_NOT_ALLOWED = hex"A2";
   bytes1 public constant INVESTOR_CLASSIFICATION_NOT_ALLOWED = hex"A3";
+  bytes1 public constant INVESTOR_NOT_WHITELISTED = hex"A4";
 }

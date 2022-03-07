@@ -452,7 +452,23 @@ describe("CustodianContract", function () {
       expect(tokens[0].address_).not.to.be.equal(tokens[1].address_);
     });
   });
-
+  describe("paymentToken", () => {
+    it("can set payment token", async () => {
+      const { custodian, issuer, kycProvider, custodianContractOwner } =
+        await getNamedAccounts();
+      const CustodianContract = await ethers.getContract(
+        "CustodianContract",
+        custodianContractOwner
+      );
+      const PaymentToken = await ethers.getContract(
+        "PaymentToken",
+        custodianContractOwner
+      );
+      await expect(CustodianContract.addPaymentToken(PaymentToken.address))
+        .to.emit(CustodianContract, "PaymentTokenAdded")
+        .withArgs(PaymentToken.address);
+    });
+  });
   describe("roles CRUD", () => {
     const createTests = ({
       roleName,

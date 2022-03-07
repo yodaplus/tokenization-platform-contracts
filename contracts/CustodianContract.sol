@@ -154,6 +154,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   event RemoveInsurer(address primaryAddress);
   event AddInsurerAddress(address primaryAddress, address[] addresses);
   event RemoveInsurerAddress(address primaryAddress, address[] addresses);
+  event PaymentTokenAdded(address tokenAddress);
 
   error ERC1066Error(bytes1 errorCode, string message);
 
@@ -860,6 +861,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
 
   function addPaymentToken(address tokenAddress) external onlyOwner {
     _paymentTokensStatus[tokenAddress] = PaymentTokenStatus.Active;
+    emit PaymentTokenAdded(tokenAddress);
   }
 
   function removePaymentToken(address tokenAddress) external onlyOwner {

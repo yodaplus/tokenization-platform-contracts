@@ -56,6 +56,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     uint256 minSubscription;
     TokenStatus status;
     address address_;
+    bool onChainKyc;
   }
 
   struct KycBasicDetails {
@@ -683,6 +684,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     bytes32[] countries;
     InvestorClassificationRules investorClassifications;
     bool useIssuerWhitelist;
+    bool onChainKyc;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
@@ -761,6 +763,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     _tokens[tokenAddress].minSubscription = token.minSubscription;
     _tokens[tokenAddress].status = TokenStatus.Published;
     _tokens[tokenAddress].address_ = tokenAddress;
+    _tokens[tokenAddress].onChainKyc = token.onChainKyc;
     _tokenWithNameExists[token.name] = true;
     _tokenWithSymbolExists[token.symbol] = true;
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
@@ -878,7 +881,10 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
 
     // Check if KYC is Complete.
-    if (!kycVerifications[tokenIssuer][investor].kycStatus) {
+    if (
+      !kycVerifications[tokenIssuer][investor].kycStatus &&
+      _tokens[tokenAddress].onChainKyc
+    ) {
       return ReasonCodes.KYC_INCOMPLETE;
     }
 

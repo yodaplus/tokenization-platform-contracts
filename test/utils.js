@@ -25,6 +25,7 @@ const TOKEN_EXAMPLE = {
     isAffiliated: true,
   },
   useIssuerWhitelist: false,
+  onChainKyc: true,
 };
 const KYC_DATA = {
   countryCode: stringToBytes32("USA"),

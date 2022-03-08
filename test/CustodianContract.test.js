@@ -341,6 +341,7 @@ describe("CustodianContract", function () {
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
+
           issuerPrimaryAddress: issuer,
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
@@ -861,6 +862,68 @@ describe("CustodianContract", function () {
       expect(await CustodianContract.isIssuer(issuer)).to.be.equal(true);
       expect(await CustodianContract.isCustodian(issuer)).to.be.equal(true);
       expect(await CustodianContract.isKycProvider(issuer)).to.be.equal(true);
+    });
+  });
+  describe("KYC", () => {
+    let CustodianContractIssuer;
+    let PaymentToken;
+
+    beforeEach(async () => {
+      const {
+        issuer,
+        custodian,
+        kycProvider,
+        custodianContractOwner,
+        subscriber,
+      } = await getNamedAccounts();
+      await CustodianContract.addIssuer("countryCode", issuer);
+      await CustodianContract.addCustodian("countryCode", custodian);
+      await CustodianContract.addKycProvider("countryCode", kycProvider);
+      CustodianContractIssuer = await ethers.getContract(
+        "CustodianContract",
+        issuer
+      );
+      PaymentToken = await ethers.getContract(
+        "PaymentToken",
+        custodianContractOwner
+      );
+      await PaymentToken.transfer(subscriber, 1000);
+      await CustodianContract.addPaymentToken(PaymentToken.address);
+    });
+    it("should issue if kyc is disabled for token", async () => {
+      const { issuer, subscriber, custodian, kycProvider } =
+        await getNamedAccounts();
+
+      await CustodianContractIssuer.publishToken({
+        ...TOKEN_EXAMPLE,
+        paymentTokens: [PaymentToken.address],
+        issuanceSwapMultiple: [2],
+        redemptionSwapMultiple: [3],
+        earlyRedemption: false,
+        issuerPrimaryAddress: issuer,
+        custodianPrimaryAddress: custodian,
+        kycProviderPrimaryAddress: kycProvider,
+        onChainKyc: false,
+        countries: [],
+        countries: [],
+        investorClassifications: {
+          isExempted: false,
+          isAccredited: false,
+          isAffiliated: false,
+        },
+        useIssuerWhitelist: false,
+      });
+      const tokens = await CustodianContractIssuer.getTokens(issuer);
+
+      const tokenAddress = tokens[0].address_;
+      await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
+      const TokenTvT = await ethers.getContractAt(
+        "TokenTvT",
+        tokenAddress,
+        issuer
+      );
+      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
+        .reverted;
     });
   });
   describe("TransferRestrictions", () => {

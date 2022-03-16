@@ -52,6 +52,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     address issuerPrimaryAddress;
     address custodianPrimaryAddress;
     address kycProviderPrimaryAddress;
+    address insurerPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
     TokenStatus status;
@@ -169,6 +170,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     TOKEN_WRONG_ISSUER,
     TOKEN_WRONG_CUSTODIAN,
     TOKEN_WRONG_KYCPROVIDER,
+    TOKEN_WRONG_INSURER,
     TOKEN_SAME_NAME_EXISTS,
     TOKEN_SAME_SYMBOL_EXISTS,
     TOKEN_WRONG_PAYMENT_TOKEN,
@@ -233,6 +235,11 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "kyc provider does not exists"
+      );
+    } else if (condition == ErrorCondition.TOKEN_WRONG_INSURER) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "insurer does not exists"
       );
     } else if (condition == ErrorCondition.TOKEN_SAME_NAME_EXISTS) {
       revert ERC1066Error(
@@ -673,6 +680,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     address issuerPrimaryAddress;
     address custodianPrimaryAddress;
     address kycProviderPrimaryAddress;
+    address insurerPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
     address[] paymentTokens;
@@ -699,7 +707,9 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     if (_isKycProvider[token.kycProviderPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_KYCPROVIDER);
     }
-
+    if (_isInsurer[token.insurerPrimaryAddress] == false) {
+      throwError(ErrorCondition.TOKEN_WRONG_INSURER);
+    }
     if (_tokenWithNameExists[token.name] == true) {
       throwError(ErrorCondition.TOKEN_SAME_NAME_EXISTS);
     }
@@ -759,6 +769,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       .custodianPrimaryAddress;
     _tokens[tokenAddress].kycProviderPrimaryAddress = token
       .kycProviderPrimaryAddress;
+    _tokens[tokenAddress].insurerPrimaryAddress = token.insurerPrimaryAddress;
     _tokens[tokenAddress].earlyRedemption = token.earlyRedemption;
     _tokens[tokenAddress].minSubscription = token.minSubscription;
     _tokens[tokenAddress].status = TokenStatus.Published;
@@ -773,6 +784,9 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       .push(tokenAddress);
     _tokenAddressesByKycProviderPrimaryAddress[token.kycProviderPrimaryAddress]
       .push(tokenAddress);
+    _tokenAddressesByInsurerPrimaryAddress[token.insurerPrimaryAddress].push(
+      tokenAddress
+    );
     _tokenRestrictions[tokenAddress].allowedCountries = token.countries;
     _tokenRestrictions[tokenAddress].allowedInvestorClassifications = token
       .investorClassifications;

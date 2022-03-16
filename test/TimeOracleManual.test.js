@@ -130,6 +130,7 @@ describe("TimeOracleManual", function () {
       subscriber,
       subscriber2,
       kycProvider,
+      insurer,
     } = await getNamedAccounts();
     CustodianContract = await ethers.getContract(
       "CustodianContract",
@@ -150,6 +151,7 @@ describe("TimeOracleManual", function () {
     await CustodianContract.addIssuer("countryCode", issuer);
     await CustodianContract.addCustodian("countryCode", custodian);
     await CustodianContract.addKycProvider("countryCode", kycProvider);
+    await CustodianContract.addInsurer("countryCode", insurer);
     await PaymentToken.transfer(subscriber, 1000);
     await CustodianContract.addPaymentToken(PaymentToken.address);
     await CustodianContractIssuer.publishToken({
@@ -163,6 +165,7 @@ describe("TimeOracleManual", function () {
       issuerPrimaryAddress: issuer,
       custodianPrimaryAddress: custodian,
       kycProviderPrimaryAddress: kycProvider,
+      insurerPrimaryAddress: insurer,
       collateral: 3,
     });
     const tokens = await CustodianContract.getTokens(issuer);

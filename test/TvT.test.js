@@ -45,6 +45,7 @@ describe("TvT", function () {
       subscriber,
       subscriber2,
       kycProvider,
+      insurer,
     } = await getNamedAccounts();
     CustodianContract = await ethers.getContract(
       "CustodianContract",
@@ -65,6 +66,7 @@ describe("TvT", function () {
     await CustodianContract.addIssuer("countryCode", issuer);
     await CustodianContract.addCustodian("countryCode", custodian);
     await CustodianContract.addKycProvider("countryCode", kycProvider);
+    await CustodianContract.addInsurer("countryCode", insurer);
     await PaymentToken.transfer(subscriber, 1000);
     await CustodianContract.addPaymentToken(PaymentToken.address);
     await CustodianContractIssuer.publishToken({
@@ -78,6 +80,7 @@ describe("TvT", function () {
       issuerPrimaryAddress: issuer,
       custodianPrimaryAddress: custodian,
       kycProviderPrimaryAddress: kycProvider,
+      insurerPrimaryAddress: insurer,
       collateral: 3,
     });
     const tokens = await CustodianContract.getTokens(issuer);
@@ -115,7 +118,8 @@ describe("TvT", function () {
   });
 
   it("cannot publish early redemption TvT token", async () => {
-    const { issuer, custodian, kycProvider } = await getNamedAccounts();
+    const { issuer, custodian, kycProvider, insurer } =
+      await getNamedAccounts();
 
     await expect(
       CustodianContractIssuer.publishToken({
@@ -128,12 +132,14 @@ describe("TvT", function () {
         issuerPrimaryAddress: issuer,
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
+        insurerPrimaryAddress: insurer,
       })
     ).to.be.revertedWith("early redemption is not allowed for TvT tokens");
   });
 
   it("cannot publish a token with unapproved payment token", async () => {
-    const { issuer, custodian, kycProvider } = await getNamedAccounts();
+    const { issuer, custodian, kycProvider, insurer } =
+      await getNamedAccounts();
 
     await expect(
       CustodianContractIssuer.publishToken({
@@ -147,12 +153,14 @@ describe("TvT", function () {
         issuerPrimaryAddress: issuer,
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
+        insurerPrimaryAddress: insurer,
       })
     ).to.be.revertedWith("payment token is not active");
   });
 
   it("cannot publish a token if payment token input is malformed", async () => {
-    const { issuer, custodian, kycProvider } = await getNamedAccounts();
+    const { issuer, custodian, kycProvider, insurer } =
+      await getNamedAccounts();
 
     await expect(
       CustodianContractIssuer.publishToken({
@@ -166,12 +174,14 @@ describe("TvT", function () {
         issuerPrimaryAddress: issuer,
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
+        insurerPrimaryAddress: insurer,
       })
     ).to.be.revertedWith("wrong input");
   });
 
   it("publishes a TvT token if payment tokens list is not empty", async () => {
-    const { issuer, custodian, kycProvider } = await getNamedAccounts();
+    const { issuer, custodian, kycProvider, insurer } =
+      await getNamedAccounts();
 
     await expect(
       CustodianContractIssuer.publishToken({
@@ -185,6 +195,7 @@ describe("TvT", function () {
         issuerPrimaryAddress: issuer,
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
+        insurerPrimaryAddress: insurer,
       })
     ).not.to.be.reverted;
 
@@ -202,7 +213,8 @@ describe("TvT", function () {
   });
 
   it("publishes a regular token if payment tokens list is empty", async () => {
-    const { issuer, custodian, kycProvider } = await getNamedAccounts();
+    const { issuer, custodian, kycProvider, insurer } =
+      await getNamedAccounts();
 
     await expect(
       CustodianContractIssuer.publishToken({
@@ -216,6 +228,7 @@ describe("TvT", function () {
         issuerPrimaryAddress: issuer,
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
+        insurerPrimaryAddress: insurer,
       })
     ).not.to.be.reverted;
 
@@ -727,6 +740,7 @@ describe("TvT", function () {
           subscriber,
           subscriber2,
           kycProvider,
+          insurer,
         } = await getNamedAccounts();
 
         await CustodianContractIssuer.publishToken({
@@ -740,6 +754,7 @@ describe("TvT", function () {
           issuerPrimaryAddress: issuer,
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
+          insurerPrimaryAddress: insurer,
           collateral: 4,
         });
 

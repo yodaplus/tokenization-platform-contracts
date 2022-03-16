@@ -23,6 +23,7 @@ describe("Token", function () {
       subscriber,
       subscriber2,
       kycProvider,
+      insurer,
     } = await getNamedAccounts();
     CustodianContract = await ethers.getContract(
       "CustodianContract",
@@ -39,11 +40,13 @@ describe("Token", function () {
     await CustodianContract.addIssuer("countryCode", issuer);
     await CustodianContract.addCustodian("countryCode", custodian);
     await CustodianContract.addKycProvider("countryCode", kycProvider);
+    await CustodianContract.addInsurer("countryCode", insurer);
     CustodianContractIssuer.publishToken({
       ...TOKEN_EXAMPLE,
       issuerPrimaryAddress: issuer,
       custodianPrimaryAddress: custodian,
       kycProviderPrimaryAddress: kycProvider,
+      insurerPrimaryAddress: insurer,
     });
     const tokens = await CustodianContract.getTokens(issuer);
     TokenContract = await ethers.getContractAt(

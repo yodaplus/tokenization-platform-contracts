@@ -1,6 +1,6 @@
 const deployOptions = {
   log: true,
-  gasPrice: ethers.utils.parseUnits("0.25", "gwei"),
+  gasPrice: ethers.utils.parseUnits("1", "gwei"),
 };
 
 module.exports = async ({ getNamedAccounts, deployments, network }) => {

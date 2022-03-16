@@ -11,5 +11,7 @@ struct EscrowOrder {
   address paymentTokenDestination;
   address investorAddress;
   uint256 collateral;
+  uint256 issuerCollateral;
+  uint256 insurerCollateral;
   uint256 timeout;
 }

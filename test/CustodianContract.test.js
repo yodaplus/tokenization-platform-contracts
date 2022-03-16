@@ -1246,7 +1246,7 @@ describe("CustodianContract", function () {
       ).to.be.revertedWith("custodian contract validation fail");
     });
     it("should issue if investor in issuer whitelist", async () => {
-      const { issuer, subscriber, custodian, kycProvider, insurer } =
+      const { issuer, subscriber, custodian, kycProvider } =
         await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
@@ -1258,7 +1258,6 @@ describe("CustodianContract", function () {
         issuerPrimaryAddress: issuer,
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
-        insurerPrimaryAddress: insurer,
         useIssuerWhitelist: true,
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);

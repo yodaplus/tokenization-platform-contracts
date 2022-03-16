@@ -689,6 +689,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     uint256 maturityPeriod;
     uint256 settlementPeriod;
     uint256 collateral;
+    uint256 insurerCollateralShare;
     bytes32[] countries;
     InvestorClassificationRules investorClassifications;
     bool useIssuerWhitelist;
@@ -707,8 +708,10 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     if (_isKycProvider[token.kycProviderPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_KYCPROVIDER);
     }
-    if (_isInsurer[token.insurerPrimaryAddress] == false) {
-      throwError(ErrorCondition.TOKEN_WRONG_INSURER);
+    if (token.collateral > 0) {
+      if (_isInsurer[token.insurerPrimaryAddress] == false) {
+        throwError(ErrorCondition.TOKEN_WRONG_INSURER);
+      }
     }
     if (_tokenWithNameExists[token.name] == true) {
       throwError(ErrorCondition.TOKEN_SAME_NAME_EXISTS);
@@ -755,7 +758,10 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
           redemptionSwapMultiple: token.redemptionSwapMultiple,
           maturityPeriod: token.maturityPeriod,
           settlementPeriod: token.settlementPeriod,
-          collateral: token.collateral
+          collateral: token.collateral,
+          issuerCollateralShare: token.collateral -
+            token.insurerCollateralShare,
+          insurerCollateralShare: token.insurerCollateralShare
         }),
         msg.sender
       );

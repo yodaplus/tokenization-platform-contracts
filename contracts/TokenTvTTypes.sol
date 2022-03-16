@@ -11,4 +11,6 @@ struct TokenTvTInput {
   uint256 maturityPeriod;
   uint256 settlementPeriod;
   uint256 collateral;
+  uint256 issuerCollateralShare;
+  uint256 insurerCollateralShare;
 }

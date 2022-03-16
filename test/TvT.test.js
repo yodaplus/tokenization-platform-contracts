@@ -413,6 +413,8 @@ describe("TvT", function () {
             issuer,
             subscriber,
             3,
+            3,
+            0,
             172800,
           ];
 
@@ -877,6 +879,8 @@ describe("TvT", function () {
             subscriber,
             subscriber,
             3,
+            3,
+            0,
             172800,
           ];
 

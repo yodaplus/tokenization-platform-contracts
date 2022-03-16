@@ -16,7 +16,8 @@ contract TokenTvT is TokenBase, ITokenHooks {
   uint256 internal _maturityPeriod;
   uint256 internal _settlementPeriod;
   uint256 internal _collateral;
-
+  uint256 internal _issuerCollateral;
+  uint256 internal _insurerCollateral;
   mapping(address => mapping(uint256 => uint256))
     internal _issuedTokensByMaturityBucket;
   mapping(address => uint256[]) internal _issuedTokensMaturityBuckets;
@@ -66,6 +67,9 @@ contract TokenTvT is TokenBase, ITokenHooks {
     _maturityPeriod = input.maturityPeriod;
     _settlementPeriod = input.settlementPeriod;
     _collateral = input.collateral;
+    _issuerCollateral = input.issuerCollateralShare;
+    _insurerCollateral = input.insurerCollateralShare;
+
     escrowManager = IEscrowInitiate(escrowManagerAddress);
   }
 
@@ -133,6 +137,8 @@ contract TokenTvT is TokenBase, ITokenHooks {
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,
+        issuerCollateral: _issuerCollateral * value,
+        insurerCollateral: _insurerCollateral * value,
         timeout: _settlementPeriod
       });
       uint256 orderId = escrowManager.startIssuanceEscrow(escrowOrder);
@@ -286,6 +292,8 @@ contract TokenTvT is TokenBase, ITokenHooks {
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,
+        issuerCollateral: _issuerCollateral * value,
+        insurerCollateral: _insurerCollateral * value,
         timeout: _settlementPeriod
       });
       uint256 orderId = escrowManager.startRedemptionEscrow(escrowOrder);

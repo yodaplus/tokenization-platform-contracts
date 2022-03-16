@@ -18,6 +18,9 @@ const TOKEN_EXAMPLE = {
   maturityPeriod: 30 * 24 * 60 * 60,
   settlementPeriod: 2 * 24 * 60 * 60,
   collateral: 0,
+  insurerCollateralShare: 0,
+  insurerPrimaryAddress: "0x0000000000000000000000000000000000000000",
+
   countries: [stringToBytes32("USA"), stringToBytes32("IND")],
   investorClassifications: {
     isExempted: true,

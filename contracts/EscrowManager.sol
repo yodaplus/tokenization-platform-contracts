@@ -28,6 +28,11 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
 
   mapping(address => uint256) internal _collateralBalance;
   mapping(address => uint256) internal _collateralBalanceLocked;
+  mapping(address => mapping(address => uint256))
+    internal _insurerCollateralBalanceByIssuer;
+  mapping(address => mapping(address => uint256))
+    internal _insurerLockedCollateralBalanceByIssuer;
+
   mapping(uint256 => EscrowOrder) internal _escrowOrders;
   mapping(uint256 => EscrowType) internal _escrowOrdersType;
   mapping(uint256 => EscrowStatus) internal _escrowOrdersStatus;
@@ -121,6 +126,14 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     _;
   }
 
+  function getEscrowOrder(uint256 orderId)
+    public
+    view
+    returns (EscrowOrder memory)
+  {
+    return _escrowOrders[orderId];
+  }
+
   function setCustodianContract(address custodianContractAddress)
     external
     onlyOwner
@@ -143,8 +156,24 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     _collateralBalance[account] += msg.value;
   }
 
+  function depositInsurerCollateral(address account, address issuer)
+    external
+    payable
+  {
+    _insurerCollateralBalanceByIssuer[issuer][account] += msg.value;
+    _collateralBalance[account] += msg.value;
+  }
+
   function collateralBalance(address account) external view returns (uint256) {
     return _collateralBalance[account];
+  }
+
+  function insurerCollateralBalanceByIssuer(address account, address issuer)
+    external
+    view
+    returns (uint256)
+  {
+    return _insurerCollateralBalanceByIssuer[issuer][account];
   }
 
   function lockedCollateralBalance(address account)
@@ -153,6 +182,13 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     returns (uint256)
   {
     return _collateralBalanceLocked[account];
+  }
+
+  function lockedInsurerCollateralBalanceByIssuer(
+    address account,
+    address issuer
+  ) external view returns (uint256) {
+    return _insurerLockedCollateralBalanceByIssuer[issuer][account];
   }
 
   function withdrawCollateral(uint256 value) external {
@@ -164,6 +200,20 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     _collateralBalance[msg.sender] -= value;
   }
 
+  function withdrawInsurerCollateral(
+    address account,
+    address issuer,
+    uint256 value
+  ) external {
+    if (value > _insurerCollateralBalanceByIssuer[issuer][account]) {
+      throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
+    }
+
+    payable(msg.sender).transfer(value);
+    _insurerCollateralBalanceByIssuer[issuer][account] -= value;
+    _collateralBalance[account] -= value;
+  }
+
   function lockCollateral(address account, uint256 value) internal {
     if (value > _collateralBalance[account]) {
       throwError(ErrorCondition.INSUFFICIENT_COLLATERAL_BALANCE);
@@ -173,12 +223,40 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     _collateralBalance[account] -= value;
   }
 
+  function lockInsurerCollateral(
+    address account,
+    address issuer,
+    uint256 value
+  ) internal {
+    if (value > _insurerCollateralBalanceByIssuer[issuer][account]) {
+      throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
+    }
+
+    _insurerLockedCollateralBalanceByIssuer[issuer][account] += value;
+    _insurerCollateralBalanceByIssuer[issuer][account] -= value;
+    _collateralBalance[account] -= value;
+  }
+
   function unlockCollateral(address account, uint256 value) internal {
     if (value > _collateralBalanceLocked[account]) {
       throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
     }
 
     _collateralBalanceLocked[account] -= value;
+    _collateralBalance[account] += value;
+  }
+
+  function unlockInsurerCollateral(
+    address account,
+    address issuer,
+    uint256 value
+  ) internal {
+    if (value > _insurerLockedCollateralBalanceByIssuer[issuer][account]) {
+      throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
+    }
+
+    _insurerLockedCollateralBalanceByIssuer[issuer][account] -= value;
+    _insurerCollateralBalanceByIssuer[issuer][account] += value;
     _collateralBalance[account] += value;
   }
 
@@ -192,6 +270,20 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     }
 
     _collateralBalanceLocked[account] -= value;
+    destination.sendValue(value);
+  }
+
+  function spendInsurerCollateral(
+    address account,
+    address issuer,
+    address payable destination,
+    uint256 value
+  ) internal {
+    if (value > _insurerLockedCollateralBalanceByIssuer[issuer][account]) {
+      throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
+    }
+
+    _insurerLockedCollateralBalanceByIssuer[issuer][account] -= value;
     destination.sendValue(value);
   }
 
@@ -224,7 +316,21 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     EscrowOrder storage escrowOrder = _escrowOrders[orderId];
 
     return
-      escrowOrder.collateral <= _collateralBalance[escrowOrder.issuerAddress];
+      escrowOrder.issuerCollateral <=
+      _collateralBalance[escrowOrder.issuerAddress];
+  }
+
+  function checkIssuanceEscrowConditionsInsurerCollateral(uint256 orderId)
+    public
+    view
+    onlyOrderType(EscrowType.Issuance, orderId)
+    returns (bool)
+  {
+    EscrowOrder storage escrowOrder = _escrowOrders[orderId];
+
+    return
+      escrowOrder.insurerCollateral <=
+      _collateralBalance[escrowOrder.issuerAddress];
   }
 
   function checkIssuanceEscrowConditionsIssuer(uint256 orderId)
@@ -305,7 +411,8 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   {
     return
       checkIssuanceEscrowConditionsIssuer(orderId) &&
-      checkIssuanceEscrowConditionsInvestor(orderId);
+      checkIssuanceEscrowConditionsInvestor(orderId) &&
+      checkIssuanceEscrowConditionsInsurerCollateral(orderId);
   }
 
   function getIssuanceEscrowConditions(uint256 orderId)

@@ -29,6 +29,7 @@ describe("TvT", function () {
   let PaymentToken;
   let EscrowManager;
   let EscrowManagerIssuer;
+  let EscrowManagerInsurer;
   let EscrowManagerSubscriber;
 
   beforeEach(async () => {
@@ -111,6 +112,7 @@ describe("TvT", function () {
       custodianContractOwner
     );
     EscrowManagerIssuer = await ethers.getContract("EscrowManager", issuer);
+    EscrowManagerInsurer = await ethers.getContract("EscrowManager", insurer);
     EscrowManagerSubscriber = await ethers.getContract(
       "EscrowManager",
       subscriber
@@ -402,7 +404,7 @@ describe("TvT", function () {
 
       describe("EscrowManager", async () => {
         it("only allows token contracts to start issuance escrow", async () => {
-          const { issuer, subscriber } = await getNamedAccounts();
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
           const escrowOrder = [
             TokenContract.address,
             1,
@@ -415,6 +417,7 @@ describe("TvT", function () {
             3,
             3,
             0,
+            insurer,
             172800,
           ];
 
@@ -565,6 +568,121 @@ describe("TvT", function () {
               EscrowManagerIssuer.swapIssuance(0)
             ).to.be.revertedWith("escrow is complete");
           });
+        });
+      });
+      describe("insurer collaterized", () => {
+        let CollatrizedTokenIssuer;
+        beforeEach(async () => {
+          let {
+            issuer,
+            custodian,
+            kycProvider,
+            insurer,
+            subscriber,
+            subscriber2,
+          } = await getNamedAccounts();
+          await CustodianContractIssuer.publishToken({
+            ...TOKEN_EXAMPLE,
+            name: "Test Token2",
+            symbol: "TT2",
+            paymentTokens: [PaymentToken.address],
+            issuanceSwapMultiple: [2],
+            redemptionSwapMultiple: [3],
+            earlyRedemption: false,
+            issuerPrimaryAddress: issuer,
+            custodianPrimaryAddress: custodian,
+            kycProviderPrimaryAddress: kycProvider,
+            insurerPrimaryAddress: insurer,
+            collateral: 3,
+            insurerCollateralShare: 1,
+          });
+          const tokens = await CustodianContract.getTokens(issuer);
+          CollatrizedTokenIssuer = await ethers.getContractAt(
+            "TokenTvT",
+            tokens[1].address_,
+            issuer
+          );
+          await CustodianContractIssuer.addWhitelist(tokens[1].address_, [
+            subscriber,
+            subscriber2,
+          ]);
+        });
+        it("check if insurer collateral conditions are met for a escrow", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
+              0
+            )
+          ).to.be.equal(false);
+
+          await EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+            value: 1,
+          });
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
+              0
+            )
+          ).to.be.equal(true);
+        });
+        it("check if insurer and issuer collateral conditions are met for a escrow", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsIssuer(0)
+          ).to.be.equal(false);
+
+          await EscrowManagerIssuer.depositCollateral(issuer, {
+            value: 2,
+          });
+
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsIssuer(0)
+          ).to.be.equal(true);
+
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
+              0
+            )
+          ).to.be.equal(false);
+
+          await EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+            value: 1,
+          });
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
+              0
+            )
+          ).to.be.equal(true);
+        });
+        it("check if insurer balance is locked after swapIssuance", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          await EscrowManagerIssuer.depositCollateral(issuer, {
+            value: 2,
+          });
+
+          await EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+            value: 1,
+          });
+          const PaymentTokenSubscriber = await ethers.getContract(
+            "PaymentToken",
+            subscriber
+          );
+          await PaymentTokenSubscriber.approve(EscrowManager.address, 2);
+          await EscrowManagerIssuer.swapIssuance(0);
+          expect(
+            await EscrowManager.lockedInsurerCollateralBalanceByIssuer(
+              insurer,
+              issuer
+            )
+          ).to.be.equal(1);
         });
       });
     });
@@ -868,7 +986,7 @@ describe("TvT", function () {
         });
 
         it("only allows token contracts to start redemption escrow", async () => {
-          const { issuer, subscriber } = await getNamedAccounts();
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
           const escrowOrder = [
             TokenContract.address,
             1,
@@ -881,6 +999,7 @@ describe("TvT", function () {
             3,
             3,
             0,
+            insurer,
             172800,
           ];
 

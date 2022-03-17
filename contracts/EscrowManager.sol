@@ -224,8 +224,8 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   }
 
   function lockInsurerCollateral(
-    address account,
     address issuer,
+    address account,
     uint256 value
   ) internal {
     if (value > _insurerCollateralBalanceByIssuer[issuer][account]) {
@@ -330,7 +330,9 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
 
     return
       escrowOrder.insurerCollateral <=
-      _collateralBalance[escrowOrder.issuerAddress];
+      _insurerCollateralBalanceByIssuer[escrowOrder.issuerAddress][
+        escrowOrder.collateralProvider
+      ];
   }
 
   function checkIssuanceEscrowConditionsIssuer(uint256 orderId)
@@ -418,11 +420,12 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   function getIssuanceEscrowConditions(uint256 orderId)
     public
     view
-    returns (bool[3] memory flags)
+    returns (bool[4] memory flags)
   {
     flags[0] = checkIssuanceEscrowConditionsIssuerToken(orderId);
     flags[1] = checkIssuanceEscrowConditionsIssuerCollateral(orderId);
     flags[2] = checkIssuanceEscrowConditionsInvestor(orderId);
+    flags[3] = checkIssuanceEscrowConditionsInsurerCollateral(orderId);
   }
 
   function checkRedemptionEscrowConditions(uint256 orderId)
@@ -519,7 +522,12 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
       escrowOrder.paymentTokenAmount
     );
 
-    lockCollateral(escrowOrder.issuerAddress, escrowOrder.collateral);
+    lockCollateral(escrowOrder.issuerAddress, escrowOrder.issuerCollateral);
+    lockInsurerCollateral(
+      escrowOrder.issuerAddress,
+      escrowOrder.collateralProvider,
+      escrowOrder.insurerCollateral
+    );
 
     ITokenHooks(escrowOrder.tradeToken).onIssue(
       escrowOrder.tradeTokenDestination,

@@ -761,7 +761,8 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
           collateral: token.collateral,
           issuerCollateralShare: token.collateral -
             token.insurerCollateralShare,
-          insurerCollateralShare: token.insurerCollateralShare
+          insurerCollateralShare: token.insurerCollateralShare,
+          collateralProvider: token.insurerPrimaryAddress
         }),
         msg.sender
       );

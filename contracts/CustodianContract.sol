@@ -708,7 +708,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     if (_isKycProvider[token.kycProviderPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_KYCPROVIDER);
     }
-    if (token.collateral > 0) {
+    if (token.insurerCollateralShare > 0) {
       if (_isInsurer[token.insurerPrimaryAddress] == false) {
         throwError(ErrorCondition.TOKEN_WRONG_INSURER);
       }

@@ -572,6 +572,8 @@ describe("TvT", function () {
       });
       describe("insurer collaterized", () => {
         let CollatrizedTokenIssuer;
+        let CollatrizedTokenSubscriber;
+
         beforeEach(async () => {
           let {
             issuer,
@@ -602,10 +604,16 @@ describe("TvT", function () {
             tokens[1].address_,
             issuer
           );
+          CollatrizedTokenSubscriber = await ethers.getContractAt(
+            "TokenTvT",
+            tokens[1].address_,
+            subscriber
+          );
           await CustodianContractIssuer.addWhitelist(tokens[1].address_, [
             subscriber,
             subscriber2,
           ]);
+          await PaymentToken.transfer(issuer, 1000);
         });
         it("check if insurer collateral conditions are met for a escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
@@ -626,6 +634,23 @@ describe("TvT", function () {
               0
             )
           ).to.be.equal(true);
+        });
+        it("check if insurer collateral conditions are not met for a escrow", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
+              0
+            )
+          ).to.be.equal(false);
+
+          expect(
+            await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
+              0
+            )
+          ).to.be.equal(false);
         });
         it("check if insurer and issuer collateral conditions are met for a escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
@@ -684,6 +709,165 @@ describe("TvT", function () {
             )
           ).to.be.equal(1);
         });
+        it("check if tokens mature when token collatrized by issuer and insurer", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          await EscrowManagerIssuer.depositCollateral(issuer, {
+            value: 2,
+          });
+
+          await EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+            value: 1,
+          });
+          const PaymentTokenSubscriber = await ethers.getContract(
+            "PaymentToken",
+            subscriber
+          );
+          await PaymentTokenSubscriber.approve(EscrowManager.address, 2);
+          await EscrowManagerIssuer.swapIssuance(0);
+          await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 2);
+
+          expect(
+            await CollatrizedTokenIssuer.matureBalanceOf(subscriber)
+          ).to.be.equal(1);
+
+          await expect(
+            CollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
+          ).to.emit(CollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
+        });
+        it("can redeem if token is matured and is collatrized by issuer and insurer", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          await EscrowManagerIssuer.depositCollateral(issuer, {
+            value: 2,
+          });
+
+          await EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+            value: 1,
+          });
+          const PaymentTokenSubscriber = await ethers.getContract(
+            "PaymentToken",
+            subscriber
+          );
+          await PaymentTokenSubscriber.approve(EscrowManagerIssuer.address, 2);
+          await EscrowManagerIssuer.swapIssuance(0);
+          await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 2);
+
+          expect(
+            await CollatrizedTokenIssuer.matureBalanceOf(subscriber)
+          ).to.be.equal(1);
+
+          await expect(
+            CollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
+          ).to.emit(CollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
+
+          const PaymentTokenIssuer = await ethers.getContract(
+            "PaymentToken",
+            issuer
+          );
+          await PaymentTokenIssuer.approve(EscrowManagerIssuer.address, 3);
+
+          await expect(EscrowManager.swapRedemption(1)).not.to.be.reverted;
+          expect(
+            await EscrowManagerInsurer.lockedInsurerCollateralBalanceByIssuer(
+              insurer,
+              issuer
+            )
+          ).to.be.equal(0);
+        });
+        it("insurer can withdraw collateral after swap", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          await EscrowManagerIssuer.depositCollateral(issuer, {
+            value: 2,
+          });
+
+          await EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+            value: 1,
+          });
+          const PaymentTokenSubscriber = await ethers.getContract(
+            "PaymentToken",
+            subscriber
+          );
+          await PaymentTokenSubscriber.approve(EscrowManagerIssuer.address, 2);
+          await EscrowManagerIssuer.swapIssuance(0);
+          await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 2);
+
+          expect(
+            await CollatrizedTokenIssuer.matureBalanceOf(subscriber)
+          ).to.be.equal(1);
+
+          await expect(
+            CollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
+          ).to.emit(CollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
+
+          const PaymentTokenIssuer = await ethers.getContract(
+            "PaymentToken",
+            issuer
+          );
+          await PaymentTokenIssuer.approve(EscrowManagerIssuer.address, 3);
+
+          await expect(EscrowManager.swapRedemption(1)).not.to.be.reverted;
+          await expect(
+            EscrowManagerInsurer.withdrawInsurerCollateral(insurer, issuer, 1)
+          ).not.to.be.reverted;
+          expect(
+            await EscrowManagerInsurer.insurerCollateralBalanceByIssuer(
+              insurer,
+              issuer
+            )
+          ).to.be.equal(0);
+        });
+        it("check if insurer and issuer collateral is transferred incase of default", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+          await EscrowManagerIssuer.depositCollateral(issuer, {
+            value: 2,
+          });
+
+          await EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+            value: 1,
+          });
+          const PaymentTokenSubscriber = await ethers.getContract(
+            "PaymentToken",
+            subscriber
+          );
+          await PaymentTokenSubscriber.approve(EscrowManagerIssuer.address, 2);
+          await EscrowManagerIssuer.swapIssuance(0);
+          await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 1);
+
+          expect(
+            await CollatrizedTokenIssuer.matureBalanceOf(subscriber)
+          ).to.be.equal(1);
+
+          await expect(
+            CollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
+          ).to.emit(CollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
+
+          await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS + 1);
+
+          await expect(EscrowManager.swapRedemption(1)).not.to.be.reverted;
+          expect(
+            await EscrowManagerInsurer.lockedInsurerCollateralBalanceByIssuer(
+              insurer,
+              issuer
+            )
+          ).to.be.equal(0);
+          expect(
+            await EscrowManagerIssuer.insurerCollateralBalanceByIssuer(
+              insurer,
+              issuer
+            )
+          ).to.be.equal(0);
+        });
       });
     });
 
@@ -700,17 +884,15 @@ describe("TvT", function () {
           TokenContract["redeem(address,uint256)"](subscriber, 1)
         ).to.be.revertedWith("caller is not allowed");
 
-        await expect(TokenContract["redeem(address,uint256)"](issuer, 1))
-          .to.emit(TokenContract, "RedeemFailed")
-          .withArgs(issuer, 1, "0x52");
+        await expect(
+          TokenContract["redeem(address,uint256)"](issuer, 1)
+        ).to.be.revertedWith("custodian contract validation fail");
 
         expect(await TokenContract.matureBalanceOf(subscriber)).to.be.equal(0);
 
         await expect(
           TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
-        )
-          .to.emit(TokenContract, "RedeemFailed")
-          .withArgs(subscriber, 1, "0x52");
+        ).to.be.revertedWith("custodian contract validation fail");
       });
 
       it("can only redeem matured tokens", async () => {
@@ -718,9 +900,7 @@ describe("TvT", function () {
 
         await expect(
           TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
-        )
-          .to.emit(TokenContract, "RedeemFailed")
-          .withArgs(subscriber, 1, "0x52");
+        ).to.be.revertedWith("custodian contract validation fail");
 
         await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS);
 
@@ -776,9 +956,7 @@ describe("TvT", function () {
 
         await expect(
           TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
-        )
-          .to.emit(TokenContract, "RedeemFailed")
-          .withArgs(subscriber, 1, "0x52");
+        ).to.be.revertedWith("custodian contract validation fail");
 
         const tokens = await CustodianContract.getTokens(issuer);
         const TokenContractSubscriber2 = await ethers.getContractAt(
@@ -789,9 +967,7 @@ describe("TvT", function () {
 
         await expect(
           TokenContractSubscriber2["redeem(address,uint256)"](subscriber2, 1)
-        )
-          .to.emit(TokenContract, "RedeemFailed")
-          .withArgs(subscriber2, 1, "0x52");
+        ).to.be.revertedWith("custodian contract validation fail");
       });
 
       it("can redeem matured tokens if they are transferred back to the original investor", async () => {

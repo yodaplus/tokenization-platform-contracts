@@ -282,7 +282,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
     }
 
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
-      emit RedeemFailed(subscriber, value, reasonCode);
+      throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
     } else {
       increaseAllowance(address(escrowManager), value);
       EscrowOrder memory escrowOrder = EscrowOrder({

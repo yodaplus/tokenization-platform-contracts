@@ -472,8 +472,14 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     // as locked collateral must be enough to compensate all
     // tokens, transferred to investors via escrow
     assert(
-      escrowOrder.collateral <=
+      escrowOrder.issuerCollateral <=
         _collateralBalanceLocked[escrowOrder.issuerAddress]
+    );
+    assert(
+      escrowOrder.insurerCollateral <=
+        _insurerLockedCollateralBalanceByIssuer[escrowOrder.issuerAddress][
+          escrowOrder.collateralProvider
+        ]
     );
 
     orderId = _nextEscrowOrderId;
@@ -583,7 +589,12 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
         escrowOrder.paymentTokenAmount
       );
 
-      unlockCollateral(escrowOrder.issuerAddress, escrowOrder.collateral);
+      unlockCollateral(escrowOrder.issuerAddress, escrowOrder.issuerCollateral);
+      unlockInsurerCollateral(
+        escrowOrder.collateralProvider,
+        escrowOrder.issuerAddress,
+        escrowOrder.insurerCollateral
+      );
     } else {
       assert(timeoutFlag);
 
@@ -602,7 +613,13 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
       spendCollateral(
         escrowOrder.issuerAddress,
         payable(escrowOrder.paymentTokenDestination),
-        escrowOrder.collateral
+        escrowOrder.issuerCollateral
+      );
+      spendInsurerCollateral(
+        escrowOrder.collateralProvider,
+        escrowOrder.issuerAddress,
+        payable(escrowOrder.paymentTokenDestination),
+        escrowOrder.insurerCollateral
       );
     }
 

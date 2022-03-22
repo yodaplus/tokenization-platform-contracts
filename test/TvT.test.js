@@ -383,7 +383,7 @@ describe("TvT", function () {
       });
 
       it("creates an escrow order with properly calculated parameters", async () => {
-        const { issuer, subscriber } = await getNamedAccounts();
+        const { issuer, subscriber, insurer } = await getNamedAccounts();
 
         await expect(TokenContract["issue(address,uint256)"](subscriber, 1))
           .to.emit(TokenContract, "IssuanceEscrowInitiated")
@@ -398,6 +398,9 @@ describe("TvT", function () {
             issuer,
             subscriber,
             3,
+            3,
+            0,
+            insurer,
             172800
           );
       });
@@ -1005,7 +1008,7 @@ describe("TvT", function () {
       });
 
       it("creates an escrow order with properly calculated parameters", async () => {
-        const { issuer, subscriber } = await getNamedAccounts();
+        const { issuer, subscriber, insurer } = await getNamedAccounts();
 
         await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS);
 
@@ -1024,6 +1027,9 @@ describe("TvT", function () {
             subscriber,
             subscriber,
             3,
+            3,
+            0,
+            insurer,
             172800
           );
       });

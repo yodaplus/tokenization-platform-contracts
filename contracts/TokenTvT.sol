@@ -38,6 +38,9 @@ contract TokenTvT is TokenBase, ITokenHooks {
     address paymentTokenDestination,
     address investorAddress,
     uint256 collateral,
+    uint256 issuerCollateral,
+    uint256 insurerCollateral,
+    address collateralProvider,
     uint256 timeout
   );
 
@@ -52,6 +55,9 @@ contract TokenTvT is TokenBase, ITokenHooks {
     address paymentTokenDestination,
     address investorAddress,
     uint256 collateral,
+    uint256 issuerCollateral,
+    uint256 insurerCollateral,
+    address collateralProvider,
     uint256 timeout
   );
 
@@ -156,6 +162,9 @@ contract TokenTvT is TokenBase, ITokenHooks {
         escrowOrder.paymentTokenDestination,
         escrowOrder.investorAddress,
         escrowOrder.collateral,
+        escrowOrder.issuerCollateral,
+        escrowOrder.insurerCollateral,
+        escrowOrder.collateralProvider,
         escrowOrder.timeout
       );
     }
@@ -312,6 +321,9 @@ contract TokenTvT is TokenBase, ITokenHooks {
         escrowOrder.paymentTokenDestination,
         escrowOrder.investorAddress,
         escrowOrder.collateral,
+        escrowOrder.issuerCollateral,
+        escrowOrder.insurerCollateral,
+        escrowOrder.collateralProvider,
         escrowOrder.timeout
       );
     }

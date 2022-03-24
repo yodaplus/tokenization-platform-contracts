@@ -920,34 +920,34 @@ describe("TvT", function () {
           await PaymentToken.transfer(issuer, 1000);
         });
 
-        it("should not redeem token if collateral is 0 ", async () => {
-          const { issuer, subscriber, insurer } = await getNamedAccounts();
+        // it("should not redeem token if collateral is 0 ", async () => {
+        //   const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await UnCollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+        //   await UnCollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
 
 
-          const PaymentTokenSubscriber = await ethers.getContract(
-            "PaymentToken",
-            subscriber
-          );
-          await PaymentTokenSubscriber.approve(EscrowManagerIssuer.address, 2);
-          await EscrowManagerIssuer.swapIssuance(0);
-          await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 1);
+        //   const PaymentTokenSubscriber = await ethers.getContract(
+        //     "PaymentToken",
+        //     subscriber
+        //   );
+        //   await PaymentTokenSubscriber.approve(EscrowManagerIssuer.address, 2);
+        //   await EscrowManagerIssuer.swapIssuance(0);
+        //   await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 1);
 
-          expect(
-            await UnCollatrizedTokenIssuer.matureBalanceOf(subscriber)
-          ).to.be.equal(1);
+        //   expect(
+        //     await UnCollatrizedTokenIssuer.matureBalanceOf(subscriber)
+        //   ).to.be.equal(1);
 
-          await expect(
-            UnCollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
-          ).to.emit(UnCollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
+        //   await expect(
+        //     UnCollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
+        //   ).to.emit(UnCollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
 
-          await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS + 2);
-          await expect(EscrowManagerIssuer.swapRedemption(1)).to.be.revertedWith(
-            "un-collateralized order cannot be redeemed after expiry"
-          );
+        //   await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS + 2);
+        //   await expect(EscrowManagerIssuer.swapRedemption(1)).to.be.revertedWith(
+        //     "un-collateralized order cannot be redeemed after expiry"
+        //   );
 
-        });
+        // });
       });
     });
 

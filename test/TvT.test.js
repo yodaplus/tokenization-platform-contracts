@@ -872,6 +872,80 @@ describe("TvT", function () {
           ).to.be.equal(0);
         });
       });
+      describe("uncollatrized tokens", () => {
+        let UnCollatrizedTokenIssuer;
+        let UnCollatrizedTokenSubscriber;
+
+        beforeEach(async () => {
+          let {
+            issuer,
+            custodian,
+            kycProvider,
+            insurer,
+            subscriber,
+            subscriber2,
+          } = await getNamedAccounts();
+          await CustodianContractIssuer.publishToken({
+            ...TOKEN_EXAMPLE,
+            name: "Test Token2",
+            symbol: "TT2",
+            paymentTokens: [PaymentToken.address],
+            issuanceSwapMultiple: [2],
+            redemptionSwapMultiple: [3],
+            earlyRedemption: false,
+            issuerPrimaryAddress: issuer,
+            custodianPrimaryAddress: custodian,
+            kycProviderPrimaryAddress: kycProvider,
+            insurerPrimaryAddress: insurer,
+
+          });
+          const tokens = await CustodianContract.getTokens(issuer);
+          UnCollatrizedTokenIssuer = await ethers.getContractAt(
+            "TokenTvT",
+            tokens[1].address_,
+            issuer
+          );
+          UnCollatrizedTokenSubscriber = await ethers.getContractAt(
+            "TokenTvT",
+            tokens[1].address_,
+            subscriber
+          );
+          await CustodianContractIssuer.addWhitelist(tokens[1].address_, [
+            subscriber,
+            subscriber2,
+          ]);
+          await PaymentToken.transfer(issuer, 1000);
+        });
+
+        it("should not redeem token if collateral is 0 ", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+
+          await UnCollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+
+
+          const PaymentTokenSubscriber = await ethers.getContract(
+            "PaymentToken",
+            subscriber
+          );
+          await PaymentTokenSubscriber.approve(EscrowManagerIssuer.address, 2);
+          await EscrowManagerIssuer.swapIssuance(0);
+          await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 1);
+
+          expect(
+            await UnCollatrizedTokenIssuer.matureBalanceOf(subscriber)
+          ).to.be.equal(1);
+
+          await expect(
+            UnCollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
+          ).to.emit(UnCollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
+
+          await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS + 2);
+          await expect(EscrowManagerIssuer.swapRedemption(1)).to.be.revertedWith(
+            "un-collateralized order cannot be redeemed after expiry"
+          );
+
+        });
+      });
     });
 
     describe("redemption", async () => {

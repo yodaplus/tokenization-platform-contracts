@@ -53,7 +53,8 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     ESCROW_ORDER_ALREADY_COMPLETE,
     ESCROW_CONDITIONS_NOT_MET,
     FULL_ESCROW_CONDITIONS_NOT_MET_BEFORE_EXPIRY,
-    INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY
+    INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY,
+    UN_COLLATRIZED_ORDER_CANNOT_BE_REDEEMED_AFTER_EXPIRY
   }
 
   event IssuanceEscrowComplete(uint256 orderId);
@@ -105,6 +106,14 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "escrow expired, but investor conditions are not met"
+      );
+    } else if (
+      condition ==
+      ErrorCondition.UN_COLLATRIZED_ORDER_CANNOT_BE_REDEEMED_AFTER_EXPIRY
+    ) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "un-collateralized order cannot be redeemed after expiry"
       );
     } else {
       revert ERC1066Error(
@@ -287,6 +296,10 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     destination.sendValue(value);
   }
 
+  function checkOrderCollatrized(uint256 orderId) public view returns (bool) {
+    return _escrowOrders[orderId].collateral > 0;
+  }
+
   function checkIssuanceEscrowConditionsIssuerToken(uint256 orderId)
     public
     view
@@ -435,6 +448,7 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   {
     return
       checkRedemptionEscrowConditionsIssuer(orderId) &&
+      checkOrderCollatrized(orderId) &&
       checkRedemptionEscrowConditionsInvestor(orderId);
   }
 
@@ -603,7 +617,11 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
           ErrorCondition.INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY
         );
       }
-
+      if (!checkOrderCollatrized(orderId)) {
+        throwError(
+          ErrorCondition.UN_COLLATRIZED_ORDER_CANNOT_BE_REDEEMED_AFTER_EXPIRY
+        );
+      }
       IERC20(escrowOrder.tradeToken).transferFrom(
         escrowOrder.investorAddress,
         escrowOrder.tradeTokenDestination,

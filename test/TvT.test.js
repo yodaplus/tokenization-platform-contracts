@@ -857,7 +857,10 @@ describe("TvT", function () {
 
           await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS + 1);
 
-          await expect(EscrowManager.swapRedemption(1)).not.to.be.reverted;
+          await expect(EscrowManager.swapRedemption(1)).to.emit(
+            EscrowManager,
+            "DefaultedEscrow"
+          );
           expect(
             await EscrowManagerInsurer.lockedInsurerCollateralBalanceByIssuer(
               insurer,

@@ -59,6 +59,7 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
 
   event IssuanceEscrowComplete(uint256 orderId);
   event RedemptionEscrowComplete(uint256 orderId);
+  event DefaultedEscrow(uint256 orderId);
 
   function throwError(ErrorCondition condition) internal pure {
     if (condition == ErrorCondition.ACCESS_ERROR) {
@@ -639,6 +640,7 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
         payable(escrowOrder.paymentTokenDestination),
         escrowOrder.insurerCollateral
       );
+      emit DefaultedEscrow(orderId);
     }
 
     ITokenHooks(escrowOrder.tradeToken).onRedeem(

@@ -247,6 +247,25 @@ describe("TvT", function () {
     expect(await TokenContract1.TYPE()).to.be.equal("Token");
   });
 
+  describe("token document", async () => {
+
+    let document;
+
+    beforeEach(async () => {
+      document = await TokenContract.getDocument(TOKEN_EXAMPLE.documentName);
+    })
+      
+    it("must have the URI set", async () => {
+      expect(await document[0]).to.equal(TOKEN_EXAMPLE.documentUri)
+    })
+
+    it("must have the hash set", async () => {
+      let d = await TokenContract.getDocument(TOKEN_EXAMPLE.documentName);
+      expect(await document[1]).to.equal(TOKEN_EXAMPLE.documentHash)
+    })
+
+  });
+
   describe("EscrowManager", async () => {
     it("lets any accounts to deposit collateral to any balance", async () => {
       const { issuer, subscriber } = await getNamedAccounts();

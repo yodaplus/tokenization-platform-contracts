@@ -87,6 +87,10 @@ contract TokenTvT is TokenBase, ITokenHooks {
     _collateralProvider = input.collateralProvider;
 
     escrowManager = IEscrowInitiate(escrowManagerAddress);
+    _documents[input.documentName] = Document(
+      input.documentHash,
+      input.documentUri
+    );
   }
 
   function updateTokenIssuanceSwapRatio(uint256 ratio) external onlyIssuer {

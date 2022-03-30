@@ -14,4 +14,7 @@ struct TokenTvTInput {
   uint256 issuerCollateralShare;
   uint256 insurerCollateralShare;
   address collateralProvider;
+  bytes32 documentName;
+  string documentUri;
+  bytes32 documentHash;
 }

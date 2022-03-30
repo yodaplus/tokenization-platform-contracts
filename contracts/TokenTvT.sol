@@ -19,6 +19,14 @@ contract TokenTvT is TokenBase, ITokenHooks {
   uint256 internal _issuerCollateral;
   uint256 internal _insurerCollateral;
   address internal _collateralProvider;
+
+  struct Document {
+    bytes32 docHash; // Hash of the document
+    string uri; // URI of the document that exist off-chain
+  }
+
+  mapping(bytes32 => Document) internal _documents;
+
   mapping(address => mapping(uint256 => uint256))
     internal _issuedTokensByMaturityBucket;
   mapping(address => uint256[]) internal _issuedTokensMaturityBuckets;
@@ -327,5 +335,13 @@ contract TokenTvT is TokenBase, ITokenHooks {
         escrowOrder.timeout
       );
     }
+  }
+
+  function getDocument(bytes32 _name)
+    external
+    view
+    returns (string memory, bytes32)
+  {
+    return (_documents[_name].uri, _documents[_name].docHash);
   }
 }

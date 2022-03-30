@@ -85,12 +85,6 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     KycAMLCTF kycAmlCtf;
   }
 
-  struct Document {
-    bytes32 docHash; // Hash of the document
-    uint256 lastModified; // Timestamp at which document details was last modified
-    string uri; // URI of the document that exist off-chain
-  }
-
   mapping(address => mapping(address => KycData)) public kycVerifications;
   struct InvestorClassificationRules {
     bool isExempted;
@@ -136,10 +130,6 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   mapping(address => bool) internal useIssuerWhitelist;
 
   mapping(address => PaymentTokenStatus) internal _paymentTokensStatus;
-
-  mapping(bytes32 => Document) internal _documents;
-  mapping(bytes32 => uint256) internal _docIndexes;
-  bytes32[] internal _docNames;
 
   event TokenPublished(string symbol, address address_);
   event AddWhitelist(address tokenAddress, address address_);
@@ -716,6 +706,9 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     InvestorClassificationRules investorClassifications;
     bool useIssuerWhitelist;
     bool onChainKyc;
+    bytes32 documentName;
+    string documentUri;
+    bytes32 documentHash;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
@@ -784,7 +777,10 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
           issuerCollateralShare: token.collateral -
             token.insurerCollateralShare,
           insurerCollateralShare: token.insurerCollateralShare,
-          collateralProvider: token.insurerPrimaryAddress
+          collateralProvider: token.insurerPrimaryAddress,
+          documentName: token.documentName,
+          documentUri: token.documentUri,
+          documentHash: token.documentHash
         }),
         msg.sender
       );
@@ -1023,62 +1019,5 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
 
   function tokenExists(address tokenAddress) external view returns (bool) {
     return _tokens[tokenAddress].status == TokenStatus.Published;
-  }
-
-  // add a document to the contract
-  function setDocument(
-    bytes32 _name,
-    string memory _uri,
-    bytes32 _documentHash
-  ) external onlyOwner {
-    require(_name != bytes32(0), "Zero value is not allowed");
-    require(bytes(_uri).length > 0, "Should not be a empty uri");
-    if (_documents[_name].lastModified == uint256(0)) {
-      _docNames.push(_name);
-      _docIndexes[_name] = _docNames.length;
-    }
-    _documents[_name] = Document(_documentHash, block.timestamp, _uri);
-    emit DocumentUpdated(_name, _uri, _documentHash);
-  }
-
-  function removeDocument(bytes32 _name) external onlyOwner {
-    require(
-      _documents[_name].lastModified != uint256(0),
-      "Document should exist"
-    );
-    uint256 index = _docIndexes[_name] - 1;
-
-    if (index != _docNames.length - 1) {
-      _docNames[index] = _docNames[_docNames.length - 1];
-      _docIndexes[_docNames[index]] = index + 1;
-    }
-
-    _docNames.pop();
-    delete _documents[_name];
-    emit DocumentRemoved(
-      _name,
-      _documents[_name].uri,
-      _documents[_name].docHash
-    );
-  }
-
-  function getDocument(bytes32 _name)
-    external
-    view
-    returns (
-      string memory,
-      bytes32,
-      uint256
-    )
-  {
-    return (
-      _documents[_name].uri,
-      _documents[_name].docHash,
-      _documents[_name].lastModified
-    );
-  }
-
-  function getAllDocuments() external view returns (bytes32[] memory) {
-    return _docNames;
   }
 }

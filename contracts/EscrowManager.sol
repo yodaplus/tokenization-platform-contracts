@@ -449,7 +449,6 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   {
     return
       checkRedemptionEscrowConditionsIssuer(orderId) &&
-      checkOrderCollatrized(orderId) &&
       checkRedemptionEscrowConditionsInvestor(orderId);
   }
 

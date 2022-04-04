@@ -551,7 +551,8 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
 
     ITokenHooks(escrowOrder.tradeToken).onIssue(
       escrowOrder.tradeTokenDestination,
-      escrowOrder.tradeTokenAmount
+      escrowOrder.tradeTokenAmount,
+      orderId
     );
 
     emit IssuanceEscrowComplete(orderId);
@@ -644,7 +645,8 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
 
     ITokenHooks(escrowOrder.tradeToken).onRedeem(
       escrowOrder.investorAddress,
-      escrowOrder.tradeTokenAmount
+      escrowOrder.tradeTokenAmount,
+      orderId
     );
 
     emit RedemptionEscrowComplete(orderId);

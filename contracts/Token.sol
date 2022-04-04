@@ -33,7 +33,7 @@ contract Token is TokenBase {
       emit IssuanceFailure(subscriber, value, reasonCode);
     } else {
       _mint(subscriber, value);
-      emit Issued(subscriber, value, reasonCode);
+      emit Issued(subscriber, value, reasonCode, 0);
     }
   }
 
@@ -64,7 +64,7 @@ contract Token is TokenBase {
       uint256 currentAllowance = allowance(subscriber, tokenOwner);
       _approve(subscriber, tokenOwner, currentAllowance - value);
       _burn(subscriber, value);
-      emit Redeemed(subscriber, value, reasonCode);
+      emit Redeemed(subscriber, value, reasonCode, 0);
     }
   }
 }

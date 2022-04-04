@@ -170,7 +170,11 @@ contract TokenTvT is TokenBase, ITokenHooks {
     }
   }
 
-  function onIssue(address subscriber, uint256 value) external override {
+  function onIssue(
+    address subscriber,
+    uint256 value,
+    uint256 orderId
+  ) external override {
     if (msg.sender != address(escrowManager)) {
       throwError(ErrorCondition.WRONG_CALLER);
     }
@@ -180,10 +184,14 @@ contract TokenTvT is TokenBase, ITokenHooks {
     _issuedTokensByMaturityBucket[subscriber][timestamp] += value;
     _issuedTokensMaturityBuckets[subscriber].push(timestamp);
 
-    emit Issued(subscriber, value, ReasonCodes.TRANSFER_SUCCESS);
+    emit Issued(subscriber, value, ReasonCodes.TRANSFER_SUCCESS, orderId);
   }
 
-  function onRedeem(address subscriber, uint256 value) external override {
+  function onRedeem(
+    address subscriber,
+    uint256 value,
+    uint256 orderId
+  ) external override {
     if (msg.sender != address(escrowManager)) {
       throwError(ErrorCondition.WRONG_CALLER);
     }
@@ -216,7 +224,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
       i += 1;
     }
 
-    emit Redeemed(subscriber, value, ReasonCodes.TRANSFER_SUCCESS);
+    emit Redeemed(subscriber, value, ReasonCodes.TRANSFER_SUCCESS, orderId);
   }
 
   function matureBalanceOf(address subscriber)

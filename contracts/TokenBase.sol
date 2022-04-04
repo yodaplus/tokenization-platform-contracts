@@ -33,9 +33,9 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
 
   event SupplyIncreased(uint256 oldValue, uint256 newValue);
   event SupplyDecreased(uint256 oldValue, uint256 newValue);
-  event Issued(address _to, uint256 _value, bytes1 _data);
+  event Issued(address _to, uint256 _value, bytes1 _data, uint256 orderId);
   event IssuanceFailure(address _to, uint256 _value, bytes1 _data);
-  event Redeemed(address _from, uint256 _value, bytes1 _data);
+  event Redeemed(address _from, uint256 _value, bytes1 _data, uint256 orderId);
   event RedeemFailed(address _from, uint256 _value, bytes1 _data);
 
   error ERC1066Error(bytes1 errorCode, string message);

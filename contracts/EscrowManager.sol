@@ -60,6 +60,7 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   event IssuanceEscrowComplete(uint256 orderId);
   event RedemptionEscrowComplete(uint256 orderId);
   event DefaultedEscrow(uint256 orderId);
+  event XDCTransfered(address _from, address _to, uint256 _amount);
 
   function throwError(ErrorCondition condition) internal pure {
     if (condition == ErrorCondition.ACCESS_ERROR) {
@@ -646,5 +647,14 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     );
 
     emit RedemptionEscrowComplete(orderId);
+  }
+
+  function sendXDC(address to) public payable {
+    // Call returns a boolean value indicating success or failure.
+    // This is the current recommended method to use.
+    address payable _to = payable(to);
+    (bool sent, bytes memory data) = _to.call{value: msg.value}("");
+    require(sent, "Failed to send Ether");
+    emit XDCTransfered(msg.sender, _to, msg.value);
   }
 }

@@ -254,7 +254,7 @@ describe("TvT", function () {
     beforeEach(async () => {
       document = await TokenContract.getDocument(TOKEN_EXAMPLE.documentName);
     })
-      
+
     it("must have the URI set", async () => {
       expect(await document[0]).to.equal(TOKEN_EXAMPLE.documentUri)
     })
@@ -276,7 +276,7 @@ describe("TvT", function () {
         EscrowManager.depositCollateral(issuer, {
           value: 1,
         })
-      ).not.to.be.reverted;
+      ).to.emit(EscrowManager, "IssuerCollateralDeposited");
 
       expect(await EscrowManager.collateralBalance(issuer)).to.be.equal(1);
 
@@ -286,7 +286,7 @@ describe("TvT", function () {
         EscrowManager.depositCollateral(issuer, {
           value: 1,
         })
-      ).not.to.be.reverted;
+      ).to.emit(EscrowManager, "IssuerCollateralDeposited");
 
       expect(await EscrowManager.collateralBalance(issuer)).to.be.equal(2);
     });
@@ -304,7 +304,10 @@ describe("TvT", function () {
 
       expect(await EscrowManager.collateralBalance(issuer)).to.be.equal(2);
 
-      await expect(EscrowManager.withdrawCollateral(1)).not.to.be.reverted;
+      await expect(EscrowManager.withdrawCollateral(1)).to.emit(
+        EscrowManager,
+        "IssuerCollateralWithdrawn"
+      );
 
       expect(await EscrowManager.collateralBalance(issuer)).to.be.equal(1);
 
@@ -520,6 +523,12 @@ describe("TvT", function () {
             await prepareIssuanceSwap();
           });
 
+          it("emits collateral locked flag", async () => {
+            await expect(EscrowManagerIssuer.swapIssuance(0)).to.emit(
+              EscrowManagerIssuer,
+              "IssuerCollateralLocked"
+            )
+          });
           it("allows any account to trigger the swap", async () => {
             await expect(EscrowManagerIssuer.swapIssuance(0)).not.to.be
               .reverted;
@@ -637,6 +646,25 @@ describe("TvT", function () {
           ]);
           await PaymentToken.transfer(issuer, 1000);
         });
+        it("check if insurer can deposit collateral", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+          await expect(
+            EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+              value: 2,
+            })
+          ).to.emit(EscrowManagerInsurer, "InsurerCollateralDeposited");
+        })
+        it("check if insurer can withdraw collateral", async () => {
+          const { issuer, subscriber, insurer } = await getNamedAccounts();
+          await expect(
+            EscrowManagerInsurer.depositInsurerCollateral(insurer, issuer, {
+              value: 2,
+            })
+          ).not.to.be.reverted;
+          await expect(
+            EscrowManagerInsurer.withdrawInsurerCollateral(insurer, issuer, 2)
+          ).to.emit(EscrowManagerInsurer, "InsurerCollateralWithdrawn");
+        })
         it("check if insurer collateral conditions are met for a escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
@@ -838,7 +866,7 @@ describe("TvT", function () {
           await expect(EscrowManager.swapRedemption(1)).not.to.be.reverted;
           await expect(
             EscrowManagerInsurer.withdrawInsurerCollateral(insurer, issuer, 1)
-          ).not.to.be.reverted;
+          ).to.emit(EscrowManagerInsurer, "InsurerCollateralWithdrawn");
           expect(
             await EscrowManagerInsurer.insurerCollateralBalanceByIssuer(
               insurer,

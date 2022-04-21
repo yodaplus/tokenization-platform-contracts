@@ -158,6 +158,8 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   event RemoveInsurerAddress(address primaryAddress, address[] addresses);
   event PaymentTokenAdded(address tokenAddress);
 
+  event KycUpdated(address tokenAddress, address investorAddress);
+
   error ERC1066Error(bytes1 errorCode, string message);
 
   // Document Events
@@ -296,6 +298,7 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     KycData calldata investorKycData
   ) external onlyIssuerOrKycProvider {
     kycVerifications[issuerAddress][investorAddress] = investorKycData;
+    emit KycUpdated(issuerAddress, investorAddress);
   }
 
   function isIssuer(address addr) public view returns (bool) {
@@ -944,7 +947,8 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     }
     if (
       !isInvestorCountryAllowed &&
-      _tokenRestrictions[tokenAddress].allowedCountries.length > 0
+      _tokenRestrictions[tokenAddress].allowedCountries.length > 0 &&
+      kycVerifications[tokenIssuer][investor].kycBasicDetails.citizenshipCheck
     ) {
       return ReasonCodes.COUNTRY_NOT_ALLOWED;
     }

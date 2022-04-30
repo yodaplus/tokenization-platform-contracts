@@ -51,20 +51,31 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     "TokenCreator",
     custodianContractOwner
   );
+
   const TokenCreatorTvT = await ethers.getContract(
     "TokenCreatorTvT",
     custodianContractOwner
   );
 
-  await TokenCreator.transferOwnership(custodianContractAddress);
-  await TokenCreatorTvT.transferOwnership(custodianContractAddress);
+  const tokenCreateorTransferOwner = await TokenCreator.transferOwnership(
+    custodianContractAddress
+  );
+  await tokenCreateorTransferOwner.wait(1);
+
+  const tokenTvtTransferOwnership = await TokenCreatorTvT.transferOwnership(
+    custodianContractAddress
+  );
+  await tokenTvtTransferOwnership.wait(1);
 
   const EscrowManager = await ethers.getContract(
     "EscrowManager",
     custodianContractOwner
   );
 
-  await EscrowManager.setCustodianContract(custodianContractAddress);
+  const escrowSetCustodian = await EscrowManager.setCustodianContract(
+    custodianContractAddress
+  );
+  await escrowSetCustodian.wait(1);
 
   await deploy("PaymentToken", {
     from: custodianContractOwner,

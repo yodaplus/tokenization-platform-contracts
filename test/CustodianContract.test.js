@@ -13,7 +13,6 @@ const normalizeArrayOutput = (arrOutput) => arrOutput.map(normalizeOutput);
 
 describe("CustodianContract", function () {
   let CustodianContract;
-  let TokenCreator;
 
   beforeEach(async () => {
     await deployments.fixture(["CustodianContract", "TokenCreator"]);
@@ -22,49 +21,10 @@ describe("CustodianContract", function () {
       "CustodianContract",
       custodianContractOwner
     );
-    TokenCreator = await ethers.getContract(
-      "TokenCreator",
-      custodianContractOwner
-    );
   });
 
   it("has a version", async () => {
     expect(await CustodianContract.VERSION()).to.equal("0.0.1");
-  });
-
-  describe("token creator", () => {
-    it("has a token creator contract", async () => {
-      expect(await CustodianContract.tokenCreator()).to.equal(
-        TokenCreator.address
-      );
-    });
-
-    it("only allows CustodianContract to publish tokens", async () => {
-      const { issuer } = await getNamedAccounts();
-
-      await expect(
-        TokenCreator.publishToken(
-          TOKEN_EXAMPLE.name,
-          TOKEN_EXAMPLE.symbol,
-          TOKEN_EXAMPLE.maxTotalSupply,
-          issuer
-        )
-      ).to.be.revertedWith("Ownable: caller is not the owner");
-
-      const TokenCreatorCustodianContract = await ethers.getContract(
-        "TokenCreator",
-        CustodianContract.address
-      );
-
-      await expect(
-        TokenCreatorCustodianContract.publishToken(
-          TOKEN_EXAMPLE.name,
-          TOKEN_EXAMPLE.symbol,
-          TOKEN_EXAMPLE.maxTotalSupply,
-          issuer
-        )
-      ).not.to.be.reverted;
-    });
   });
 
   describe("tokens", () => {
@@ -236,12 +196,6 @@ describe("CustodianContract", function () {
       });
     });
 
-    it("has a token creator address", async () => {
-      expect(await CustodianContract.tokenCreator()).to.equal(
-        TokenCreator.address
-      );
-    });
-
     it(`doesn't allow non-issuers to publish tokens`, async () => {
       const { issuer, custodian, kycProvider, insurer } =
         await getNamedAccounts();
@@ -375,7 +329,6 @@ describe("CustodianContract", function () {
       expect(tokens.every(({ address_ }) => address_ !== "0x")).to.be.equal(
         true
       );
-
       expect(normalizeArrayOutput(tokens)).to.matchSnapshot(this);
     });
 

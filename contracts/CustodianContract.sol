@@ -5,25 +5,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./ReasonCodes.sol";
-import "./TokenCreator.sol";
-import "./TokenCreatorTvT.sol";
 import "./TokenTvTTypes.sol";
 import "./TimeOracle.sol";
 import "./interfaces/ICustodianContractQuery.sol";
+import "./TokenCreatorTvT.sol";
 
 contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
   string public constant VERSION = "0.0.1";
 
-  TokenCreator public tokenCreator;
   TokenCreatorTvT public tokenCreatorTvT;
   TimeOracle public timeOracle;
 
-  constructor(
-    address tokenCreatorAddr,
-    address tokenCreatorTvTAddr,
-    address timeOracleAddr
-  ) {
-    tokenCreator = TokenCreator(tokenCreatorAddr);
+  constructor(address tokenCreatorTvTAddr, address timeOracleAddr) {
     tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
     timeOracle = TimeOracle(timeOracleAddr);
   }

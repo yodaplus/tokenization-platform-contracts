@@ -24,11 +24,6 @@ const setupTest = deployments.createFixture(
       args: [],
     });
 
-    const { address: tokenCreatorAddress } = await deploy("TokenCreator", {
-      from: custodianContractOwner,
-      args: [],
-    });
-
     const { address: tokenCreatorTvTAddress } = await deploy(
       "TokenCreatorTvT",
       {
@@ -41,24 +36,15 @@ const setupTest = deployments.createFixture(
       "CustodianContract",
       {
         from: custodianContractOwner,
-        args: [
-          tokenCreatorAddress,
-          tokenCreatorTvTAddress,
-          timeOracleManualAddress,
-        ],
+        args: [tokenCreatorTvTAddress, timeOracleManualAddress],
       }
     );
 
-    const TokenCreator = await ethers.getContract(
-      "TokenCreator",
-      custodianContractOwner
-    );
     const TokenCreatorTvT = await ethers.getContract(
       "TokenCreatorTvT",
       custodianContractOwner
     );
 
-    await TokenCreator.transferOwnership(custodianContractAddress);
     await TokenCreatorTvT.transferOwnership(custodianContractAddress);
 
     const EscrowManager = await ethers.getContract(

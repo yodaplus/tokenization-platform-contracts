@@ -749,6 +749,9 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
     if (token.paymentTokens.length > 0 && token.earlyRedemption) {
       throwError(ErrorCondition.TOKEN_EARLY_REDEMPTION_NOT_ALLOWED);
     }
+    if (token.paymentTokens.length < 0) {
+      throwError(ErrorCondition.WRONG_INPUT);
+    }
 
     for (uint256 i = 0; i < token.paymentTokens.length; i += 1) {
       if (
@@ -759,34 +762,26 @@ contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
       }
     }
 
-    address tokenAddress = token.paymentTokens.length == 0
-      ? tokenCreator.publishToken(
-        token.name,
-        token.symbol,
-        token.maxTotalSupply,
-        msg.sender
-      )
-      : tokenCreatorTvT.publishToken(
-        TokenTvTInput({
-          name: token.name,
-          symbol: token.symbol,
-          maxTotalSupply: token.maxTotalSupply,
-          paymentTokens: token.paymentTokens,
-          issuanceSwapMultiple: token.issuanceSwapMultiple,
-          redemptionSwapMultiple: token.redemptionSwapMultiple,
-          maturityPeriod: token.maturityPeriod,
-          settlementPeriod: token.settlementPeriod,
-          collateral: token.collateral,
-          issuerCollateralShare: token.collateral -
-            token.insurerCollateralShare,
-          insurerCollateralShare: token.insurerCollateralShare,
-          collateralProvider: token.insurerPrimaryAddress,
-          documentName: token.documentName,
-          documentUri: token.documentUri,
-          documentHash: token.documentHash
-        }),
-        msg.sender
-      );
+    address tokenAddress = tokenCreatorTvT.publishToken(
+      TokenTvTInput({
+        name: token.name,
+        symbol: token.symbol,
+        maxTotalSupply: token.maxTotalSupply,
+        paymentTokens: token.paymentTokens,
+        issuanceSwapMultiple: token.issuanceSwapMultiple,
+        redemptionSwapMultiple: token.redemptionSwapMultiple,
+        maturityPeriod: token.maturityPeriod,
+        settlementPeriod: token.settlementPeriod,
+        collateral: token.collateral,
+        issuerCollateralShare: token.collateral - token.insurerCollateralShare,
+        insurerCollateralShare: token.insurerCollateralShare,
+        collateralProvider: token.insurerPrimaryAddress,
+        documentName: token.documentName,
+        documentUri: token.documentUri,
+        documentHash: token.documentHash
+      }),
+      msg.sender
+    );
 
     _tokens[tokenAddress].name = token.name;
     _tokens[tokenAddress].symbol = token.symbol;

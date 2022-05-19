@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
 import "./ReasonCodes.sol";
 import "./interfaces/ITokenHooks.sol";
@@ -21,8 +22,13 @@ enum EscrowStatus {
   Done
 }
 
-contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
-  using Address for address payable;
+contract EscrowManager is
+  Initializable,
+  OwnableUpgradeable,
+  IEscrowInitiate,
+  ReasonCodes
+{
+  using AddressUpgradeable for address payable;
 
   string public constant VERSION = "0.0.1";
 
@@ -38,7 +44,7 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
   mapping(uint256 => EscrowStatus) internal _escrowOrdersStatus;
   mapping(uint256 => uint256) internal _escrowStartTimestamp;
 
-  uint256 internal _nextEscrowOrderId = 0;
+  uint256 internal _nextEscrowOrderId;
 
   CustodianContract custodianContract;
 
@@ -110,6 +116,11 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
     uint256 _amount,
     uint256 orderId
   );
+
+  function initialize() public initializer {
+    _nextEscrowOrderId = 0;
+    __Ownable_init();
+  }
 
   function throwError(ErrorCondition condition) internal pure {
     if (condition == ErrorCondition.ACCESS_ERROR) {

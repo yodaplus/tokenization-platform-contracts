@@ -1,7 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./ReasonCodes.sol";
@@ -10,15 +11,30 @@ import "./TimeOracle.sol";
 import "./interfaces/ICustodianContractQuery.sol";
 import "./TokenCreatorTvT.sol";
 
-contract CustodianContract is Ownable, ICustodianContractQuery, ReasonCodes {
+contract CustodianContract is
+  Initializable,
+  OwnableUpgradeable,
+  ICustodianContractQuery,
+  ReasonCodes
+{
   string public constant VERSION = "0.0.1";
 
   TokenCreatorTvT public tokenCreatorTvT;
   TimeOracle public timeOracle;
 
-  constructor(address tokenCreatorTvTAddr, address timeOracleAddr) {
+  // constructor(address tokenCreatorTvTAddr, address timeOracleAddr) {
+  //   tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
+  //   timeOracle = TimeOracle(timeOracleAddr);
+  // }
+
+  // Initalize Method For Upgradable Contracts
+  function initialize(address tokenCreatorTvTAddr, address timeOracleAddr)
+    public
+    initializer
+  {
     tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
     timeOracle = TimeOracle(timeOracleAddr);
+    __Ownable_init();
   }
 
   struct RoleData {

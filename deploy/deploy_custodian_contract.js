@@ -16,11 +16,17 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     }
   );
 
-  const { address: escrowManagerAddress } = await deploy("EscrowManager", {
+  const escrowManager = await deploy("EscrowManager", {
     from: custodianContractOwner,
-    args: [],
-    ...deployOptions,
+    proxy: {
+      proxyContract: "OpenZeppelinTransparentProxy",
+      execute: {
+        methodName: "initialize",
+        args: [],
+      },
+    },
   });
+  const escrowManagerAddress = escrowManager.address;
 
   const { address: tokenCreatorTvTAddress } = await deploy("TokenCreatorTvT", {
     from: custodianContractOwner,
@@ -28,14 +34,25 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     ...deployOptions,
   });
 
-  const { address: custodianContractAddress } = await deploy(
-    "CustodianContract",
-    {
-      from: custodianContractOwner,
-      args: [tokenCreatorTvTAddress, timeOracleBlockAddress],
-      ...deployOptions,
-    }
-  );
+  // const { address: custodianContractAddress } = await deploy(
+  //   "CustodianContract",
+  //   {
+  //     from: custodianContractOwner,
+  //     args: [tokenCreatorTvTAddress, timeOracleBlockAddress],
+  //     ...deployOptions,
+  //   }
+  // );
+  const deployResult = await deploy("CustodianContract", {
+    from: custodianContractOwner,
+    proxy: {
+      proxyContract: "OpenZeppelinTransparentProxy",
+      execute: {
+        methodName: "initialize",
+        args: [tokenCreatorTvTAddress, timeOracleBlockAddress],
+      },
+    },
+  });
+  const custodianContractAddress = deployResult.address;
 
   const TokenCreatorTvT = await ethers.getContract(
     "TokenCreatorTvT",

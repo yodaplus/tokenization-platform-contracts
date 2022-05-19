@@ -19,11 +19,17 @@ const setupTest = deployments.createFixture(
       }
     );
 
-    const { address: escrowManagerAddress } = await deploy("EscrowManager", {
+    const escrowManager = await deploy("EscrowManager", {
       from: custodianContractOwner,
-      args: [],
+      proxy: {
+        proxyContract: "OpenZeppelinTransparentProxy",
+        execute: {
+          methodName: "initialize",
+          args: [],
+        },
+      },
     });
-
+    const escrowManagerAddress = escrowManager.address;
     const { address: tokenCreatorTvTAddress } = await deploy(
       "TokenCreatorTvT",
       {
@@ -32,13 +38,17 @@ const setupTest = deployments.createFixture(
       }
     );
 
-    const { address: custodianContractAddress } = await deploy(
-      "CustodianContract",
-      {
-        from: custodianContractOwner,
-        args: [tokenCreatorTvTAddress, timeOracleManualAddress],
-      }
-    );
+    const deployResult = await deploy("CustodianContract", {
+      from: custodianContractOwner,
+      proxy: {
+        proxyContract: "OpenZeppelinTransparentProxy",
+        execute: {
+          methodName: "initialize",
+          args: [tokenCreatorTvTAddress, timeOracleManualAddress],
+        },
+      },
+    });
+    const custodianContractAddress = deployResult.address;
 
     const TokenCreatorTvT = await ethers.getContract(
       "TokenCreatorTvT",

@@ -22,11 +22,6 @@ contract CustodianContract is
   TokenCreatorTvT public tokenCreatorTvT;
   TimeOracle public timeOracle;
 
-  // constructor(address tokenCreatorTvTAddr, address timeOracleAddr) {
-  //   tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
-  //   timeOracle = TimeOracle(timeOracleAddr);
-  // }
-
   // Initalize Method For Upgradable Contracts
   function initialize(address tokenCreatorTvTAddr, address timeOracleAddr)
     public

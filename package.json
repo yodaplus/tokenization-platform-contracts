@@ -51,9 +51,7 @@
     "solhint": "^3.3.6",
     "solhint-plugin-prettier": "^0.0.5",
     "solidity-coverage": "^0.7.17",
-    "web3": "^1.6.0"
-  },
-  "dependencies": {
+    "web3": "^1.6.0",
     "@openzeppelin/contracts-upgradeable": "^4.6.0"
   }
 }

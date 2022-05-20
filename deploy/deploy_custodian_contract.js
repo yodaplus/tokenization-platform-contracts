@@ -34,14 +34,6 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     ...deployOptions,
   });
 
-  // const { address: custodianContractAddress } = await deploy(
-  //   "CustodianContract",
-  //   {
-  //     from: custodianContractOwner,
-  //     args: [tokenCreatorTvTAddress, timeOracleBlockAddress],
-  //     ...deployOptions,
-  //   }
-  // );
   const deployResult = await deploy("CustodianContract", {
     from: custodianContractOwner,
     proxy: {

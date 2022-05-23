@@ -258,8 +258,13 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
       throwError(ErrorCondition.INSUFFICIENT_COLLATERAL_BALANCE);
     }
 
-    payable(msg.sender).transfer(value);
     _collateralBalance[msg.sender] -= value;
+    (bool success, bytes memory data) = payable(msg.sender).call{value: value}(
+      ""
+    );
+    if (!success) {
+      revert("Collateral withdrawal failed");
+    }
     emit IssuerCollateralWithdrawn(msg.sender, value);
   }
 
@@ -272,9 +277,14 @@ contract EscrowManager is Ownable, IEscrowInitiate, ReasonCodes {
       throwError(ErrorCondition.INSUFFICIENT_LOCKED_COLLATERAL_BALANCE);
     }
 
-    payable(msg.sender).transfer(value);
     _insurerCollateralBalanceByIssuer[issuer][account] -= value;
     _collateralBalance[account] -= value;
+    (bool success, bytes memory data) = payable(msg.sender).call{value: value}(
+      ""
+    );
+    if (!success) {
+      revert("Insurer Collateral withdrawal failed");
+    }
     emit InsurerCollateralWithdrawn(account, issuer, value);
   }
 

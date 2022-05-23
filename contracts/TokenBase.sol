@@ -31,6 +31,14 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
     _unpause();
   }
 
+  event BurntContract(address aadr);
+
+  function burnContract(address addr) public onlyOwner {
+    // require statement
+    selfdestruct(payable(addr));
+    emit BurntContract(addr);
+  }
+
   event SupplyIncreased(uint256 oldValue, uint256 newValue);
   event SupplyDecreased(uint256 oldValue, uint256 newValue);
   event Issued(address _to, uint256 _value, bytes1 _data, uint256 orderId);

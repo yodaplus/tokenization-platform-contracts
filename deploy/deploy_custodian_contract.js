@@ -16,17 +16,17 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     }
   );
 
-  const { address: escrowManagerAddress } = await deploy("EscrowManager", {
+  const escrowManager = await deploy("EscrowManager", {
     from: custodianContractOwner,
-    args: [],
-    ...deployOptions,
+    proxy: {
+      proxyContract: "OpenZeppelinTransparentProxy",
+      execute: {
+        methodName: "initialize",
+        args: [],
+      },
+    },
   });
-
-  const { address: tokenCreatorAddress } = await deploy("TokenCreator", {
-    from: custodianContractOwner,
-    args: [],
-    ...deployOptions,
-  });
+  const escrowManagerAddress = escrowManager.address;
 
   const { address: tokenCreatorTvTAddress } = await deploy("TokenCreatorTvT", {
     from: custodianContractOwner,
@@ -34,33 +34,22 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     ...deployOptions,
   });
 
-  const { address: custodianContractAddress } = await deploy(
-    "CustodianContract",
-    {
-      from: custodianContractOwner,
-      args: [
-        tokenCreatorAddress,
-        tokenCreatorTvTAddress,
-        timeOracleBlockAddress,
-      ],
-      ...deployOptions,
-    }
-  );
-
-  const TokenCreator = await ethers.getContract(
-    "TokenCreator",
-    custodianContractOwner
-  );
+  const deployResult = await deploy("CustodianContract", {
+    from: custodianContractOwner,
+    proxy: {
+      proxyContract: "OpenZeppelinTransparentProxy",
+      execute: {
+        methodName: "initialize",
+        args: [tokenCreatorTvTAddress, timeOracleBlockAddress],
+      },
+    },
+  });
+  const custodianContractAddress = deployResult.address;
 
   const TokenCreatorTvT = await ethers.getContract(
     "TokenCreatorTvT",
     custodianContractOwner
   );
-
-  const tokenCreateorTransferOwner = await TokenCreator.transferOwnership(
-    custodianContractAddress
-  );
-  await tokenCreateorTransferOwner.wait(1);
 
   const tokenTvtTransferOwnership = await TokenCreatorTvT.transferOwnership(
     custodianContractAddress
@@ -84,4 +73,4 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
   });
 };
 
-module.exports.tags = ["CustodianContract", "TokenCreator"];
+module.exports.tags = ["CustodianContract"];

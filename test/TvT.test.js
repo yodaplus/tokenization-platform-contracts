@@ -214,56 +214,21 @@ describe("TvT", function () {
     expect(await TokenContract1.TYPE()).to.be.equal("TokenTvT");
   });
 
-  it("publishes a regular token if payment tokens list is empty", async () => {
-    const { issuer, custodian, kycProvider, insurer } =
-      await getNamedAccounts();
-
-    await expect(
-      CustodianContractIssuer.publishToken({
-        ...TOKEN_EXAMPLE,
-        name: "Test Token 2",
-        symbol: "TT2",
-        paymentTokens: [],
-        issuanceSwapMultiple: [],
-        redemptionSwapMultiple: [],
-        earlyRedemption: false,
-        issuerPrimaryAddress: issuer,
-        custodianPrimaryAddress: custodian,
-        kycProviderPrimaryAddress: kycProvider,
-        insurerPrimaryAddress: insurer,
-      })
-    ).not.to.be.reverted;
-
-    const tokens = await CustodianContract.getTokens(issuer);
-
-    expect(tokens[1].symbol).to.be.equal("TT2");
-
-    const TokenContract1 = await ethers.getContractAt(
-      "Token",
-      tokens[1].address_,
-      issuer
-    );
-
-    expect(await TokenContract1.TYPE()).to.be.equal("Token");
-  });
-
   describe("token document", async () => {
-
     let document;
 
     beforeEach(async () => {
       document = await TokenContract.getDocument(TOKEN_EXAMPLE.documentName);
-    })
+    });
 
     it("must have the URI set", async () => {
-      expect(await document[0]).to.equal(TOKEN_EXAMPLE.documentUri)
-    })
+      expect(await document[0]).to.equal(TOKEN_EXAMPLE.documentUri);
+    });
 
     it("must have the hash set", async () => {
       let d = await TokenContract.getDocument(TOKEN_EXAMPLE.documentName);
-      expect(await document[1]).to.equal(TOKEN_EXAMPLE.documentHash)
-    })
-
+      expect(await document[1]).to.equal(TOKEN_EXAMPLE.documentHash);
+    });
   });
 
   describe("EscrowManager", async () => {
@@ -527,7 +492,7 @@ describe("TvT", function () {
             await expect(EscrowManagerIssuer.swapIssuance(0)).to.emit(
               EscrowManagerIssuer,
               "IssuerCollateralLocked"
-            )
+            );
           });
           it("allows any account to trigger the swap", async () => {
             await expect(EscrowManagerIssuer.swapIssuance(0)).not.to.be
@@ -653,7 +618,7 @@ describe("TvT", function () {
               value: 2,
             })
           ).to.emit(EscrowManagerInsurer, "InsurerCollateralDeposited");
-        })
+        });
         it("check if insurer can withdraw collateral", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
           await expect(
@@ -664,7 +629,7 @@ describe("TvT", function () {
           await expect(
             EscrowManagerInsurer.withdrawInsurerCollateral(insurer, issuer, 2)
           ).to.emit(EscrowManagerInsurer, "InsurerCollateralWithdrawn");
-        })
+        });
         it("check if insurer collateral conditions are met for a escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
@@ -947,7 +912,6 @@ describe("TvT", function () {
             custodianPrimaryAddress: custodian,
             kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
-
           });
           const tokens = await CustodianContract.getTokens(issuer);
           UnCollatrizedTokenIssuer = await ethers.getContractAt(
@@ -971,7 +935,6 @@ describe("TvT", function () {
         //   const { issuer, subscriber, insurer } = await getNamedAccounts();
 
         //   await UnCollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
-
 
         //   const PaymentTokenSubscriber = await ethers.getContract(
         //     "PaymentToken",

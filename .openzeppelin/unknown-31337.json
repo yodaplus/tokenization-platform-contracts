@@ -1,0 +1,981 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "txHash": "0xc8193561bb496967a82189d402d400c43003786a8e6a50ad24c22941ff9faef4"
+  },
+  "proxies": [
+    {
+      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      "txHash": "0x2a6f96bab322c918f51701597f2ffde96189248d5da5d022582a7d9a5621a173",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+      "txHash": "0xd218e7de69ae390acf2800699befac03a13ba42b2f49ebaadf47bf31f31850bd",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "a9d936a19c3b1edb53833edf255d5f4169448977192ec451b7e39f4e6af5b181": {
+      "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "txHash": "0x69fba887e1a4241e409a8113f6b647190937c915964af044dc408edb0e316493",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "label": "_collateralBalance",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:30"
+          },
+          {
+            "label": "_collateralBalanceLocked",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:31"
+          },
+          {
+            "label": "_insurerCollateralBalanceByIssuer",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:32"
+          },
+          {
+            "label": "_insurerLockedCollateralBalanceByIssuer",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:34"
+          },
+          {
+            "label": "_escrowOrders",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_mapping(t_uint256,t_struct(EscrowOrder)6668_storage)",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:37"
+          },
+          {
+            "label": "_escrowOrdersType",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_uint256,t_enum(EscrowType)4772)",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:38"
+          },
+          {
+            "label": "_escrowOrdersStatus",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_mapping(t_uint256,t_enum(EscrowStatus)4775)",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:39"
+          },
+          {
+            "label": "_escrowStartTimestamp",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:40"
+          },
+          {
+            "label": "_nextEscrowOrderId",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_uint256",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:42"
+          },
+          {
+            "label": "custodianContract",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_contract(CustodianContract)4758",
+            "contract": "EscrowManager",
+            "src": "contracts/EscrowManager.sol:44"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(CustodianContract)4758": {
+            "label": "contract CustodianContract",
+            "numberOfBytes": "20"
+          },
+          "t_enum(EscrowStatus)4775": {
+            "label": "enum EscrowStatus",
+            "members": [
+              "Pending",
+              "Done"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(EscrowType)4772": {
+            "label": "enum EscrowType",
+            "members": [
+              "Issuance",
+              "Redemption"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_enum(EscrowStatus)4775)": {
+            "label": "mapping(uint256 => enum EscrowStatus)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_enum(EscrowType)4772)": {
+            "label": "mapping(uint256 => enum EscrowType)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(EscrowOrder)6668_storage)": {
+            "label": "mapping(uint256 => struct EscrowOrder)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(EscrowOrder)6668_storage": {
+            "label": "struct EscrowOrder",
+            "members": [
+              {
+                "label": "tradeToken",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "tradeTokenAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "tradeTokenDestination",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "issuerAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "paymentToken",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "paymentTokenAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "paymentTokenDestination",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "investorAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "collateral",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "issuerCollateral",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "insurerCollateral",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "10"
+              },
+              {
+                "label": "collateralProvider",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "11"
+              },
+              {
+                "label": "timeout",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "12"
+              }
+            ],
+            "numberOfBytes": "416"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "b0eb158b4abd7db6e12a15d22986b524b3e33654d7f74abafe0772dd41fc88a3": {
+      "address": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      "txHash": "0x9702ba25aab470dc49e17c1d51a0ce2a8aa5e5c4d27b2e5a344e416907bccef5",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "label": "tokenCreatorTvT",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_contract(TokenCreatorTvT)7688",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:17"
+          },
+          {
+            "label": "timeOracle",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_contract(TimeOracle)6741",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:18"
+          },
+          {
+            "label": "kycVerifications",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_struct(KycData)2205_storage))",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:89"
+          },
+          {
+            "label": "_issuers",
+            "offset": 0,
+            "slot": "104",
+            "type": "t_mapping(t_address,t_struct(RoleData)2134_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:100"
+          },
+          {
+            "label": "_custodians",
+            "offset": 0,
+            "slot": "105",
+            "type": "t_mapping(t_address,t_struct(RoleData)2134_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:101"
+          },
+          {
+            "label": "_kycProviders",
+            "offset": 0,
+            "slot": "106",
+            "type": "t_mapping(t_address,t_struct(RoleData)2134_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:102"
+          },
+          {
+            "label": "_insurers",
+            "offset": 0,
+            "slot": "107",
+            "type": "t_mapping(t_address,t_struct(RoleData)2134_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:103"
+          },
+          {
+            "label": "_addressToIssuerPrimaryAddress",
+            "offset": 0,
+            "slot": "108",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:105"
+          },
+          {
+            "label": "_addressToCustodianPrimaryAddress",
+            "offset": 0,
+            "slot": "109",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:106"
+          },
+          {
+            "label": "_addressToKycProviderPrimaryAddress",
+            "offset": 0,
+            "slot": "110",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:107"
+          },
+          {
+            "label": "_addressToInsurerPrimaryAddress",
+            "offset": 0,
+            "slot": "111",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:108"
+          },
+          {
+            "label": "_isIssuer",
+            "offset": 0,
+            "slot": "112",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:110"
+          },
+          {
+            "label": "_isCustodian",
+            "offset": 0,
+            "slot": "113",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:111"
+          },
+          {
+            "label": "_isKycProvider",
+            "offset": 0,
+            "slot": "114",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:112"
+          },
+          {
+            "label": "_isInsurer",
+            "offset": 0,
+            "slot": "115",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:113"
+          },
+          {
+            "label": "_tokens",
+            "offset": 0,
+            "slot": "116",
+            "type": "t_mapping(t_address,t_struct(TokenData)2168_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:115"
+          },
+          {
+            "label": "_tokenRestrictions",
+            "offset": 0,
+            "slot": "117",
+            "type": "t_mapping(t_address,t_struct(TokenRestrictions)2228_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:116"
+          },
+          {
+            "label": "_tokenAddressesByIssuerPrimaryAddress",
+            "offset": 0,
+            "slot": "118",
+            "type": "t_mapping(t_address,t_array(t_address)dyn_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:117"
+          },
+          {
+            "label": "_tokenAddressesByCustodianPrimaryAddress",
+            "offset": 0,
+            "slot": "119",
+            "type": "t_mapping(t_address,t_array(t_address)dyn_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:118"
+          },
+          {
+            "label": "_tokenAddressesByKycProviderPrimaryAddress",
+            "offset": 0,
+            "slot": "120",
+            "type": "t_mapping(t_address,t_array(t_address)dyn_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:120"
+          },
+          {
+            "label": "_tokenAddressesByInsurerPrimaryAddress",
+            "offset": 0,
+            "slot": "121",
+            "type": "t_mapping(t_address,t_array(t_address)dyn_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:122"
+          },
+          {
+            "label": "_tokenWithNameExists",
+            "offset": 0,
+            "slot": "122",
+            "type": "t_mapping(t_string_memory_ptr,t_bool)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:124"
+          },
+          {
+            "label": "_tokenWithSymbolExists",
+            "offset": 0,
+            "slot": "123",
+            "type": "t_mapping(t_string_memory_ptr,t_bool)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:125"
+          },
+          {
+            "label": "_whitelist",
+            "offset": 0,
+            "slot": "124",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:127"
+          },
+          {
+            "label": "_issuerWhitelist",
+            "offset": 0,
+            "slot": "125",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:128"
+          },
+          {
+            "label": "allowedCountries",
+            "offset": 0,
+            "slot": "126",
+            "type": "t_mapping(t_address,t_string_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:129"
+          },
+          {
+            "label": "allowedClassifications",
+            "offset": 0,
+            "slot": "127",
+            "type": "t_mapping(t_address,t_array(t_string_storage)dyn_storage)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:130"
+          },
+          {
+            "label": "useIssuerWhitelist",
+            "offset": 0,
+            "slot": "128",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:131"
+          },
+          {
+            "label": "_paymentTokensStatus",
+            "offset": 0,
+            "slot": "129",
+            "type": "t_mapping(t_address,t_enum(PaymentTokenStatus)2140)",
+            "contract": "CustodianContract",
+            "src": "contracts/CustodianContract.sol:133"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_string_storage)dyn_storage": {
+            "label": "string[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(TimeOracle)6741": {
+            "label": "contract TimeOracle",
+            "numberOfBytes": "20"
+          },
+          "t_contract(TokenCreatorTvT)7688": {
+            "label": "contract TokenCreatorTvT",
+            "numberOfBytes": "20"
+          },
+          "t_enum(PaymentTokenStatus)2140": {
+            "label": "enum CustodianContract.PaymentTokenStatus",
+            "members": [
+              "Inactive",
+              "Active"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_enum(TokenStatus)2137": {
+            "label": "enum CustodianContract.TokenStatus",
+            "members": [
+              "NonExistent",
+              "Published"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_address)dyn_storage)": {
+            "label": "mapping(address => address[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_string_storage)dyn_storage)": {
+            "label": "mapping(address => string[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_enum(PaymentTokenStatus)2140)": {
+            "label": "mapping(address => enum CustodianContract.PaymentTokenStatus)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_struct(KycData)2205_storage))": {
+            "label": "mapping(address => mapping(address => struct CustodianContract.KycData))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_string_storage)": {
+            "label": "mapping(address => string)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(KycData)2205_storage)": {
+            "label": "mapping(address => struct CustodianContract.KycData)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(RoleData)2134_storage)": {
+            "label": "mapping(address => struct CustodianContract.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(TokenData)2168_storage)": {
+            "label": "mapping(address => struct CustodianContract.TokenData)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(TokenRestrictions)2228_storage)": {
+            "label": "mapping(address => struct CustodianContract.TokenRestrictions)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_string_memory_ptr,t_bool)": {
+            "label": "mapping(string => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_string_memory_ptr": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(InvestorClassificationRules)2219_storage": {
+            "label": "struct CustodianContract.InvestorClassificationRules",
+            "members": [
+              {
+                "label": "isExempted",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "isAccredited",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "0"
+              },
+              {
+                "label": "isAffiliated",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(KycAMLCTF)2188_storage": {
+            "label": "struct CustodianContract.KycAMLCTF",
+            "members": [
+              {
+                "label": "pepCheck",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "sanctionScreening",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "0"
+              },
+              {
+                "label": "suspiciousActivityReport",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "0"
+              },
+              {
+                "label": "cddReport",
+                "type": "t_bool",
+                "offset": 3,
+                "slot": "0"
+              },
+              {
+                "label": "fatfComplianceCheck",
+                "type": "t_bool",
+                "offset": 4,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(KycBasicDetails)2177_storage": {
+            "label": "struct CustodianContract.KycBasicDetails",
+            "members": [
+              {
+                "label": "leiCheck",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "bankCheck",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "0"
+              },
+              {
+                "label": "citizenshipCheck",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "0"
+              },
+              {
+                "label": "addressCheck",
+                "type": "t_bool",
+                "offset": 3,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(KycData)2205_storage": {
+            "label": "struct CustodianContract.KycData",
+            "members": [
+              {
+                "label": "countryCode",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "kycStatus",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "accredation",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "1"
+              },
+              {
+                "label": "affiliation",
+                "type": "t_bool",
+                "offset": 2,
+                "slot": "1"
+              },
+              {
+                "label": "exempted",
+                "type": "t_bool",
+                "offset": 3,
+                "slot": "1"
+              },
+              {
+                "label": "kycBasicDetails",
+                "type": "t_struct(KycBasicDetails)2177_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "kycAmlCtf",
+                "type": "t_struct(KycAMLCTF)2188_storage",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(RoleData)2134_storage": {
+            "label": "struct CustodianContract.RoleData",
+            "members": [
+              {
+                "label": "primaryAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "countryCode",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "addresses",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(TokenData)2168_storage": {
+            "label": "struct CustodianContract.TokenData",
+            "members": [
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "symbol",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "value",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "currency",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "issuerPrimaryAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "custodianPrimaryAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "kycProviderPrimaryAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "insurerPrimaryAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "earlyRedemption",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "7"
+              },
+              {
+                "label": "minSubscription",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(TokenStatus)2137",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "address_",
+                "type": "t_address",
+                "offset": 1,
+                "slot": "9"
+              },
+              {
+                "label": "onChainKyc",
+                "type": "t_bool",
+                "offset": 21,
+                "slot": "9"
+              }
+            ],
+            "numberOfBytes": "320"
+          },
+          "t_struct(TokenRestrictions)2228_storage": {
+            "label": "struct CustodianContract.TokenRestrictions",
+            "members": [
+              {
+                "label": "allowedCountries",
+                "type": "t_array(t_bytes32)dyn_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "allowedInvestorClassifications",
+                "type": "t_struct(InvestorClassificationRules)2219_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "useIssuerWhitelist",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

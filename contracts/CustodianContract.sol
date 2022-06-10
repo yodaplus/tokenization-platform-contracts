@@ -38,6 +38,11 @@ contract CustodianContract is
     address[] addresses;
   }
 
+  struct LiquidityPool {
+    address primaryAddress;
+    address settlementAddress;
+  }
+
   enum TokenStatus {
     NonExistent,
     Published
@@ -104,6 +109,7 @@ contract CustodianContract is
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
   mapping(address => RoleData) public _insurers;
+  mapping(address => LiquidityPool) public _liquidityPool;
 
   mapping(address => address) public _addressToIssuerPrimaryAddress;
   mapping(address => address) public _addressToCustodianPrimaryAddress;
@@ -164,6 +170,9 @@ contract CustodianContract is
 
   event KycUpdated(address tokenAddress, address investorAddress);
 
+  event AddLiquidityPool(address primaryAddress, address settlementAddress);
+  event RemoveLiquidityPool(address primaryAddress);
+
   error ERC1066Error(bytes1 errorCode, string message);
 
   // Document Events
@@ -196,7 +205,9 @@ contract CustodianContract is
     TOKEN_DOES_NOT_EXIST,
     TOKEN_PAUSED,
     WRONG_INPUT,
-    REMOVED_INSURER_HAS_TOKENS
+    REMOVED_INSURER_HAS_TOKENS,
+    LIQUIDITY_POOL_EXISTS,
+    LIQUIDITY_POOL_DOES_NOT_EXIST
   }
 
   function getTimestamp() external view override returns (uint256) {
@@ -288,6 +299,16 @@ contract CustodianContract is
       );
     } else if (condition == ErrorCondition.TOKEN_PAUSED) {
       revert ERC1066Error(ReasonCodes.APP_SPECIFIC_FAILURE, "token is paused");
+    } else if (condition == ErrorCondition.LIQUIDITY_POOL_EXISTS) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "liquidity pool already exists"
+      );
+    } else if (condition == ErrorCondition.LIQUIDITY_POOL_DOES_NOT_EXIST) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "liquidity pool does not exist"
+      );
     } else {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
@@ -688,6 +709,26 @@ contract CustodianContract is
       addresses
     );
     emit RemoveKYCProviderAddress(primaryAddress, addresses);
+  }
+
+  function addLiqudityPool(address primaryAddress, address settlementAddress)
+    external
+    onlyOwner
+  {
+    if (_liquidityPool[primaryAddress].primaryAddress != address(0)) {
+      throwError(ErrorCondition.LIQUIDITY_POOL_EXISTS);
+    }
+    _liquidityPool[primaryAddress].primaryAddress = primaryAddress;
+    _liquidityPool[primaryAddress].settlementAddress = settlementAddress;
+    emit AddLiquidityPool(primaryAddress, settlementAddress);
+  }
+
+  function removeLiquidityPool(address primaryAddress) external {
+    if (_liquidityPool[primaryAddress].primaryAddress == address(0)) {
+      throwError(ErrorCondition.LIQUIDITY_POOL_DOES_NOT_EXIST);
+    }
+    delete _liquidityPool[primaryAddress];
+    emit RemoveLiquidityPool(primaryAddress);
   }
 
   struct TokenInput {

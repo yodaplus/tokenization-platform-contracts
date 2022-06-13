@@ -65,6 +65,7 @@ contract CustodianContract is
     bool earlyRedemption;
     uint256 minSubscription;
     TokenStatus status;
+    TokenType tokenType;
     address address_;
     bool onChainKyc;
   }
@@ -106,6 +107,7 @@ contract CustodianContract is
     bool useIssuerWhitelist;
   }
   mapping(address => RoleData) public _issuers;
+  mapping(address => uint256) public issuerCreditLimit;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
   mapping(address => RoleData) public _insurers;
@@ -172,7 +174,7 @@ contract CustodianContract is
 
   event AddLiquidityPool(address primaryAddress, address settlementAddress);
   event RemoveLiquidityPool(address primaryAddress);
-
+  event IssuerCreditLimitUpdated(address issuerAddress, uint256 creditLimit);
   error ERC1066Error(bytes1 errorCode, string message);
 
   // Document Events
@@ -502,6 +504,9 @@ contract CustodianContract is
       countryCode,
       primaryAddress
     );
+    // setting Issuer Credit Limit
+    issuerCreditLimit[primaryAddress] = 0;
+    emit IssuerCreditLimitUpdated(primaryAddress, 0);
     emit AddIssuer(primaryAddress);
   }
 
@@ -731,6 +736,14 @@ contract CustodianContract is
     emit RemoveLiquidityPool(primaryAddress);
   }
 
+  function setIssuerCredit(address primaryAddress, uint256 credit)
+    external
+    onlyOwner
+  {
+    issuerCreditLimit[primaryAddress] = credit;
+    emit IssuerCreditLimitUpdated(primaryAddress, credit);
+  }
+
   struct TokenInput {
     string name;
     string symbol;
@@ -757,6 +770,7 @@ contract CustodianContract is
     bytes32 documentName;
     string documentUri;
     bytes32 documentHash;
+    TokenType tokenType;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
@@ -823,7 +837,8 @@ contract CustodianContract is
         collateralProvider: token.insurerPrimaryAddress,
         documentName: token.documentName,
         documentUri: token.documentUri,
-        documentHash: token.documentHash
+        documentHash: token.documentHash,
+        tokenType: token.tokenType
       }),
       msg.sender
     );
@@ -843,6 +858,7 @@ contract CustodianContract is
     _tokens[tokenAddress].status = TokenStatus.Published;
     _tokens[tokenAddress].address_ = tokenAddress;
     _tokens[tokenAddress].onChainKyc = token.onChainKyc;
+    _tokens[tokenAddress].tokenType = token.tokenType;
     _tokenWithNameExists[token.name] = true;
     _tokenWithSymbolExists[token.symbol] = true;
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
@@ -959,82 +975,85 @@ contract CustodianContract is
     uint256 value
   ) external view override returns (bytes1) {
     assertTokenExists(tokenAddress);
+    if (_tokens[tokenAddress].tokenType == TokenType.Subscription) {
+      address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
 
-    address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
-
-    // Check if KYC is Complete.
-    if (
-      !kycVerifications[tokenIssuer][investor].kycStatus &&
-      _tokens[tokenAddress].onChainKyc
-    ) {
-      return ReasonCodes.KYC_INCOMPLETE;
-    }
-
-    // Check if investorCountry is allowed using token restrictions.
-    bool isInvestorCountryAllowed = false;
-    for (
-      uint256 i = 0;
-      i < _tokenRestrictions[tokenAddress].allowedCountries.length;
-      i++
-    ) {
+      // Check if KYC is Complete.
       if (
-        _tokenRestrictions[tokenAddress].allowedCountries[i] ==
-        kycVerifications[tokenIssuer][investor].countryCode
+        !kycVerifications[tokenIssuer][investor].kycStatus &&
+        _tokens[tokenAddress].onChainKyc
       ) {
-        isInvestorCountryAllowed = true;
-        break;
+        return ReasonCodes.KYC_INCOMPLETE;
       }
-    }
-    if (
-      !isInvestorCountryAllowed &&
-      _tokenRestrictions[tokenAddress].allowedCountries.length > 0 &&
-      kycVerifications[tokenIssuer][investor].kycBasicDetails.citizenshipCheck
-    ) {
-      return ReasonCodes.COUNTRY_NOT_ALLOWED;
-    }
 
-    // Check if investorClassification is allowed using token restrictions.
-    if (
-      _tokenRestrictions[tokenAddress].allowedInvestorClassifications.isExempted
-    ) {
-      if (!kycVerifications[tokenIssuer][investor].exempted) {
-        return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+      // Check if investorCountry is allowed using token restrictions.
+      bool isInvestorCountryAllowed = false;
+      for (
+        uint256 i = 0;
+        i < _tokenRestrictions[tokenAddress].allowedCountries.length;
+        i++
+      ) {
+        if (
+          _tokenRestrictions[tokenAddress].allowedCountries[i] ==
+          kycVerifications[tokenIssuer][investor].countryCode
+        ) {
+          isInvestorCountryAllowed = true;
+          break;
+        }
       }
-    }
-    if (
-      _tokenRestrictions[tokenAddress]
-        .allowedInvestorClassifications
-        .isAccredited
-    ) {
-      if (!kycVerifications[tokenIssuer][investor].accredation) {
-        return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
-      }
-    }
-    if (
-      _tokenRestrictions[tokenAddress]
-        .allowedInvestorClassifications
-        .isAffiliated
-    ) {
-      if (!kycVerifications[tokenIssuer][investor].affiliation) {
-        return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
-      }
-    }
-
-    if (_tokenRestrictions[tokenAddress].useIssuerWhitelist) {
-      if (!_issuerWhitelist[tokenIssuer][investor]) {
-        return ReasonCodes.INVALID_RECEIVER;
-      }
-    } else {
       if (
-        (_whitelist[tokenAddress][investor] != true) &&
-        (_issuerWhitelist[tokenIssuer][investor] != true)
+        !isInvestorCountryAllowed &&
+        _tokenRestrictions[tokenAddress].allowedCountries.length > 0 &&
+        kycVerifications[tokenIssuer][investor].kycBasicDetails.citizenshipCheck
       ) {
-        return ReasonCodes.INVALID_RECEIVER;
+        return ReasonCodes.COUNTRY_NOT_ALLOWED;
       }
-    }
 
-    if (value == 0) {
-      return ReasonCodes.APP_SPECIFIC_FAILURE;
+      // Check if investorClassification is allowed using token restrictions.
+      if (
+        _tokenRestrictions[tokenAddress]
+          .allowedInvestorClassifications
+          .isExempted
+      ) {
+        if (!kycVerifications[tokenIssuer][investor].exempted) {
+          return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+        }
+      }
+      if (
+        _tokenRestrictions[tokenAddress]
+          .allowedInvestorClassifications
+          .isAccredited
+      ) {
+        if (!kycVerifications[tokenIssuer][investor].accredation) {
+          return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+        }
+      }
+      if (
+        _tokenRestrictions[tokenAddress]
+          .allowedInvestorClassifications
+          .isAffiliated
+      ) {
+        if (!kycVerifications[tokenIssuer][investor].affiliation) {
+          return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+        }
+      }
+
+      if (_tokenRestrictions[tokenAddress].useIssuerWhitelist) {
+        if (!_issuerWhitelist[tokenIssuer][investor]) {
+          return ReasonCodes.INVALID_RECEIVER;
+        }
+      } else {
+        if (
+          (_whitelist[tokenAddress][investor] != true) &&
+          (_issuerWhitelist[tokenIssuer][investor] != true)
+        ) {
+          return ReasonCodes.INVALID_RECEIVER;
+        }
+      }
+
+      if (value == 0) {
+        return ReasonCodes.APP_SPECIFIC_FAILURE;
+      }
     }
 
     return ReasonCodes.TRANSFER_SUCCESS;

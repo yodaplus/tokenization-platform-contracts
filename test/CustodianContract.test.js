@@ -852,6 +852,33 @@ describe("CustodianContract", function () {
       expect(await CustodianContract.isInsurer(issuer)).to.be.equal(true);
     });
   });
+  describe("liquidity pool", () => {
+    it("can add liquidity pool", async () => {
+      const { custodian, issuer, kycProvider, custodianContractOwner } =
+        await getNamedAccounts();
+      const CustodianContract = await ethers.getContract(
+        "CustodianContract",
+        custodianContractOwner
+      );
+      await expect(CustodianContract.addLiqudityPool(issuer, issuer))
+        .to.emit(CustodianContract, "AddLiquidityPool")
+        .withArgs(issuer, issuer);
+    });
+    it("can remove liquidity pool", async () => {
+      const { custodian, issuer, kycProvider, custodianContractOwner } =
+        await getNamedAccounts();
+      const CustodianContract = await ethers.getContract(
+        "CustodianContract",
+        custodianContractOwner
+      );
+      await expect(CustodianContract.addLiqudityPool(issuer, issuer))
+        .to.emit(CustodianContract, "AddLiquidityPool")
+        .withArgs(issuer, issuer);
+      await expect(CustodianContract.removeLiquidityPool(issuer))
+        .to.emit(CustodianContract, "RemoveLiquidityPool")
+        .withArgs(issuer);
+    });
+  });
   describe("KYC", () => {
     let CustodianContractIssuer;
     let PaymentToken;

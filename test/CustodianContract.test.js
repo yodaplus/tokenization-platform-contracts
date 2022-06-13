@@ -320,6 +320,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          tokenType: 0,
         })
       ).not.to.be.reverted;
 

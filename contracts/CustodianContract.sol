@@ -108,6 +108,7 @@ contract CustodianContract is
   }
   mapping(address => RoleData) public _issuers;
   mapping(address => uint256) public issuerCreditLimit;
+  mapping(address => uint256) public issuerDefault;
   mapping(address => RoleData) public _custodians;
   mapping(address => RoleData) public _kycProviders;
   mapping(address => RoleData) public _insurers;
@@ -506,6 +507,7 @@ contract CustodianContract is
     );
     // setting Issuer Credit Limit
     issuerCreditLimit[primaryAddress] = 0;
+    issuerDefault[primaryAddress] = 0;
     emit IssuerCreditLimitUpdated(primaryAddress, 0);
     emit AddIssuer(primaryAddress);
   }
@@ -742,6 +744,10 @@ contract CustodianContract is
   {
     issuerCreditLimit[primaryAddress] = credit;
     emit IssuerCreditLimitUpdated(primaryAddress, credit);
+  }
+
+  function setIssuerDefault(address issuerAddress) external onlyOwner {
+    issuerDefault[issuerAddress] = issuerDefault[issuerAddress] + 1;
   }
 
   struct TokenInput {

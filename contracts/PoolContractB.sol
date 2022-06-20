@@ -26,13 +26,21 @@ contract PoolContractB is Pausable, Ownable {
   // variables to store balance of pool for each payment token
   mapping(address => uint256) public _paymentTokenBalance;
 
+  // variables to store balance of pool for each asset token
+  address[] public _assetTokens;
+
   // Events
   event TokenizationPlatformAdded(address tokenizationPlatform);
   event TokenizationPlatformRemoved(address tokenizationPlatform);
   event PaymentTokenAdded(address paymentToken);
   event PaymentTokenRemoved(address paymentToken);
+  event AssetTokenAdded(address assetToken);
+  event AssetTokenRemoved(address assetToken);
 
   //   Functions
+  /*
+  This function is not required if we are planning to keep the contract generic.
+  */
   function addTokenizationPlatform(address escrowManagerAddress)
     public
     onlyOwner
@@ -41,6 +49,9 @@ contract PoolContractB is Pausable, Ownable {
     emit TokenizationPlatformAdded(escrowManagerAddress);
   }
 
+  /*
+  This function is not required if we are planning to keep the contract generic.
+  */
   function removeTokenizationPlatform(address escrowManagerAddress)
     public
     onlyOwner
@@ -63,22 +74,42 @@ contract PoolContractB is Pausable, Ownable {
     return _paymentTokenBalance[tokenAddress];
   }
 
-  function escrowFunds(
-    address escrowManager,
+  // Owner of the pool will need to add the asset token invested in to help the pool to maintain the balance. and NAV
+  function addAsset(address tokenAddress) external onlyOwner {
+    _assetTokens.push(tokenAddress);
+    emit AssetTokenAdded(tokenAddress);
+  }
+
+  function approve(
+    address spender,
     address tokenAddress,
     uint256 amount
   ) public onlyOwner {
-    // check if escrowManager is a tokenization platform
-    require(
-      tokenizationPlatform[escrowManager],
-      "escrowManager is not a tokenization platform"
-    );
+    // // check if escrowManager is a tokenization platform
+    // require(
+    //   tokenizationPlatform[escrowManager],
+    //   "escrowManager is not a tokenization platform"
+    // );
     // check if tokenAddress is a payment token
     require(
       _paymentTokensStatus[tokenAddress] == PaymentTokenStatus.Active,
       "tokenAddress is not a payment token"
     );
     require(amount > 0, "Amount must be greater than 0");
-    IERC20(tokenAddress).safeApprove(escrowManager, amount);
+    IERC20(tokenAddress).safeApprove(spender, amount);
+  }
+
+  function transfer(
+    address to,
+    address tokenAddress,
+    uint256 amount
+  ) public onlyOwner {
+    // check if tokenAddress is a payment token
+    require(
+      _paymentTokensStatus[tokenAddress] == PaymentTokenStatus.Active,
+      "tokenAddress is not a payment token"
+    );
+    require(amount > 0, "Amount must be greater than 0");
+    IERC20(tokenAddress).safeTransfer(to, amount);
   }
 }

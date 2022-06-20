@@ -68,6 +68,7 @@ contract CustodianContract is
     TokenType tokenType;
     address address_;
     bool onChainKyc;
+    address liquidityPool;
   }
 
   struct KycBasicDetails {
@@ -777,6 +778,7 @@ contract CustodianContract is
     string documentUri;
     bytes32 documentHash;
     TokenType tokenType;
+    address liquidityPool;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
@@ -865,6 +867,7 @@ contract CustodianContract is
     _tokens[tokenAddress].address_ = tokenAddress;
     _tokens[tokenAddress].onChainKyc = token.onChainKyc;
     _tokens[tokenAddress].tokenType = token.tokenType;
+    _tokens[tokenAddress].liquidityPool = token.liquidityPool;
     _tokenWithNameExists[token.name] = true;
     _tokenWithSymbolExists[token.symbol] = true;
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(

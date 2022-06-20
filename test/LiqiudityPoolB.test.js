@@ -13,12 +13,27 @@ const normalizeArrayOutput = (arrOutput) => arrOutput.map(normalizeOutput);
 
 describe("PoolContractB", function () {
   let PoolContractB;
+  let PaymentToken;
+  let EscrowManager;
 
   beforeEach(async () => {
-    await deployments.fixture(["PoolContractB"]);
+    await deployments.fixture([
+      "PoolContractB",
+      "CustodianContract",
+      "PaymentToken",
+    ]);
     const { custodianContractOwner } = await getNamedAccounts();
     PoolContractB = await ethers.getContract(
       "PoolContractB",
+      custodianContractOwner
+    );
+
+    PaymentToken = await ethers.getContract(
+      "PaymentToken",
+      custodianContractOwner
+    );
+    EscrowManager = await ethers.getContract(
+      "EscrowManager",
       custodianContractOwner
     );
   });
@@ -55,6 +70,32 @@ describe("PoolContractB", function () {
       await expect(PoolContractB.removePaymentToken(issuer))
         .to.emit(PoolContractB, "PaymentTokenRemoved")
         .withArgs(issuer);
+    });
+    it("can escrow funds", async () => {
+      const { custodian, issuer, custodianContractOwner } =
+        await getNamedAccounts();
+
+      const escrowAmount = ethers.utils.parseEther("1");
+
+      await expect(
+        PaymentToken.freshMint(custodianContractOwner, escrowAmount)
+      );
+      await expect(PaymentToken.transfer(PoolContractB.address, escrowAmount))
+        .not.to.be.reverted;
+
+      await expect(PoolContractB.addTokenizationPlatform(EscrowManager.address))
+        .not.to.be.reverted;
+
+      await expect(PoolContractB.addPaymentToken(PaymentToken.address)).not.to
+        .be.reverted;
+
+      await expect(
+        PoolContractB.escrowFunds(
+          EscrowManager.address,
+          PaymentToken.address,
+          escrowAmount
+        )
+      );
     });
   });
 });

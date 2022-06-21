@@ -7,8 +7,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import "hardhat/console.sol";
+import "./interfaces/ITokenTvT.sol";
 
 contract PoolContractB is Pausable, Ownable {
   using Address for address payable;
@@ -111,5 +110,10 @@ contract PoolContractB is Pausable, Ownable {
     );
     require(amount > 0, "Amount must be greater than 0");
     IERC20(tokenAddress).safeTransfer(to, amount);
+  }
+
+  function redeemTvT(address tokenAddress, uint256 amount) public {
+    require(amount > 0, "Amount must be greater than 0");
+    ITokenTvT(tokenAddress).redeem(address(this), amount);
   }
 }

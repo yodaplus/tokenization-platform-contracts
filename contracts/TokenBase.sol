@@ -154,30 +154,30 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
 
   function issue(address subscriber, uint256 value) public virtual;
 
-  function issueBatch(address[] calldata subscribers, uint256[] calldata value)
-    external
-    onlyIssuer
-  {
-    if (subscribers.length != value.length) {
-      throwError(ErrorCondition.WRONG_INPUT);
-    }
-    for (uint256 i = 0; i < subscribers.length; i++) {
-      issue(subscribers[i], value[i]);
-    }
-  }
+  // function issueBatch(address[] calldata subscribers, uint256[] calldata value)
+  //   external
+  //   onlyIssuer
+  // {
+  //   if (subscribers.length != value.length) {
+  //     throwError(ErrorCondition.WRONG_INPUT);
+  //   }
+  //   for (uint256 i = 0; i < subscribers.length; i++) {
+  //     issue(subscribers[i], value[i]);
+  //   }
+  // }
 
   function redeem(address subscriber, uint256 value) public virtual;
 
-  function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
-    external
-    onlyIssuer
-  {
-    if (subscribers.length != value.length) {
-      throwError(ErrorCondition.WRONG_INPUT);
-    }
+  // function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
+  //   external
+  //   onlyIssuer
+  // {
+  //   if (subscribers.length != value.length) {
+  //     throwError(ErrorCondition.WRONG_INPUT);
+  //   }
 
-    for (uint256 i = 0; i < subscribers.length; i++) {
-      redeem(subscribers[i], value[i]);
-    }
-  }
+  //   for (uint256 i = 0; i < subscribers.length; i++) {
+  //     redeem(subscribers[i], value[i]);
+  //   }
+  // }
 }

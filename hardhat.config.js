@@ -9,6 +9,7 @@ require("solidity-coverage");
 require("./tasks");
 require("dotenv").config();
 require("@openzeppelin/hardhat-upgrades");
+require("hardhat-interface-generator");
 
 const { MNEMONIC } = process.env;
 const DEFAULT_MNEMONIC =

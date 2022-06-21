@@ -90,7 +90,7 @@ describe("PoolContractB", function () {
         .be.reverted;
 
       await expect(
-        PoolContractB.escrowFunds(
+        PoolContractB.approve(
           EscrowManager.address,
           PaymentToken.address,
           escrowAmount

@@ -62,6 +62,7 @@ describe("CustodianContract", function () {
             custodianPrimaryAddress: custodian,
             kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
+            issuerSettlementAddress: issuer,
           })
         ).not.to.be.reverted;
 
@@ -167,6 +168,7 @@ describe("CustodianContract", function () {
             custodianPrimaryAddress: custodian,
             kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
+            issuerSettlementAddress: issuer,
           })
         ).not.to.be.reverted;
 
@@ -207,12 +209,13 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).to.be.revertedWith("caller is not allowed");
     });
 
     it(`can't publish a token for non-existent issuer`, async () => {
-      const { userOfOtherType, custodian, kycProvider, insurer } =
+      const { userOfOtherType, custodian, kycProvider, insurer, issuer } =
         await getNamedAccounts();
 
       await expect(
@@ -222,6 +225,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).to.be.revertedWith("issuer does not exists");
     });
@@ -237,6 +241,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: userOfOtherType,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).to.be.revertedWith("custodian does not exists");
     });
@@ -252,6 +257,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: userOfOtherType,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).to.be.revertedWith("kyc provider does not exists");
     });
@@ -267,6 +273,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       );
 
@@ -278,6 +285,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).to.be.revertedWith("token with the same name already exists");
     });
@@ -293,6 +301,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).not.to.be.reverted;
 
@@ -304,6 +313,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).to.be.revertedWith("token with the same symbol already exists");
     });
@@ -320,6 +330,8 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
+
           tokenType: 0,
         })
       ).not.to.be.reverted;
@@ -343,6 +355,7 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       });
 
       const tokens = await CustodianContractIssuer.getTokens(issuer);
@@ -363,6 +376,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).not.to.be.reverted;
 
@@ -390,6 +404,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).not.to.be.reverted;
 
@@ -414,6 +429,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).not.to.be.reverted;
 
@@ -426,6 +442,7 @@ describe("CustodianContract", function () {
           custodianPrimaryAddress: custodian,
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
+          issuerSettlementAddress: issuer,
         })
       ).not.to.be.reverted;
 
@@ -782,6 +799,7 @@ describe("CustodianContract", function () {
             custodianPrimaryAddress: custodian,
             kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
+            issuerSettlementAddress: issuer,
           })
         ).not.to.be.reverted;
         await expect(
@@ -922,6 +940,8 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
+
         onChainKyc: false,
         countries: [],
         countries: [],
@@ -987,6 +1007,7 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1019,6 +1040,7 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1051,6 +1073,7 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1080,6 +1103,8 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
+
         investorClassifications: {
           isExempted: false,
           isAccredited: true,
@@ -1123,6 +1148,8 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
+
         investorClassifications: {
           isExempted: true,
           isAccredited: false,
@@ -1166,6 +1193,8 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
+
         investorClassifications: {
           isExempted: false,
           isAccredited: false,
@@ -1209,6 +1238,8 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
+
         useIssuerWhitelist: true,
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
@@ -1240,6 +1271,7 @@ describe("CustodianContract", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         useIssuerWhitelist: true,
+        issuerSettlementAddress: issuer,
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 

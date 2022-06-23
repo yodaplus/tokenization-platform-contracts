@@ -20,6 +20,8 @@ contract TokenTvT is TokenBase, ITokenHooks {
   uint256 internal _insurerCollateral;
   address internal _collateralProvider;
 
+  address internal _issuerSettlementAddress;
+
   struct Document {
     bytes32 docHash; // Hash of the document
     string uri; // URI of the document that exist off-chain
@@ -85,6 +87,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
     _issuerCollateral = input.issuerCollateralShare;
     _insurerCollateral = input.insurerCollateralShare;
     _collateralProvider = input.collateralProvider;
+    _issuerSettlementAddress = input.issuerSettlementAddress;
 
     escrowManager = IEscrowInitiate(escrowManagerAddress);
     _documents[input.documentName] = Document(
@@ -114,7 +117,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   }
 
   function issue(address subscriber, uint256 value) public override onlyIssuer {
-    return issue(subscriber, owner(), subscriber, value);
+    return issue(subscriber, _issuerSettlementAddress, subscriber, value);
   }
 
   function issue(
@@ -294,7 +297,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   }
 
   function redeem(address subscriber, uint256 value) public override {
-    return redeem(subscriber, subscriber, owner(), value);
+    return redeem(subscriber, subscriber, _issuerSettlementAddress, value);
   }
 
   function redeem(

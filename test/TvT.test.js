@@ -83,6 +83,7 @@ describe("TvT", function () {
       kycProviderPrimaryAddress: kycProvider,
       insurerPrimaryAddress: insurer,
       collateral: 3,
+      issuerSettlementAddress: issuer,
     });
     const tokens = await CustodianContract.getTokens(issuer);
     TokenContract = await ethers.getContractAt(
@@ -135,6 +136,7 @@ describe("TvT", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       })
     ).to.be.revertedWith("early redemption is not allowed for TvT tokens");
   });
@@ -156,6 +158,7 @@ describe("TvT", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       })
     ).to.be.revertedWith("payment token is not active");
   });
@@ -177,6 +180,7 @@ describe("TvT", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       })
     ).to.be.revertedWith("wrong input");
   });
@@ -198,6 +202,7 @@ describe("TvT", function () {
         custodianPrimaryAddress: custodian,
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
+        issuerSettlementAddress: issuer,
       })
     ).not.to.be.reverted;
 
@@ -330,14 +335,8 @@ describe("TvT", function () {
           TokenContractSubscriber["issue(address,uint256)"](subscriber, 1)
         ).to.be.revertedWith("caller is not allowed");
 
-        await expect(
-          TokenContractSubscriber.issueBatch([subscriber], [1])
-        ).to.be.revertedWith("caller is not allowed");
-
         await expect(TokenContract["issue(address,uint256)"](subscriber, 1)).not
           .to.be.reverted;
-        await expect(TokenContract.issueBatch([subscriber], [1])).not.to.be
-          .reverted;
       });
 
       it("mints requested amount of tokens for the issuer", async () => {
@@ -631,6 +630,7 @@ describe("TvT", function () {
             insurerPrimaryAddress: insurer,
             collateral: 3,
             insurerCollateralShare: 1,
+            issuerSettlementAddress: issuer,
           });
           const tokens = await CustodianContract.getTokens(issuer);
           CollatrizedTokenIssuer = await ethers.getContractAt(
@@ -1206,6 +1206,7 @@ describe("TvT", function () {
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           collateral: 4,
+          issuerSettlementAddress: issuer,
         });
 
         const tokens = await CustodianContract.getTokens(issuer);

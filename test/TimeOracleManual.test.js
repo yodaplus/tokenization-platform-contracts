@@ -163,6 +163,7 @@ describe("TimeOracleManual", function () {
       kycProviderPrimaryAddress: kycProvider,
       insurerPrimaryAddress: insurer,
       collateral: 3,
+      issuerSettlementAddress: issuer,
     });
     const tokens = await CustodianContract.getTokens(issuer);
     TokenContract = await ethers.getContractAt(

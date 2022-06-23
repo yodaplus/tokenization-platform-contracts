@@ -779,6 +779,7 @@ contract CustodianContract is
     bytes32 documentHash;
     TokenType tokenType;
     address liquidityPool;
+    address issuerSettlementAddress;
   }
 
   function publishToken(TokenInput calldata token) external onlyIssuer {
@@ -846,7 +847,8 @@ contract CustodianContract is
         documentName: token.documentName,
         documentUri: token.documentUri,
         documentHash: token.documentHash,
-        tokenType: token.tokenType
+        tokenType: token.tokenType,
+        issuerSettlementAddress: token.issuerSettlementAddress
       }),
       msg.sender
     );

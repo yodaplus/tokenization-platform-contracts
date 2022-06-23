@@ -23,4 +23,5 @@ struct TokenTvTInput {
   string documentUri;
   bytes32 documentHash;
   TokenType tokenType;
+  address issuerSettlementAddress;
 }

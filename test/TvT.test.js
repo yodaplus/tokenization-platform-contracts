@@ -1118,6 +1118,29 @@ describe("TvT", function () {
         ).to.emit(TokenContract, "RedemptionEscrowInitiated");
       });
 
+      // it("burns tokens upon redemption", async () => {
+      //   const { issuer, subscriber, subscriber2 } = await getNamedAccounts();
+
+      //   // const tokens = await CustodianContract.getTokens(issuer);
+      //   // const TokenContractSubscriber2 = await ethers.getContractAt(
+      //   //   "TokenTvT",
+      //   //   tokens[0].address_,
+      //   //   subscriber2
+      //   // );
+
+      //   // await TokenContractSubscriber.transfer(subscriber2, 1);
+      //   // await TokenContractSubscriber2.transfer(subscriber, 1);
+
+      //   await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 1);
+
+      //   await expect(
+      //     TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
+      //   ).to.emit(TokenContract, "RedemptionEscrowInitiated");
+
+      //   expect(await TokenContractSubscriber.balanceOf(subscriber)).to.be.equal(0);
+
+      // });
+
       it("gives escrow manager allowance for the tokens", async () => {
         const { subscriber } = await getNamedAccounts();
 
@@ -1448,7 +1471,7 @@ describe("TvT", function () {
 
             expect(await PaymentToken.balanceOf(issuer)).to.be.equal(1001); // 1000 + 2 + 2 - 3
             expect(await PaymentToken.balanceOf(subscriber)).to.be.equal(999); // 1000 - 2 - 2 + 3
-            expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
+            expect(await TokenContract.balanceOf(issuer)).to.be.equal(0);
             expect(await TokenContract.balanceOf(subscriber)).to.be.equal(1);
           });
 
@@ -1499,7 +1522,7 @@ describe("TvT", function () {
               await EscrowManagerIssuer.lockedCollateralBalance(issuer)
             ).to.be.equal(3);
 
-            expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
+            expect(await TokenContract.balanceOf(issuer)).to.be.equal(0);
             expect(
               subscriberXdcBalanceAfter
                 .sub(subscriberXdcBalanceBefore)

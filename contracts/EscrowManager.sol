@@ -791,6 +791,10 @@ contract EscrowManager is
       orderId
     );
 
+    ITokenHooks(escrowOrder.tradeToken).burnTokens(
+      escrowOrder.tradeTokenAmount
+    );
+
     emit RedemptionEscrowComplete(orderId);
   }
 

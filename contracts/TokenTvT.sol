@@ -93,6 +93,13 @@ contract TokenTvT is TokenBase, ITokenHooks {
     );
   }
 
+  function burnTokens(uint256 amount) public virtual override {
+    if (msg.sender != address(escrowManager)) {
+      throwError(ErrorCondition.WRONG_CALLER);
+    }
+    _burn(owner(), amount);
+  }
+
   function updateTokenIssuanceSwapRatio(uint256 ratio) external onlyIssuer {
     if (ratio < 0) {
       throwError(ErrorCondition.WRONG_INPUT);

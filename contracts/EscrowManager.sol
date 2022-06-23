@@ -19,7 +19,8 @@ enum EscrowType {
 
 enum EscrowStatus {
   Pending,
-  Done
+  Done,
+  Cancelled
 }
 
 contract EscrowManager is
@@ -60,7 +61,8 @@ contract EscrowManager is
     ESCROW_CONDITIONS_NOT_MET,
     FULL_ESCROW_CONDITIONS_NOT_MET_BEFORE_EXPIRY,
     INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY,
-    UN_COLLATRIZED_ORDER_CANNOT_BE_REDEEMED_AFTER_EXPIRY
+    UN_COLLATRIZED_ORDER_CANNOT_BE_REDEEMED_AFTER_EXPIRY,
+    ISSUANCE_CANNOT_BE_CANCELLED_BEFORE_EXPIRY
   }
 
   event IssuanceEscrowComplete(uint256 orderId);
@@ -168,6 +170,13 @@ contract EscrowManager is
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "escrow expired, but investor conditions are not met"
+      );
+    } else if (
+      condition == ErrorCondition.ISSUANCE_CANNOT_BE_CANCELLED_BEFORE_EXPIRY
+    ) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "cannot cancel issuance before expiry"
       );
     } else if (
       condition ==
@@ -596,6 +605,38 @@ contract EscrowManager is
     _escrowOrdersType[orderId] = EscrowType.Redemption;
     _escrowStartTimestamp[orderId] = custodianContract.getTimestamp();
     _escrowOrdersStatus[orderId] = EscrowStatus.Pending;
+  }
+
+  function cancelIssuance(uint256 orderId) external {
+    if (_escrowStartTimestamp[orderId] == 0) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_ID);
+    }
+
+    if (_escrowOrdersType[orderId] != EscrowType.Issuance) {
+      throwError(ErrorCondition.INVALID_ESCROW_ORDER_TYPE);
+    }
+
+    if (_escrowOrdersStatus[orderId] == EscrowStatus.Done) {
+      throwError(ErrorCondition.ESCROW_ORDER_ALREADY_COMPLETE);
+    }
+
+    assert(_escrowOrdersStatus[orderId] == EscrowStatus.Pending);
+
+    EscrowOrder storage escrowOrder = _escrowOrders[orderId];
+
+    bool timeoutFlag = custodianContract.getTimestamp() -
+      _escrowStartTimestamp[orderId] >
+      escrowOrder.timeout;
+
+    if (!timeoutFlag) {
+      throwError(ErrorCondition.ISSUANCE_CANNOT_BE_CANCELLED_BEFORE_EXPIRY);
+    }
+
+    _escrowOrdersStatus[orderId] = EscrowStatus.Cancelled;
+
+    ITokenHooks(escrowOrder.tradeToken).burnTokens(
+      escrowOrder.tradeTokenAmount
+    );
   }
 
   function swapIssuance(uint256 orderId) external {

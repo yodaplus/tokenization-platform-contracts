@@ -13,4 +13,6 @@ interface ITokenHooks {
     uint256 value,
     uint256 orderId
   ) external;
+
+  function burnTokens(uint256 amount) external;
 }

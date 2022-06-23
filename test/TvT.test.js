@@ -483,6 +483,44 @@ describe("TvT", function () {
           );
         });
 
+        describe("issuance cancellation", async () => {
+          it ("cancels issuance", async () => {
+            const { issuer, subscriber } = await getNamedAccounts();
+
+            await TokenContract["issue(address,uint256)"](subscriber, 1);
+            const escrowManager = await TokenContract.escrowManager();
+
+            await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
+            await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be.reverted
+
+          })
+          it ("prevents cancellation before expiry", async () => {
+
+            const { issuer, subscriber } = await getNamedAccounts();
+
+            await TokenContract["issue(address,uint256)"](subscriber, 1);
+            const escrowManager = await TokenContract.escrowManager();
+
+            await expect(EscrowManagerIssuer.cancelIssuance(0)).to.be.revertedWith(
+              "cannot cancel issuance before expiry"
+            )
+
+          })
+          it ("should burn tokens on cancellation", async () => {
+            const { issuer, subscriber } = await getNamedAccounts();
+
+            await TokenContract["issue(address,uint256)"](subscriber, 1);
+            
+            expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
+
+            await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
+            await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be.reverted
+
+            expect(await TokenContract.balanceOf(issuer)).to.be.equal(0);
+            
+          })
+        })
+
         describe("executing swap", async () => {
           beforeEach(async () => {
             await prepareIssuanceSwap();

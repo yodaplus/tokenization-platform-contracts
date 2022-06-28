@@ -21,7 +21,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   address internal _collateralProvider;
 
   address internal _issuerSettlementAddress;
-
+  IssueType internal _issueType;
   struct Document {
     bytes32 docHash; // Hash of the document
     string uri; // URI of the document that exist off-chain
@@ -88,6 +88,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
     _insurerCollateral = input.insurerCollateralShare;
     _collateralProvider = input.collateralProvider;
     _issuerSettlementAddress = input.issuerSettlementAddress;
+    _issueType = input.issueType;
 
     escrowManager = IEscrowInitiate(escrowManagerAddress);
     _documents[input.documentName] = Document(
@@ -319,7 +320,10 @@ contract TokenTvT is TokenBase, ITokenHooks {
     if (matureBalanceOf(subscriber) < value || balanceOf(subscriber) < value) {
       reasonCode = ReasonCodes.INSUFFICIENT_BALANCE;
     }
-
+    uint256 redeemPrice = _redemptionSwapMultiple[0] * value;
+    if (_issueType == IssueType.NAV) {
+      redeemPrice = _issuanceSwapMultiple[0] * value;
+    }
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
       throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
     } else {
@@ -330,7 +334,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeTokenDestination: tradeTokenDestination,
         issuerAddress: owner(),
         paymentToken: _paymentTokens[0],
-        paymentTokenAmount: _redemptionSwapMultiple[0] * value,
+        paymentTokenAmount: redeemPrice,
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,

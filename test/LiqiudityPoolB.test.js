@@ -97,5 +97,40 @@ describe("PoolContractB", function () {
         )
       );
     });
+    it("can transfer funds", async () => {
+      const { custodian, issuer, custodianContractOwner } =
+        await getNamedAccounts();
+
+      const escrowAmount = ethers.utils.parseEther("1");
+
+      await expect(
+        PaymentToken.freshMint(custodianContractOwner, escrowAmount)
+      );
+      await expect(PaymentToken.transfer(PoolContractB.address, escrowAmount))
+        .not.to.be.reverted;
+
+      await expect(
+        PoolContractB.transfer(
+          EscrowManager.address,
+          PaymentToken.address,
+          escrowAmount
+        )
+      );
+    });
+    it("can get the balanceOf for a tokenAddress", async () => {
+      const { custodianContractOwner } = await getNamedAccounts();
+
+      const escrowAmount = ethers.utils.parseEther("1");
+
+      await expect(
+        PaymentToken.freshMint(custodianContractOwner, escrowAmount)
+      );
+      await expect(PaymentToken.transfer(PoolContractB.address, escrowAmount))
+        .not.to.be.reverted;
+
+      const balance = await PoolContractB.getPoolBalance(PaymentToken.address);
+
+      expect(balance).to.equal(escrowAmount);
+    });
   });
 });

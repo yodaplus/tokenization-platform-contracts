@@ -70,7 +70,7 @@ contract PoolContractB is Pausable, Ownable {
   }
 
   function getPoolBalance(address tokenAddress) public view returns (uint256) {
-    return _paymentTokenBalance[tokenAddress];
+    return IERC20(tokenAddress).balanceOf(address(this));
   }
 
   // Owner of the pool will need to add the asset token invested in to help the pool to maintain the balance. and NAV
@@ -104,10 +104,10 @@ contract PoolContractB is Pausable, Ownable {
     uint256 amount
   ) public onlyOwner {
     // check if tokenAddress is a payment token
-    require(
-      _paymentTokensStatus[tokenAddress] == PaymentTokenStatus.Active,
-      "tokenAddress is not a payment token"
-    );
+    // require(
+    //   _paymentTokensStatus[tokenAddress] == PaymentTokenStatus.Active,
+    //   "tokenAddress is not a payment token"
+    // );
     require(amount > 0, "Amount must be greater than 0");
     IERC20(tokenAddress).safeTransfer(to, amount);
   }

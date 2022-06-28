@@ -5,6 +5,10 @@ enum TokenType {
   Subscription,
   LiquidityPool
 }
+enum IssueType {
+  Normal,
+  NAV
+}
 
 struct TokenTvTInput {
   string name;
@@ -24,4 +28,5 @@ struct TokenTvTInput {
   bytes32 documentHash;
   TokenType tokenType;
   address issuerSettlementAddress;
+  IssueType issueType;
 }

@@ -1077,17 +1077,19 @@ contract CustodianContract is
     address investor,
     uint256 value
   ) external view override returns (bytes1) {
-    address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
+    if (_tokens[tokenAddress].tokenType == TokenType.Subscription) {
+      address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
 
-    if (
-      (_whitelist[tokenAddress][investor] != true) &&
-      (_issuerWhitelist[tokenIssuer][investor] != true)
-    ) {
-      return ReasonCodes.INVALID_RECEIVER;
-    }
+      if (
+        (_whitelist[tokenAddress][investor] != true) &&
+        (_issuerWhitelist[tokenIssuer][investor] != true)
+      ) {
+        return ReasonCodes.INVALID_RECEIVER;
+      }
 
-    if (value == 0) {
-      return ReasonCodes.APP_SPECIFIC_FAILURE;
+      if (value == 0) {
+        return ReasonCodes.APP_SPECIFIC_FAILURE;
+      }
     }
 
     return ReasonCodes.TRANSFER_SUCCESS;

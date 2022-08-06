@@ -27,3 +27,9 @@ npm run gas
 ```
 npm run size
 ```
+# Links
+[Yodaplus Website](https://yodaplus.com/)
+
+[Asset Tokenization Platform Video](https://player.vimeo.com/video/679714793?h=8f973e3646)
+
+[XDC Dev Forum](https://xdc.dev/)

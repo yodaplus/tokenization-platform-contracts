@@ -10,10 +10,10 @@ contract TokenTvT is TokenBase, ITokenHooks {
   string public constant VERSION = "0.0.1";
   string public constant TYPE = "TokenTvT";
 
-  address[] internal _paymentTokens;
+  address[] public paymentTokens;
   uint256[] internal _issuanceSwapMultiple;
   uint256[] internal _redemptionSwapMultiple;
-  uint256 internal _maturityPeriod;
+  uint256 public maturityPeriod;
   uint256 internal _settlementPeriod;
   uint256 internal _collateral;
   uint256 internal _issuerCollateral;
@@ -78,10 +78,10 @@ contract TokenTvT is TokenBase, ITokenHooks {
   )
     TokenBase(input.name, input.symbol, input.maxTotalSupply, custodianContract)
   {
-    _paymentTokens = input.paymentTokens;
+    paymentTokens = input.paymentTokens;
     _issuanceSwapMultiple = input.issuanceSwapMultiple;
     _redemptionSwapMultiple = input.redemptionSwapMultiple;
-    _maturityPeriod = input.maturityPeriod;
+    maturityPeriod = input.maturityPeriod;
     _settlementPeriod = input.settlementPeriod;
     _collateral = input.collateral;
     _issuerCollateral = input.issuerCollateralShare;
@@ -163,7 +163,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeTokenAmount: value,
         tradeTokenDestination: tradeTokenDestination,
         issuerAddress: tokenOwner,
-        paymentToken: _paymentTokens[0],
+        paymentToken: paymentTokens[0],
         paymentTokenAmount: _issuanceSwapMultiple[0] * value,
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
@@ -228,7 +228,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
     while (
       i < maturityBuckets.length &&
       remainingValue > 0 &&
-      (maturityBuckets[i] + _maturityPeriod < _custodianContract.getTimestamp())
+      (maturityBuckets[i] + maturityPeriod < _custodianContract.getTimestamp())
     ) {
       uint256 currentBucketBalance = _issuedTokensByMaturityBucket[subscriber][
         maturityBuckets[i]
@@ -262,7 +262,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
 
     while (
       i < maturityBuckets.length &&
-      (maturityBuckets[i] + _maturityPeriod < _custodianContract.getTimestamp())
+      (maturityBuckets[i] + maturityPeriod < _custodianContract.getTimestamp())
     ) {
       result += _issuedTokensByMaturityBucket[subscriber][maturityBuckets[i]];
 
@@ -282,7 +282,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
 
     while (
       i < maturityBuckets.length &&
-      (maturityBuckets[maturityBuckets.length - i - 1] + _maturityPeriod >=
+      (maturityBuckets[maturityBuckets.length - i - 1] + maturityPeriod >=
         _custodianContract.getTimestamp())
     ) {
       result += _issuedTokensByMaturityBucket[subscriber][
@@ -333,7 +333,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeTokenAmount: value,
         tradeTokenDestination: tradeTokenDestination,
         issuerAddress: owner(),
-        paymentToken: _paymentTokens[0],
+        paymentToken: paymentTokens[0],
         paymentTokenAmount: redeemPrice,
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,

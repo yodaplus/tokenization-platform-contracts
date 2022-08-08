@@ -10,16 +10,18 @@ contract TokenTvT is TokenBase, ITokenHooks {
   string public constant VERSION = "0.0.1";
   string public constant TYPE = "TokenTvT";
 
-  address[] internal _paymentTokens;
+  address[] public paymentTokens;
   uint256[] internal _issuanceSwapMultiple;
   uint256[] internal _redemptionSwapMultiple;
-  uint256 internal _maturityPeriod;
+  uint256 public maturityPeriod;
   uint256 internal _settlementPeriod;
   uint256 internal _collateral;
   uint256 internal _issuerCollateral;
   uint256 internal _insurerCollateral;
   address internal _collateralProvider;
 
+  address internal _issuerSettlementAddress;
+  IssueType internal _issueType;
   struct Document {
     bytes32 docHash; // Hash of the document
     string uri; // URI of the document that exist off-chain
@@ -76,15 +78,17 @@ contract TokenTvT is TokenBase, ITokenHooks {
   )
     TokenBase(input.name, input.symbol, input.maxTotalSupply, custodianContract)
   {
-    _paymentTokens = input.paymentTokens;
+    paymentTokens = input.paymentTokens;
     _issuanceSwapMultiple = input.issuanceSwapMultiple;
     _redemptionSwapMultiple = input.redemptionSwapMultiple;
-    _maturityPeriod = input.maturityPeriod;
+    maturityPeriod = input.maturityPeriod;
     _settlementPeriod = input.settlementPeriod;
     _collateral = input.collateral;
     _issuerCollateral = input.issuerCollateralShare;
     _insurerCollateral = input.insurerCollateralShare;
     _collateralProvider = input.collateralProvider;
+    _issuerSettlementAddress = input.issuerSettlementAddress;
+    _issueType = input.issueType;
 
     escrowManager = IEscrowInitiate(escrowManagerAddress);
     _documents[input.documentName] = Document(
@@ -114,7 +118,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   }
 
   function issue(address subscriber, uint256 value) public override onlyIssuer {
-    return issue(subscriber, owner(), subscriber, value);
+    return issue(subscriber, _issuerSettlementAddress, subscriber, value);
   }
 
   function issue(
@@ -159,7 +163,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeTokenAmount: value,
         tradeTokenDestination: tradeTokenDestination,
         issuerAddress: tokenOwner,
-        paymentToken: _paymentTokens[0],
+        paymentToken: paymentTokens[0],
         paymentTokenAmount: _issuanceSwapMultiple[0] * value,
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
@@ -224,7 +228,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
     while (
       i < maturityBuckets.length &&
       remainingValue > 0 &&
-      (maturityBuckets[i] + _maturityPeriod < _custodianContract.getTimestamp())
+      (maturityBuckets[i] + maturityPeriod < _custodianContract.getTimestamp())
     ) {
       uint256 currentBucketBalance = _issuedTokensByMaturityBucket[subscriber][
         maturityBuckets[i]
@@ -258,7 +262,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
 
     while (
       i < maturityBuckets.length &&
-      (maturityBuckets[i] + _maturityPeriod < _custodianContract.getTimestamp())
+      (maturityBuckets[i] + maturityPeriod < _custodianContract.getTimestamp())
     ) {
       result += _issuedTokensByMaturityBucket[subscriber][maturityBuckets[i]];
 
@@ -278,7 +282,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
 
     while (
       i < maturityBuckets.length &&
-      (maturityBuckets[maturityBuckets.length - i - 1] + _maturityPeriod >=
+      (maturityBuckets[maturityBuckets.length - i - 1] + maturityPeriod >=
         _custodianContract.getTimestamp())
     ) {
       result += _issuedTokensByMaturityBucket[subscriber][
@@ -294,7 +298,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   }
 
   function redeem(address subscriber, uint256 value) public override {
-    return redeem(subscriber, subscriber, owner(), value);
+    return redeem(subscriber, subscriber, _issuerSettlementAddress, value);
   }
 
   function redeem(
@@ -316,7 +320,10 @@ contract TokenTvT is TokenBase, ITokenHooks {
     if (matureBalanceOf(subscriber) < value || balanceOf(subscriber) < value) {
       reasonCode = ReasonCodes.INSUFFICIENT_BALANCE;
     }
-
+    uint256 redeemPrice = _redemptionSwapMultiple[0] * value;
+    if (_issueType == IssueType.NAV) {
+      redeemPrice = _issuanceSwapMultiple[0] * value;
+    }
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
       throwError(ErrorCondition.CUSTODIAN_VALIDATION_FAIL);
     } else {
@@ -326,8 +333,8 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeTokenAmount: value,
         tradeTokenDestination: tradeTokenDestination,
         issuerAddress: owner(),
-        paymentToken: _paymentTokens[0],
-        paymentTokenAmount: _redemptionSwapMultiple[0] * value,
+        paymentToken: paymentTokens[0],
+        paymentTokenAmount: redeemPrice,
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,

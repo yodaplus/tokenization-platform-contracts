@@ -30,8 +30,13 @@ const TOKEN_EXAMPLE = {
   useIssuerWhitelist: false,
   onChainKyc: true,
   documentName: stringToBytes32("RICK_ASTLEY"),
-  documentUri: "https://ipfs.io/ipfs/QmbXp7tz1v92zdARJp6576xxFuNnd2tycs3dtFikrcczNY?filename=rickastley.jpg",
-  documentHash: "0xfb25b054b44b4518bd3d2a0c5ad1389b6476bc009b36e671afeaa09ab4f16524"
+  documentUri:
+    "https://ipfs.io/ipfs/QmbXp7tz1v92zdARJp6576xxFuNnd2tycs3dtFikrcczNY?filename=rickastley.jpg",
+  documentHash:
+    "0xfb25b054b44b4518bd3d2a0c5ad1389b6476bc009b36e671afeaa09ab4f16524",
+  tokenType: 0,
+  liquidityPool: "0x0000000000000000000000000000000000000000",
+  issueType: 0,
 };
 const KYC_DATA = {
   countryCode: stringToBytes32("USA"),

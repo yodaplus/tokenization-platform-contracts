@@ -332,7 +332,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeToken: address(this),
         tradeTokenAmount: value,
         tradeTokenDestination: tradeTokenDestination,
-        issuerAddress: owner(),
+        issuerAddress: _issuerSettlementAddress,
         paymentToken: paymentTokens[0],
         paymentTokenAmount: redeemPrice,
         paymentTokenDestination: paymentTokenDestination,

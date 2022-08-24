@@ -298,7 +298,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   }
 
   function redeem(address subscriber, uint256 value) public override {
-    return redeem(subscriber, subscriber, _issuerSettlementAddress, value);
+    return redeem(subscriber, subscriber, owner(), value);
   }
 
   function redeem(

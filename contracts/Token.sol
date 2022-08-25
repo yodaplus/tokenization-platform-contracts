@@ -64,7 +64,7 @@ contract Token is TokenBase {
       uint256 currentAllowance = allowance(subscriber, tokenOwner);
       _approve(subscriber, tokenOwner, currentAllowance - value);
       _burn(subscriber, value);
-      emit Redeemed(subscriber, value, reasonCode, 0);
+      emit Redeemed(subscriber, value, reasonCode, 0, totalSupply());
     }
   }
 }

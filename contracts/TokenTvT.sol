@@ -247,7 +247,13 @@ contract TokenTvT is TokenBase, ITokenHooks {
       i += 1;
     }
 
-    emit Redeemed(subscriber, value, ReasonCodes.TRANSFER_SUCCESS, orderId);
+    emit Redeemed(
+      subscriber,
+      value,
+      ReasonCodes.TRANSFER_SUCCESS,
+      orderId,
+      totalSupply()
+    );
   }
 
   function matureBalanceOf(address subscriber)

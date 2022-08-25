@@ -784,15 +784,14 @@ contract EscrowManager is
       );
       emit DefaultedEscrow(orderId);
     }
+    ITokenHooks(escrowOrder.tradeToken).burnTokens(
+      escrowOrder.tradeTokenAmount
+    );
 
     ITokenHooks(escrowOrder.tradeToken).onRedeem(
       escrowOrder.investorAddress,
       escrowOrder.tradeTokenAmount,
       orderId
-    );
-
-    ITokenHooks(escrowOrder.tradeToken).burnTokens(
-      escrowOrder.tradeTokenAmount
     );
 
     emit RedemptionEscrowComplete(orderId);

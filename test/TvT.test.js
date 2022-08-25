@@ -234,6 +234,11 @@ describe("TvT", function () {
       let d = await TokenContract.getDocument(TOKEN_EXAMPLE.documentName);
       expect(await document[1]).to.equal(TOKEN_EXAMPLE.documentHash);
     });
+    it("must emit finalizeIssuance event", async () => {
+      await expect(
+        TokenContract.finalizeIssuance()
+      ).to.emit(TokenContract, "IssuanceFinalized");
+    });
   });
 
   describe("EscrowManager", async () => {
@@ -483,7 +488,7 @@ describe("TvT", function () {
         });
 
         describe("issuance cancellation", async () => {
-          it ("cancels issuance", async () => {
+          it("cancels issuance", async () => {
             const { issuer, subscriber } = await getNamedAccounts();
 
             await TokenContract["issue(address,uint256)"](subscriber, 1);
@@ -493,7 +498,7 @@ describe("TvT", function () {
             await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be.reverted
 
           })
-          it ("prevents cancellation before expiry", async () => {
+          it("prevents cancellation before expiry", async () => {
 
             const { issuer, subscriber } = await getNamedAccounts();
 
@@ -505,18 +510,18 @@ describe("TvT", function () {
             )
 
           })
-          it ("should burn tokens on cancellation", async () => {
+          it("should burn tokens on cancellation", async () => {
             const { issuer, subscriber } = await getNamedAccounts();
 
             await TokenContract["issue(address,uint256)"](subscriber, 1);
-            
+
             expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
 
             await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
             await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be.reverted
 
             expect(await TokenContract.balanceOf(issuer)).to.be.equal(0);
-            
+
           })
         })
 

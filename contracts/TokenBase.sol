@@ -44,9 +44,15 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
   event SupplyDecreased(uint256 oldValue, uint256 newValue);
   event Issued(address _to, uint256 _value, bytes1 _data, uint256 orderId);
   event IssuanceFailure(address _to, uint256 _value, bytes1 _data);
-  event Redeemed(address _from, uint256 _value, bytes1 _data, uint256 orderId);
+  event Redeemed(
+    address _from,
+    uint256 _value,
+    bytes1 _data,
+    uint256 orderId,
+    uint256 totalSupply
+  );
   event RedeemFailed(address _from, uint256 _value, bytes1 _data);
-
+  event IssuanceFinalized(bool _isFinalized);
   error ERC1066Error(bytes1 errorCode, string message);
 
   enum ErrorCondition {
@@ -137,6 +143,7 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
 
   function finalizeIssuance() external onlyOwner {
     _isFinalized = true;
+    emit IssuanceFinalized(_isFinalized);
   }
 
   function setMaxSupply(uint256 maxTotalSupply_) external onlyOwner {

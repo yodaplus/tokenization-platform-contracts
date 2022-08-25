@@ -247,7 +247,13 @@ contract TokenTvT is TokenBase, ITokenHooks {
       i += 1;
     }
 
-    emit Redeemed(subscriber, value, ReasonCodes.TRANSFER_SUCCESS, orderId);
+    emit Redeemed(
+      subscriber,
+      value,
+      ReasonCodes.TRANSFER_SUCCESS,
+      orderId,
+      totalSupply()
+    );
   }
 
   function matureBalanceOf(address subscriber)
@@ -298,7 +304,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   }
 
   function redeem(address subscriber, uint256 value) public override {
-    return redeem(subscriber, subscriber, _issuerSettlementAddress, value);
+    return redeem(subscriber, subscriber, owner(), value);
   }
 
   function redeem(
@@ -332,7 +338,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeToken: address(this),
         tradeTokenAmount: value,
         tradeTokenDestination: tradeTokenDestination,
-        issuerAddress: owner(),
+        issuerAddress: _issuerSettlementAddress,
         paymentToken: paymentTokens[0],
         paymentTokenAmount: redeemPrice,
         paymentTokenDestination: paymentTokenDestination,

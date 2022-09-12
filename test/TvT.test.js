@@ -395,7 +395,14 @@ describe("TvT", function () {
             172800
           );
       });
+      it("should not issue if token paused", async () => {
+        const { issuer, subscriber } = await getNamedAccounts();
+        await TokenContract.pause();
+        await expect(TokenContract["issue(address,uint256)"](subscriber, 1)).to.be.revertedWith(
+          "token is paused"
+        );
 
+      })
       describe("EscrowManager", async () => {
         it("only allows token contracts to start issuance escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
@@ -1123,28 +1130,6 @@ describe("TvT", function () {
         ).to.emit(TokenContract, "RedemptionEscrowInitiated");
       });
 
-      // it("burns tokens upon redemption", async () => {
-      //   const { issuer, subscriber, subscriber2 } = await getNamedAccounts();
-
-      //   // const tokens = await CustodianContract.getTokens(issuer);
-      //   // const TokenContractSubscriber2 = await ethers.getContractAt(
-      //   //   "TokenTvT",
-      //   //   tokens[0].address_,
-      //   //   subscriber2
-      //   // );
-
-      //   // await TokenContractSubscriber.transfer(subscriber2, 1);
-      //   // await TokenContractSubscriber2.transfer(subscriber, 1);
-
-      //   await moveBlockTimestampBy(ONE_MONTH_IN_SECONDS + 1);
-
-      //   await expect(
-      //     TokenContractSubscriber["redeem(address,uint256)"](subscriber, 1)
-      //   ).to.emit(TokenContract, "RedemptionEscrowInitiated");
-
-      //   expect(await TokenContractSubscriber.balanceOf(subscriber)).to.be.equal(0);
-
-      // });
 
       it("gives escrow manager allowance for the tokens", async () => {
         const { subscriber } = await getNamedAccounts();
@@ -1467,6 +1452,19 @@ describe("TvT", function () {
             await expect(EscrowManagerIssuer.swapRedemption(2))
               .to.emit(EscrowManagerIssuer, "RedemptionEscrowComplete")
               .withArgs(2);
+          });
+          it("burns tokens upon redemption", async () => {
+
+            const { issuer, subscriber } = await getNamedAccounts();
+
+            await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
+
+            await expect(EscrowManagerIssuer.swapRedemption(2))
+              .to.emit(EscrowManagerIssuer, "RedemptionEscrowComplete")
+              .withArgs(2);
+
+            expect(await TokenContract.balanceOf(subscriber)).to.be.equal(1);
+            expect(await TokenContract.balanceOf(issuer)).to.be.equal(0);
           });
 
           it("on success: swaps tokens", async () => {

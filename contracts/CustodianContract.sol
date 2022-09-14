@@ -988,6 +988,7 @@ contract CustodianContract is
     uint256 value
   ) external view override returns (bytes1) {
     assertTokenExists(tokenAddress);
+    assertTokenNotPaused(tokenAddress);
     if (_tokens[tokenAddress].tokenType == TokenType.Subscription) {
       address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
 
@@ -1077,6 +1078,8 @@ contract CustodianContract is
     address investor,
     uint256 value
   ) external view override returns (bytes1) {
+    assertTokenExists(tokenAddress);
+    assertTokenNotPaused(tokenAddress);
     if (_tokens[tokenAddress].tokenType == TokenType.Subscription) {
       address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
 

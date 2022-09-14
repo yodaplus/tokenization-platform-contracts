@@ -34,7 +34,7 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
 
   event BurntContract(address aadr);
 
-  function burnContract(address addr) public onlyOwner {
+  function burnContract(address addr) public onlyOwner whenNotPaused {
     // require statement
     selfdestruct(payable(addr));
     emit BurntContract(addr);
@@ -141,12 +141,16 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
     return _maxTotalSupply;
   }
 
-  function finalizeIssuance() external onlyOwner {
+  function finalizeIssuance() external onlyOwner whenNotPaused {
     _isFinalized = true;
     emit IssuanceFinalized(_isFinalized);
   }
 
-  function setMaxSupply(uint256 maxTotalSupply_) external onlyOwner {
+  function setMaxSupply(uint256 maxTotalSupply_)
+    external
+    onlyOwner
+    whenNotPaused
+  {
     if (maxTotalSupply_ < totalSupply()) {
       throwError(ErrorCondition.MAX_SUPPLY_LESS_THAN_TOTAL_SUPPLY);
     }
@@ -162,30 +166,13 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
 
   function issue(address subscriber, uint256 value) public virtual;
 
-  // function issueBatch(address[] calldata subscribers, uint256[] calldata value)
-  //   external
-  //   onlyIssuer
-  // {
-  //   if (subscribers.length != value.length) {
-  //     throwError(ErrorCondition.WRONG_INPUT);
-  //   }
-  //   for (uint256 i = 0; i < subscribers.length; i++) {
-  //     issue(subscribers[i], value[i]);
-  //   }
-  // }
-
   function redeem(address subscriber, uint256 value) public virtual;
 
-  // function redeemBatch(address[] calldata subscribers, uint256[] calldata value)
-  //   external
-  //   onlyIssuer
-  // {
-  //   if (subscribers.length != value.length) {
-  //     throwError(ErrorCondition.WRONG_INPUT);
-  //   }
-
-  //   for (uint256 i = 0; i < subscribers.length; i++) {
-  //     redeem(subscribers[i], value[i]);
-  //   }
-  // }
+  function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override whenNotPaused {
+    super._beforeTokenTransfer(from, to, amount);
+  }
 }

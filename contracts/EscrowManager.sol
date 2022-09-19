@@ -762,6 +762,11 @@ contract EscrowManager is
           ErrorCondition.INVESTOR_ESCROW_CONDITIONS_NOT_MET_AFTER_EXPIRY
         );
       }
+      if (!checkOrderCollatrized(orderId)) {
+        throwError(
+          ErrorCondition.UN_COLLATRIZED_ORDER_CANNOT_BE_REDEEMED_AFTER_EXPIRY
+        );
+      }
 
       IERC20(escrowOrder.tradeToken).transferFrom(
         escrowOrder.investorAddress,

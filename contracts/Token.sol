@@ -14,7 +14,11 @@ contract Token is TokenBase {
     address custodianContract
   ) TokenBase(name, symbol, maxTotalSupply, custodianContract) {}
 
-  function issue(address subscriber, uint256 value) public override onlyIssuer {
+  function issue(
+    address subscriber,
+    uint256 value,
+    uint256 tranche
+  ) public override onlyIssuer {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
     }

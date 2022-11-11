@@ -892,7 +892,7 @@ abstract contract TokenBase is ERC20Pausable, Ownable, ReasonCodes {
     _maxTotalSupply = maxTotalSupply_;
   }
 
-  function issue(address subscriber, uint256 value) public virtual;
+  function issue(address subscriber, uint256 value, uint tranche) public virtual;
 
   function issueBatch(address[] calldata subscribers, uint256[] calldata value)
     external

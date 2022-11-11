@@ -33,6 +33,8 @@ contract TokenTvT is TokenBase, ITokenHooks {
     internal _issuedTokensByMaturityBucket;
   mapping(address => uint256[]) internal _issuedTokensMaturityBuckets;
 
+  mapping(address => uint256) internal investorTranches;
+
   event TokenIssuanceSwapRatioUpdated(uint256 ratio);
 
   IEscrowInitiate public escrowManager;
@@ -117,15 +119,21 @@ contract TokenTvT is TokenBase, ITokenHooks {
     return _issuanceSwapMultiple[0];
   }
 
-  function issue(address subscriber, uint256 value) public override onlyIssuer {
-    return issue(subscriber, _issuerSettlementAddress, subscriber, value);
+  function issue(
+    address subscriber,
+    uint256 value,
+    uint256 tranche
+  ) public override onlyIssuer {
+    return
+      issue(subscriber, _issuerSettlementAddress, subscriber, value, tranche);
   }
 
   function issue(
     address subscriber,
     address paymentTokenDestination,
     address tradeTokenDestination,
-    uint256 value
+    uint256 value,
+    uint256 tranche
   ) public onlyIssuer {
     if (_isFinalized == true) {
       throwError(ErrorCondition.TOKEN_IS_FINALIZED);
@@ -140,6 +148,9 @@ contract TokenTvT is TokenBase, ITokenHooks {
       subscriber,
       value
     );
+
+    // save investor tranche
+    investorTranches[subscriber] = tranche;
 
     address tokenOwner = owner();
 
@@ -327,7 +338,9 @@ contract TokenTvT is TokenBase, ITokenHooks {
       reasonCode = ReasonCodes.INSUFFICIENT_BALANCE;
     }
     uint256 redeemPrice = _redemptionSwapMultiple[0] * value;
-    if (_issueType == IssueType.NAV) {
+    // SENIOR_TRANCHE = 0
+    // JUNIOR TRANCHE = 1
+    if (_issueType == IssueType.NAV && investorTranches[subscriber] == 1) {
       redeemPrice = _issuanceSwapMultiple[0] * value;
     }
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {

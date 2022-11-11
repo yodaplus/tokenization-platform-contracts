@@ -164,7 +164,11 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
     _maxTotalSupply = maxTotalSupply_;
   }
 
-  function issue(address subscriber, uint256 value) public virtual;
+  function issue(
+    address subscriber,
+    uint256 value,
+    uint256 tranche
+  ) public virtual;
 
   function redeem(address subscriber, uint256 value) public virtual;
 

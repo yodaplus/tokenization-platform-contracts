@@ -59,7 +59,6 @@ contract CustodianContract is
     uint256 value;
     string currency;
     address issuerPrimaryAddress;
-    address custodianPrimaryAddress;
     address kycProviderPrimaryAddress;
     address insurerPrimaryAddress;
     bool earlyRedemption;
@@ -116,7 +115,6 @@ contract CustodianContract is
   mapping(address => LiquidityPool) public _liquidityPool;
 
   mapping(address => address) public _addressToIssuerPrimaryAddress;
-  mapping(address => address) public _addressToCustodianPrimaryAddress;
   mapping(address => address) public _addressToKycProviderPrimaryAddress;
   mapping(address => address) public _addressToInsurerPrimaryAddress;
 
@@ -128,8 +126,6 @@ contract CustodianContract is
   mapping(address => TokenData) internal _tokens;
   mapping(address => TokenRestrictions) internal _tokenRestrictions;
   mapping(address => address[]) internal _tokenAddressesByIssuerPrimaryAddress;
-  mapping(address => address[])
-    internal _tokenAddressesByCustodianPrimaryAddress;
   mapping(address => address[])
     internal _tokenAddressesByKycProviderPrimaryAddress;
   mapping(address => address[]) internal _tokenAddressesByInsurerPrimaryAddress;
@@ -155,11 +151,6 @@ contract CustodianContract is
   event RemoveIssuer(address primaryAddress);
   event AddIssuerAddress(address primaryAddress, address[] addresses);
   event RemoveIssuerAddress(address primaryAddress, address[] addresses);
-
-  event AddCustodian(address primaryAddress);
-  event RemoveCustodian(address primaryAddress);
-  event AddCustodianAddress(address primaryAddress, address[] addresses);
-  event RemoveCustodianAddress(address primaryAddress, address[] addresses);
 
   event AddKYCProvider(address primaryAddress);
   event RemoveKYCProvider(address primaryAddress);
@@ -347,10 +338,6 @@ contract CustodianContract is
     return _addressToIssuerPrimaryAddress[issuer] == primaryIssuer;
   }
 
-  function isCustodian(address addr) public view returns (bool) {
-    return _isCustodian[_addressToCustodianPrimaryAddress[addr]];
-  }
-
   function isKycProvider(address addr) public view returns (bool) {
     return _isKycProvider[_addressToKycProviderPrimaryAddress[addr]];
   }
@@ -373,13 +360,6 @@ contract CustodianContract is
 
   modifier onlyIssuer() {
     if (isIssuer(msg.sender) == false) {
-      throwError(ErrorCondition.WRONG_CALLER);
-    }
-    _;
-  }
-
-  modifier onlyCustodian() {
-    if (isCustodian(msg.sender) == false) {
       throwError(ErrorCondition.WRONG_CALLER);
     }
     _;
@@ -513,20 +493,6 @@ contract CustodianContract is
     emit AddIssuer(primaryAddress);
   }
 
-  function addCustodian(string calldata countryCode, address primaryAddress)
-    external
-    onlyOwner
-  {
-    _addRole(
-      _isCustodian,
-      _custodians,
-      _addressToCustodianPrimaryAddress,
-      countryCode,
-      primaryAddress
-    );
-    emit AddCustodian(primaryAddress);
-  }
-
   function addKycProvider(string calldata countryCode, address primaryAddress)
     external
     onlyOwner
@@ -566,19 +532,6 @@ contract CustodianContract is
       primaryAddress
     );
     emit RemoveIssuer(primaryAddress);
-  }
-
-  function removeCustodian(address primaryAddress) external onlyOwner {
-    if (_tokenAddressesByCustodianPrimaryAddress[primaryAddress].length > 0) {
-      throwError(ErrorCondition.REMOVED_CUSTODIAN_HAS_TOKENS);
-    }
-    _removeRole(
-      _isCustodian,
-      _custodians,
-      _addressToCustodianPrimaryAddress,
-      primaryAddress
-    );
-    emit RemoveCustodian(primaryAddress);
   }
 
   function removeKycProvider(address primaryAddress) external onlyOwner {
@@ -621,20 +574,6 @@ contract CustodianContract is
     emit AddIssuerAddress(primaryAddress, addresses);
   }
 
-  function addCustodianAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _addRoleAddresses(
-      _isCustodian,
-      _custodians,
-      _addressToCustodianPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit AddCustodianAddress(primaryAddress, addresses);
-  }
-
   function addKycProviderAccounts(
     address primaryAddress,
     address[] calldata addresses
@@ -675,20 +614,6 @@ contract CustodianContract is
       addresses
     );
     emit RemoveIssuerAddress(primaryAddress, addresses);
-  }
-
-  function removeCustodianAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _removeRoleAddresses(
-      _isCustodian,
-      _custodians,
-      _addressToCustodianPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit RemoveCustodianAddress(primaryAddress, addresses);
   }
 
   function removeInsurerAccounts(
@@ -758,7 +683,7 @@ contract CustodianContract is
     uint256 value;
     string currency;
     address issuerPrimaryAddress;
-    address custodianPrimaryAddress;
+    // address custodianPrimaryAddress;
     address kycProviderPrimaryAddress;
     address insurerPrimaryAddress;
     bool earlyRedemption;
@@ -786,10 +711,6 @@ contract CustodianContract is
   function publishToken(TokenInput calldata token) external onlyIssuer {
     if (_isIssuer[token.issuerPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_ISSUER);
-    }
-
-    if (_isCustodian[token.custodianPrimaryAddress] == false) {
-      throwError(ErrorCondition.TOKEN_WRONG_CUSTODIAN);
     }
 
     if (_isKycProvider[token.kycProviderPrimaryAddress] == false) {
@@ -860,8 +781,6 @@ contract CustodianContract is
     _tokens[tokenAddress].value = token.value;
     _tokens[tokenAddress].currency = token.currency;
     _tokens[tokenAddress].issuerPrimaryAddress = token.issuerPrimaryAddress;
-    _tokens[tokenAddress].custodianPrimaryAddress = token
-      .custodianPrimaryAddress;
     _tokens[tokenAddress].kycProviderPrimaryAddress = token
       .kycProviderPrimaryAddress;
     _tokens[tokenAddress].insurerPrimaryAddress = token.insurerPrimaryAddress;
@@ -877,8 +796,6 @@ contract CustodianContract is
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
       tokenAddress
     );
-    _tokenAddressesByCustodianPrimaryAddress[token.custodianPrimaryAddress]
-      .push(tokenAddress);
     _tokenAddressesByKycProviderPrimaryAddress[token.kycProviderPrimaryAddress]
       .push(tokenAddress);
     _tokenAddressesByInsurerPrimaryAddress[token.insurerPrimaryAddress].push(

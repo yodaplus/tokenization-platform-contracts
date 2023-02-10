@@ -417,63 +417,63 @@ contract CustodianContract is
     delete _usersData[primaryAddress];
   }
 
-  function _addRoleAddresses(
-    mapping(address => bool) storage _isUserType,
-    mapping(address => RoleData) storage _usersData,
-    mapping(address => address) storage _addressToUserPrimaryAddress,
-    address primaryAddress,
-    address[] calldata addresses
-  ) internal {
-    bool senderNotOwner = owner() != msg.sender;
-    bool senderNoPrimaryArgMatch = primaryAddress != msg.sender;
-    bool primaryArgNotUser = _isUserType[primaryAddress] == false;
+  // function _addRoleAddresses(
+  //   mapping(address => bool) storage _isUserType,
+  //   mapping(address => RoleData) storage _usersData,
+  //   mapping(address => address) storage _addressToUserPrimaryAddress,
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) internal {
+  //   bool senderNotOwner = owner() != msg.sender;
+  //   bool senderNoPrimaryArgMatch = primaryAddress != msg.sender;
+  //   bool primaryArgNotUser = _isUserType[primaryAddress] == false;
 
-    if (senderNotOwner && (senderNoPrimaryArgMatch || primaryArgNotUser)) {
-      throwError(ErrorCondition.WRONG_CALLER);
-    }
+  //   if (senderNotOwner && (senderNoPrimaryArgMatch || primaryArgNotUser)) {
+  //     throwError(ErrorCondition.WRONG_CALLER);
+  //   }
 
-    if (primaryArgNotUser) {
-      throwError(ErrorCondition.USER_DOES_NOT_EXIST);
-    }
+  //   if (primaryArgNotUser) {
+  //     throwError(ErrorCondition.USER_DOES_NOT_EXIST);
+  //   }
 
-    address[] storage userAddresses = _usersData[primaryAddress].addresses;
+  //   address[] storage userAddresses = _usersData[primaryAddress].addresses;
 
-    for (uint256 i = 0; i < addresses.length; i++) {
-      _addressToUserPrimaryAddress[addresses[i]] = primaryAddress;
-      userAddresses.push(addresses[i]);
-    }
-  }
+  //   for (uint256 i = 0; i < addresses.length; i++) {
+  //     _addressToUserPrimaryAddress[addresses[i]] = primaryAddress;
+  //     userAddresses.push(addresses[i]);
+  //   }
+  // }
 
-  function _removeRoleAddresses(
-    mapping(address => bool) storage _isUserType,
-    mapping(address => RoleData) storage _usersData,
-    mapping(address => address) storage _addressToUserPrimaryAddress,
-    address primaryAddress,
-    address[] calldata addresses
-  ) internal {
-    bool senderNotOwner = owner() != msg.sender;
-    bool senderNoPrimaryArgMatch = primaryAddress != msg.sender;
-    bool primaryArgNotUser = _isUserType[primaryAddress] == false;
+  // function _removeRoleAddresses(
+  //   mapping(address => bool) storage _isUserType,
+  //   mapping(address => RoleData) storage _usersData,
+  //   mapping(address => address) storage _addressToUserPrimaryAddress,
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) internal {
+  //   bool senderNotOwner = owner() != msg.sender;
+  //   bool senderNoPrimaryArgMatch = primaryAddress != msg.sender;
+  //   bool primaryArgNotUser = _isUserType[primaryAddress] == false;
 
-    if (senderNotOwner && (senderNoPrimaryArgMatch || primaryArgNotUser)) {
-      throwError(ErrorCondition.WRONG_CALLER);
-    }
+  //   if (senderNotOwner && (senderNoPrimaryArgMatch || primaryArgNotUser)) {
+  //     throwError(ErrorCondition.WRONG_CALLER);
+  //   }
 
-    if (primaryArgNotUser) {
-      throwError(ErrorCondition.USER_DOES_NOT_EXIST);
-    }
+  //   if (primaryArgNotUser) {
+  //     throwError(ErrorCondition.USER_DOES_NOT_EXIST);
+  //   }
 
-    address[] storage userAddresses = _usersData[primaryAddress].addresses;
+  //   address[] storage userAddresses = _usersData[primaryAddress].addresses;
 
-    for (uint256 i = 0; i < addresses.length; i++) {
-      for (uint256 j = 0; j < userAddresses.length; j++) {
-        if (userAddresses[j] == addresses[i]) {
-          delete _addressToUserPrimaryAddress[userAddresses[j]];
-          delete userAddresses[j];
-        }
-      }
-    }
-  }
+  //   for (uint256 i = 0; i < addresses.length; i++) {
+  //     for (uint256 j = 0; j < userAddresses.length; j++) {
+  //       if (userAddresses[j] == addresses[i]) {
+  //         delete _addressToUserPrimaryAddress[userAddresses[j]];
+  //         delete userAddresses[j];
+  //       }
+  //     }
+  //   }
+  // }
 
   function addIssuer(string calldata countryCode, address primaryAddress)
     external
@@ -560,89 +560,89 @@ contract CustodianContract is
     emit RemoveInsurer(primaryAddress);
   }
 
-  function addIssuerAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _addRoleAddresses(
-      _isIssuer,
-      _issuers,
-      _addressToIssuerPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit AddIssuerAddress(primaryAddress, addresses);
-  }
+  // function addIssuerAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _addRoleAddresses(
+  //     _isIssuer,
+  //     _issuers,
+  //     _addressToIssuerPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit AddIssuerAddress(primaryAddress, addresses);
+  // }
 
-  function addKycProviderAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _addRoleAddresses(
-      _isKycProvider,
-      _kycProviders,
-      _addressToKycProviderPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit AddKYCProviderAddress(primaryAddress, addresses);
-  }
+  // function addKycProviderAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _addRoleAddresses(
+  //     _isKycProvider,
+  //     _kycProviders,
+  //     _addressToKycProviderPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit AddKYCProviderAddress(primaryAddress, addresses);
+  // }
 
-  function addInsurerAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _addRoleAddresses(
-      _isInsurer,
-      _insurers,
-      _addressToInsurerPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit AddInsurerAddress(primaryAddress, addresses);
-  }
+  // function addInsurerAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _addRoleAddresses(
+  //     _isInsurer,
+  //     _insurers,
+  //     _addressToInsurerPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit AddInsurerAddress(primaryAddress, addresses);
+  // }
 
-  function removeIssuerAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _removeRoleAddresses(
-      _isIssuer,
-      _issuers,
-      _addressToIssuerPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit RemoveIssuerAddress(primaryAddress, addresses);
-  }
+  // function removeIssuerAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _removeRoleAddresses(
+  //     _isIssuer,
+  //     _issuers,
+  //     _addressToIssuerPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit RemoveIssuerAddress(primaryAddress, addresses);
+  // }
 
-  function removeInsurerAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _removeRoleAddresses(
-      _isInsurer,
-      _insurers,
-      _addressToInsurerPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit RemoveInsurerAddress(primaryAddress, addresses);
-  }
+  // function removeInsurerAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _removeRoleAddresses(
+  //     _isInsurer,
+  //     _insurers,
+  //     _addressToInsurerPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit RemoveInsurerAddress(primaryAddress, addresses);
+  // }
 
-  function removeKycProviderAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _removeRoleAddresses(
-      _isKycProvider,
-      _kycProviders,
-      _addressToKycProviderPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit RemoveKYCProviderAddress(primaryAddress, addresses);
-  }
+  // function removeKycProviderAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _removeRoleAddresses(
+  //     _isKycProvider,
+  //     _kycProviders,
+  //     _addressToKycProviderPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit RemoveKYCProviderAddress(primaryAddress, addresses);
+  // }
 
   function addLiqudityPool(address primaryAddress, address settlementAddress)
     external

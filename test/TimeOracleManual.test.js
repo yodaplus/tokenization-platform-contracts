@@ -145,7 +145,6 @@ describe("TimeOracleManual", function () {
       custodianContractOwner
     );
     await CustodianContract.addIssuer("countryCode", issuer);
-    await CustodianContract.addCustodian("countryCode", custodian);
     await CustodianContract.addKycProvider("countryCode", kycProvider);
     await CustodianContract.addInsurer("countryCode", insurer);
     await PaymentToken.transfer(subscriber, 1000);
@@ -159,7 +158,6 @@ describe("TimeOracleManual", function () {
       redemptionSwapMultiple: [3],
       earlyRedemption: false,
       issuerPrimaryAddress: issuer,
-      custodianPrimaryAddress: custodian,
       kycProviderPrimaryAddress: kycProvider,
       insurerPrimaryAddress: insurer,
       collateral: 3,

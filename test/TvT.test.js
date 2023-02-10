@@ -65,7 +65,6 @@ describe("TvT", function () {
       custodianContractOwner
     );
     await CustodianContract.addIssuer("countryCode", issuer);
-    await CustodianContract.addCustodian("countryCode", custodian);
     await CustodianContract.addKycProvider("countryCode", kycProvider);
     await CustodianContract.addInsurer("countryCode", insurer);
     await PaymentToken.transfer(subscriber, 1000);
@@ -79,7 +78,6 @@ describe("TvT", function () {
       redemptionSwapMultiple: [3],
       earlyRedemption: false,
       issuerPrimaryAddress: issuer,
-      custodianPrimaryAddress: custodian,
       kycProviderPrimaryAddress: kycProvider,
       insurerPrimaryAddress: insurer,
       collateral: 3,
@@ -133,7 +131,7 @@ describe("TvT", function () {
         issuanceSwapMultiple: [1],
         redemptionSwapMultiple: [1],
         issuerPrimaryAddress: issuer,
-        custodianPrimaryAddress: custodian,
+
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
@@ -155,7 +153,7 @@ describe("TvT", function () {
         issuanceSwapMultiple: [1],
         redemptionSwapMultiple: [1],
         issuerPrimaryAddress: issuer,
-        custodianPrimaryAddress: custodian,
+
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
@@ -177,7 +175,7 @@ describe("TvT", function () {
         redemptionSwapMultiple: [],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        custodianPrimaryAddress: custodian,
+
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
@@ -199,7 +197,7 @@ describe("TvT", function () {
         redemptionSwapMultiple: [1],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        custodianPrimaryAddress: custodian,
+
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
@@ -235,9 +233,10 @@ describe("TvT", function () {
       expect(await document[1]).to.equal(TOKEN_EXAMPLE.documentHash);
     });
     it("must emit finalizeIssuance event", async () => {
-      await expect(
-        TokenContract.finalizeIssuance()
-      ).to.emit(TokenContract, "IssuanceFinalized");
+      await expect(TokenContract.finalizeIssuance()).to.emit(
+        TokenContract,
+        "IssuanceFinalized"
+      );
     });
   });
 
@@ -398,11 +397,10 @@ describe("TvT", function () {
       it("should not issue if token paused", async () => {
         const { issuer, subscriber } = await getNamedAccounts();
         await TokenContract.pause();
-        await expect(TokenContract["issue(address,uint256)"](subscriber, 1)).to.be.revertedWith(
-          "token is paused"
-        );
-
-      })
+        await expect(
+          TokenContract["issue(address,uint256)"](subscriber, 1)
+        ).to.be.revertedWith("token is paused");
+      });
       describe("EscrowManager", async () => {
         it("only allows token contracts to start issuance escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
@@ -502,21 +500,19 @@ describe("TvT", function () {
             const escrowManager = await TokenContract.escrowManager();
 
             await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
-            await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be.reverted
-
-          })
+            await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be
+              .reverted;
+          });
           it("prevents cancellation before expiry", async () => {
-
             const { issuer, subscriber } = await getNamedAccounts();
 
             await TokenContract["issue(address,uint256)"](subscriber, 1);
             const escrowManager = await TokenContract.escrowManager();
 
-            await expect(EscrowManagerIssuer.cancelIssuance(0)).to.be.revertedWith(
-              "cannot cancel issuance before expiry"
-            )
-
-          })
+            await expect(
+              EscrowManagerIssuer.cancelIssuance(0)
+            ).to.be.revertedWith("cannot cancel issuance before expiry");
+          });
           it("should burn tokens on cancellation", async () => {
             const { issuer, subscriber } = await getNamedAccounts();
 
@@ -525,12 +521,12 @@ describe("TvT", function () {
             expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
 
             await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
-            await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be.reverted
+            await expect(EscrowManagerIssuer.cancelIssuance(0)).not.to.be
+              .reverted;
 
             expect(await TokenContract.balanceOf(issuer)).to.be.equal(0);
-
-          })
-        })
+          });
+        });
 
         describe("executing swap", async () => {
           beforeEach(async () => {
@@ -637,7 +633,7 @@ describe("TvT", function () {
             redemptionSwapMultiple: [3],
             earlyRedemption: false,
             issuerPrimaryAddress: issuer,
-            custodianPrimaryAddress: custodian,
+
             kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             collateral: 3,
@@ -959,7 +955,7 @@ describe("TvT", function () {
             redemptionSwapMultiple: [3],
             earlyRedemption: false,
             issuerPrimaryAddress: issuer,
-            custodianPrimaryAddress: custodian,
+
             kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             issuerSettlementAddress: issuer,
@@ -985,7 +981,10 @@ describe("TvT", function () {
         it("should not redeem token if collateral is 0 ", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await UnCollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await UnCollatrizedTokenIssuer["issue(address,uint256)"](
+            subscriber,
+            1
+          );
 
           const PaymentTokenSubscriber = await ethers.getContract(
             "PaymentToken",
@@ -1000,14 +999,18 @@ describe("TvT", function () {
           ).to.be.equal(1);
 
           await expect(
-            UnCollatrizedTokenSubscriber["redeem(address,uint256)"](subscriber, 1)
+            UnCollatrizedTokenSubscriber["redeem(address,uint256)"](
+              subscriber,
+              1
+            )
           ).to.emit(UnCollatrizedTokenSubscriber, "RedemptionEscrowInitiated");
 
           await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS + 2);
-          await expect(EscrowManagerIssuer.swapRedemption(1)).to.be.revertedWith(
+          await expect(
+            EscrowManagerIssuer.swapRedemption(1)
+          ).to.be.revertedWith(
             "un-collateralized order cannot be redeemed after expiry"
           );
-
         });
       });
     });
@@ -1131,7 +1134,6 @@ describe("TvT", function () {
         ).to.emit(TokenContract, "RedemptionEscrowInitiated");
       });
 
-
       it("gives escrow manager allowance for the tokens", async () => {
         const { subscriber } = await getNamedAccounts();
 
@@ -1193,7 +1195,7 @@ describe("TvT", function () {
           redemptionSwapMultiple: [3],
           earlyRedemption: false,
           issuerPrimaryAddress: issuer,
-          custodianPrimaryAddress: custodian,
+
           kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           collateral: 4,
@@ -1455,7 +1457,6 @@ describe("TvT", function () {
               .withArgs(2);
           });
           it("burns tokens upon redemption", async () => {
-
             const { issuer, subscriber } = await getNamedAccounts();
 
             await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);

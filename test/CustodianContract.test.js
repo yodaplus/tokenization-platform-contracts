@@ -896,8 +896,8 @@ describe("CustodianContract", function () {
         tokenAddress,
         issuer
       );
-      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
-        .reverted;
+      await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
+        .not.to.be.reverted;
     });
   });
   describe("TransferRestrictions", () => {
@@ -956,7 +956,7 @@ describe("CustodianContract", function () {
         issuer
       );
       await expect(
-        TokenTvT["issue(address,uint256)"](subscriber, 2)
+        TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
       ).to.be.revertedWith("country is not allowed");
     });
     it("issue if issuer in allowed countries", async () => {
@@ -988,8 +988,8 @@ describe("CustodianContract", function () {
         tokenAddress,
         issuer
       );
-      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
-        .reverted;
+      await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
+        .not.to.be.reverted;
     });
     it("should not issue if kyc is complete", async () => {
       const { issuer, subscriber, kycProvider, insurer } =
@@ -1017,7 +1017,7 @@ describe("CustodianContract", function () {
         issuer
       );
       await expect(
-        TokenTvT["issue(address,uint256)"](subscriber, 2)
+        TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
       ).to.be.revertedWith("KYC is incomplete");
     });
     it("should revert if investor is not isAccredited else issue", async () => {
@@ -1055,14 +1055,14 @@ describe("CustodianContract", function () {
         issuer
       );
       await expect(
-        TokenTvT["issue(address,uint256)"](subscriber, 2)
+        TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
       ).to.be.revertedWith("investor classification is not allowed");
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
         accredation: true,
       });
-      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
-        .reverted;
+      await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
+        .not.to.be.reverted;
     });
     it("should revert if investor is not isExempted else issue", async () => {
       const { issuer, subscriber, kycProvider, insurer } =
@@ -1099,14 +1099,14 @@ describe("CustodianContract", function () {
         issuer
       );
       await expect(
-        TokenTvT["issue(address,uint256)"](subscriber, 2)
+        TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
       ).to.be.revertedWith("investor classification is not allowed");
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
         exempted: true,
       });
-      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
-        .reverted;
+      await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
+        .not.to.be.reverted;
     });
     it("should revert if investor is not isAffiliated else issue", async () => {
       const { issuer, subscriber, kycProvider, insurer } =
@@ -1143,14 +1143,14 @@ describe("CustodianContract", function () {
         issuer
       );
       await expect(
-        TokenTvT["issue(address,uint256)"](subscriber, 2)
+        TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
       ).to.be.revertedWith("investor classification is not allowed");
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
         affiliation: true,
       });
-      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
-        .reverted;
+      await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
+        .not.to.be.reverted;
     });
     it("should not issue if investor not in issuer whitelist", async () => {
       const { issuer, subscriber, kycProvider, insurer } =
@@ -1181,7 +1181,7 @@ describe("CustodianContract", function () {
         issuer
       );
       await expect(
-        TokenTvT["issue(address,uint256)"](subscriber, 2)
+        TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
       ).to.be.revertedWith("custodian contract validation fail");
     });
     it("should issue if investor in issuer whitelist", async () => {
@@ -1210,8 +1210,8 @@ describe("CustodianContract", function () {
         tokenAddress,
         issuer
       );
-      await expect(TokenTvT["issue(address,uint256)"](subscriber, 2)).not.to.be
-        .reverted;
+      await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
+        .not.to.be.reverted;
     });
   });
 });

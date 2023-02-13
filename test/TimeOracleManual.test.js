@@ -89,7 +89,11 @@ describe("TimeOracleManual", function () {
   const prepareIssuanceSwap = async (amount = 1) => {
     const { issuer, subscriber } = await getNamedAccounts();
 
-    await TokenContract["issue(address,uint256)"](subscriber, amount);
+    await TokenContract["issue(address,uint256,uint256)"](
+      subscriber,
+      amount,
+      0
+    );
     await EscrowManagerIssuer.depositCollateral(issuer, {
       value: amount * 3,
     });

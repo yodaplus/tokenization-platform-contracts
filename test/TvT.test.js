@@ -297,7 +297,11 @@ describe("TvT", function () {
     const prepareIssuanceSwap = async (amount = 1) => {
       const { issuer, subscriber } = await getNamedAccounts();
 
-      await TokenContract["issue(address,uint256)"](subscriber, amount);
+      await TokenContract["issue(address,uint256,uint256)"](
+        subscriber,
+        amount,
+        0
+      );
       await EscrowManagerIssuer.depositCollateral(issuer, {
         value: amount * 3,
       });
@@ -336,17 +340,22 @@ describe("TvT", function () {
         const { issuer, subscriber } = await getNamedAccounts();
 
         await expect(
-          TokenContractSubscriber["issue(address,uint256)"](subscriber, 1)
+          TokenContractSubscriber["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          )
         ).to.be.revertedWith("caller is not allowed");
 
-        await expect(TokenContract["issue(address,uint256)"](subscriber, 1)).not
-          .to.be.reverted;
+        await expect(
+          TokenContract["issue(address,uint256,uint256)"](subscriber, 1, 0)
+        ).not.to.be.reverted;
       });
 
       it("mints requested amount of tokens for the issuer", async () => {
         const { issuer, subscriber } = await getNamedAccounts();
 
-        await TokenContract["issue(address,uint256)"](subscriber, 1);
+        await TokenContract["issue(address,uint256,uint256)"](subscriber, 1, 0);
 
         expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
       });
@@ -356,7 +365,7 @@ describe("TvT", function () {
 
         const escrowManager = await TokenContract.escrowManager();
 
-        await TokenContract["issue(address,uint256)"](subscriber, 1);
+        await TokenContract["issue(address,uint256,uint256)"](subscriber, 1, 0);
 
         expect(
           await TokenContract.allowance(issuer, escrowManager)
@@ -375,7 +384,9 @@ describe("TvT", function () {
       it("creates an escrow order with properly calculated parameters", async () => {
         const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-        await expect(TokenContract["issue(address,uint256)"](subscriber, 1))
+        await expect(
+          TokenContract["issue(address,uint256,uint256)"](subscriber, 1, 0)
+        )
           .to.emit(TokenContract, "IssuanceEscrowInitiated")
           .withArgs(
             0,
@@ -398,7 +409,7 @@ describe("TvT", function () {
         const { issuer, subscriber } = await getNamedAccounts();
         await TokenContract.pause();
         await expect(
-          TokenContract["issue(address,uint256)"](subscriber, 1)
+          TokenContract["issue(address,uint256,uint256)"](subscriber, 1, 0)
         ).to.be.revertedWith("token is paused");
       });
       describe("EscrowManager", async () => {
@@ -436,7 +447,11 @@ describe("TvT", function () {
         it("checks escrow order status according to necessary conditions", async () => {
           const { issuer, subscriber } = await getNamedAccounts();
 
-          await TokenContract["issue(address,uint256)"](subscriber, 1);
+          await TokenContract["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           expect(
             await EscrowManager.checkIssuanceEscrowConditionsIssuer(0)
@@ -485,7 +500,11 @@ describe("TvT", function () {
         it("cannot swap the order if escrow conditions are not met", async () => {
           const { subscriber } = await getNamedAccounts();
 
-          await TokenContract["issue(address,uint256)"](subscriber, 1);
+          await TokenContract["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           await expect(EscrowManagerIssuer.swapIssuance(0)).to.be.revertedWith(
             "escrow conditions are not met"
@@ -496,7 +515,11 @@ describe("TvT", function () {
           it("cancels issuance", async () => {
             const { issuer, subscriber } = await getNamedAccounts();
 
-            await TokenContract["issue(address,uint256)"](subscriber, 1);
+            await TokenContract["issue(address,uint256,uint256)"](
+              subscriber,
+              1,
+              0
+            );
             const escrowManager = await TokenContract.escrowManager();
 
             await moveBlockTimestampBy(TWO_DAYS_IN_SECONDS);
@@ -506,7 +529,11 @@ describe("TvT", function () {
           it("prevents cancellation before expiry", async () => {
             const { issuer, subscriber } = await getNamedAccounts();
 
-            await TokenContract["issue(address,uint256)"](subscriber, 1);
+            await TokenContract["issue(address,uint256,uint256)"](
+              subscriber,
+              1,
+              0
+            );
             const escrowManager = await TokenContract.escrowManager();
 
             await expect(
@@ -516,7 +543,11 @@ describe("TvT", function () {
           it("should burn tokens on cancellation", async () => {
             const { issuer, subscriber } = await getNamedAccounts();
 
-            await TokenContract["issue(address,uint256)"](subscriber, 1);
+            await TokenContract["issue(address,uint256,uint256)"](
+              subscriber,
+              1,
+              0
+            );
 
             expect(await TokenContract.balanceOf(issuer)).to.be.equal(1);
 
@@ -679,7 +710,11 @@ describe("TvT", function () {
         it("check if insurer collateral conditions are met for a escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           expect(
             await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
@@ -699,7 +734,11 @@ describe("TvT", function () {
         it("check if insurer collateral conditions are not met for a escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           expect(
             await EscrowManager.checkIssuanceEscrowConditionsInsurerCollateral(
@@ -716,7 +755,11 @@ describe("TvT", function () {
         it("check if insurer and issuer collateral conditions are met for a escrow", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           expect(
             await EscrowManager.checkIssuanceEscrowConditionsIssuer(0)
@@ -748,7 +791,11 @@ describe("TvT", function () {
         it("check if insurer balance is locked after swapIssuance", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           await EscrowManagerIssuer.depositCollateral(issuer, {
             value: 2,
@@ -773,7 +820,11 @@ describe("TvT", function () {
         it("check if tokens mature when token collatrized by issuer and insurer", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           await EscrowManagerIssuer.depositCollateral(issuer, {
             value: 2,
@@ -801,7 +852,11 @@ describe("TvT", function () {
         it("can redeem if token is matured and is collatrized by issuer and insurer", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           await EscrowManagerIssuer.depositCollateral(issuer, {
             value: 2,
@@ -843,7 +898,11 @@ describe("TvT", function () {
         it("insurer can withdraw collateral after swap", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           await EscrowManagerIssuer.depositCollateral(issuer, {
             value: 2,
@@ -888,7 +947,11 @@ describe("TvT", function () {
         it("check if insurer and issuer collateral is transferred incase of default", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await CollatrizedTokenIssuer["issue(address,uint256)"](subscriber, 1);
+          await CollatrizedTokenIssuer["issue(address,uint256,uint256)"](
+            subscriber,
+            1,
+            0
+          );
 
           await EscrowManagerIssuer.depositCollateral(issuer, {
             value: 2,
@@ -981,9 +1044,10 @@ describe("TvT", function () {
         it("should not redeem token if collateral is 0 ", async () => {
           const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-          await UnCollatrizedTokenIssuer["issue(address,uint256)"](
+          await UnCollatrizedTokenIssuer["issue(address,uint256,uint256)"](
             subscriber,
-            1
+            1,
+            0
           );
 
           const PaymentTokenSubscriber = await ethers.getContract(
@@ -1232,7 +1296,7 @@ describe("TvT", function () {
         expect(await TokenContract2.symbol()).to.be.equal("TT2");
 
         await expect(
-          TokenContract2["issue(address,uint256)"](subscriber, 1)
+          TokenContract2["issue(address,uint256,uint256)"](subscriber, 1, 0)
         ).to.emit(TokenContract2, "IssuanceEscrowInitiated");
 
         await EscrowManagerIssuer.depositCollateral(issuer, {

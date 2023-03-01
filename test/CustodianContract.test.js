@@ -431,8 +431,8 @@ describe("CustodianContract", function () {
     const createTests = ({
       roleName,
       addUser,
-      // addUserAccounts,
-      // removeUserAccounts,
+      addUserAccounts,
+      removeUserAccounts,
       removeUser,
       isUser,
       userAddressName,
@@ -449,128 +449,128 @@ describe("CustodianContract", function () {
         ).to.be.revertedWith("Ownable: caller is not the owner");
       });
 
-      // it(`doesn't allow non-owners and non-primary-${roleName}s to add ${roleName} addresses`, async () => {
-      //   const { userOfType, userOfType2 } = await getNamedAccounts();
-      //   const CustodianContractNonOwner = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType
-      //   );
-      //   const CustodianContractNonOwner2 = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType2
-      //   );
+      it(`doesn't allow non-owners and non-primary-${roleName}s to add ${roleName} addresses`, async () => {
+        const { userOfType, userOfType2 } = await getNamedAccounts();
+        const CustodianContractNonOwner = await ethers.getContract(
+          "CustodianContract",
+          userOfType
+        );
+        const CustodianContractNonOwner2 = await ethers.getContract(
+          "CustodianContract",
+          userOfType2
+        );
 
-      //   await expect(
-      //     CustodianContractNonOwner[addUserAccounts](userOfType, [userOfType2])
-      //   ).to.be.revertedWith("caller is not allowed");
+        await expect(
+          CustodianContractNonOwner[addUserAccounts](userOfType, [userOfType2])
+        ).to.be.revertedWith("caller is not allowed");
 
-      //   await expect(
-      //     CustodianContractNonOwner2[addUserAccounts](userOfType, [userOfType2])
-      //   ).to.be.revertedWith("caller is not allowed");
-      // });
+        await expect(
+          CustodianContractNonOwner2[addUserAccounts](userOfType, [userOfType2])
+        ).to.be.revertedWith("caller is not allowed");
+      });
 
-      // it(`doesn't allow primary ${roleName}s to add ${roleName} addresses for other primary ${roleName}s`, async () => {
-      //   const { userOfType, userOfType2, userOfOtherType } =
-      //     await getNamedAccounts();
-      //   const CustodianContractPrimary1 = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType
-      //   );
-      //   const CustodianContractPrimary2 = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType2
-      //   );
+      it(`doesn't allow primary ${roleName}s to add ${roleName} addresses for other primary ${roleName}s`, async () => {
+        const { userOfType, userOfType2, userOfOtherType } =
+          await getNamedAccounts();
+        const CustodianContractPrimary1 = await ethers.getContract(
+          "CustodianContract",
+          userOfType
+        );
+        const CustodianContractPrimary2 = await ethers.getContract(
+          "CustodianContract",
+          userOfType2
+        );
 
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType)).not
-      //     .to.be.reverted;
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType2)).not
-      //     .to.be.reverted;
+        await expect(CustodianContract[addUser]("countryCode", userOfType)).not
+          .to.be.reverted;
+        await expect(CustodianContract[addUser]("countryCode", userOfType2)).not
+          .to.be.reverted;
 
-      //   await expect(
-      //     CustodianContractPrimary1[addUserAccounts](userOfType2, [
-      //       userOfOtherType,
-      //     ])
-      //   ).to.be.revertedWith("caller is not allowed");
+        await expect(
+          CustodianContractPrimary1[addUserAccounts](userOfType2, [
+            userOfOtherType,
+          ])
+        ).to.be.revertedWith("caller is not allowed");
 
-      //   await expect(
-      //     CustodianContractPrimary2[addUserAccounts](userOfType, [
-      //       userOfOtherType,
-      //     ])
-      //   ).to.be.revertedWith("caller is not allowed");
-      // });
+        await expect(
+          CustodianContractPrimary2[addUserAccounts](userOfType, [
+            userOfOtherType,
+          ])
+        ).to.be.revertedWith("caller is not allowed");
+      });
 
-      // it(`doesn't allow non-owners and non-primary-${roleName}s to remove ${roleName} addresses`, async () => {
-      //   const { userOfType, userOfOtherType, userOfType2 } =
-      //     await getNamedAccounts();
-      //   const CustodianContractNonOwner = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfOtherType
-      //   );
-      //   const CustodianContractNonOwner2 = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType2
-      //   );
+      it(`doesn't allow non-owners and non-primary-${roleName}s to remove ${roleName} addresses`, async () => {
+        const { userOfType, userOfOtherType, userOfType2 } =
+          await getNamedAccounts();
+        const CustodianContractNonOwner = await ethers.getContract(
+          "CustodianContract",
+          userOfOtherType
+        );
+        const CustodianContractNonOwner2 = await ethers.getContract(
+          "CustodianContract",
+          userOfType2
+        );
 
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType)).not
-      //     .to.be.reverted;
-      //   await expect(
-      //     CustodianContract[addUserAccounts](userOfType, [userOfType2])
-      //   ).not.to.be.reverted;
+        await expect(CustodianContract[addUser]("countryCode", userOfType)).not
+          .to.be.reverted;
+        await expect(
+          CustodianContract[addUserAccounts](userOfType, [userOfType2])
+        ).not.to.be.reverted;
 
-      //   await expect(
-      //     CustodianContractNonOwner[removeUserAccounts](userOfType, [
-      //       userOfType2,
-      //     ])
-      //   ).to.be.revertedWith("caller is not allowed");
+        await expect(
+          CustodianContractNonOwner[removeUserAccounts](userOfType, [
+            userOfType2,
+          ])
+        ).to.be.revertedWith("caller is not allowed");
 
-      //   await expect(
-      //     CustodianContractNonOwner2[removeUserAccounts](userOfType, [
-      //       userOfType2,
-      //     ])
-      //   ).to.be.revertedWith("caller is not allowed");
-      // });
+        await expect(
+          CustodianContractNonOwner2[removeUserAccounts](userOfType, [
+            userOfType2,
+          ])
+        ).to.be.revertedWith("caller is not allowed");
+      });
 
-      // it(`doesn't allow primary ${roleName}s to remove ${roleName} addresses for other primary ${roleName}s`, async () => {
-      //   const { userOfType, userOfType2, userOfOtherType } =
-      //     await getNamedAccounts();
-      //   const CustodianContractPrimary1 = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType
-      //   );
-      //   const CustodianContractPrimary2 = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType2
-      //   );
+      it(`doesn't allow primary ${roleName}s to remove ${roleName} addresses for other primary ${roleName}s`, async () => {
+        const { userOfType, userOfType2, userOfOtherType } =
+          await getNamedAccounts();
+        const CustodianContractPrimary1 = await ethers.getContract(
+          "CustodianContract",
+          userOfType
+        );
+        const CustodianContractPrimary2 = await ethers.getContract(
+          "CustodianContract",
+          userOfType2
+        );
 
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType)).not
-      //     .to.be.reverted;
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType2)).not
-      //     .to.be.reverted;
+        await expect(CustodianContract[addUser]("countryCode", userOfType)).not
+          .to.be.reverted;
+        await expect(CustodianContract[addUser]("countryCode", userOfType2)).not
+          .to.be.reverted;
 
-      //   await expect(
-      //     CustodianContractPrimary1[addUserAccounts](userOfType, [
-      //       userOfOtherType,
-      //     ])
-      //   ).not.to.be.reverted;
+        await expect(
+          CustodianContractPrimary1[addUserAccounts](userOfType, [
+            userOfOtherType,
+          ])
+        ).not.to.be.reverted;
 
-      //   await expect(
-      //     CustodianContractPrimary2[addUserAccounts](userOfType2, [
-      //       userOfOtherType,
-      //     ])
-      //   ).not.to.be.reverted;
+        await expect(
+          CustodianContractPrimary2[addUserAccounts](userOfType2, [
+            userOfOtherType,
+          ])
+        ).not.to.be.reverted;
 
-      //   await expect(
-      //     CustodianContractPrimary1[removeUserAccounts](userOfType2, [
-      //       userOfOtherType,
-      //     ])
-      //   ).to.be.revertedWith("caller is not allowed");
+        await expect(
+          CustodianContractPrimary1[removeUserAccounts](userOfType2, [
+            userOfOtherType,
+          ])
+        ).to.be.revertedWith("caller is not allowed");
 
-      //   await expect(
-      //     CustodianContractPrimary2[removeUserAccounts](userOfType, [
-      //       userOfOtherType,
-      //     ])
-      //   ).to.be.revertedWith("caller is not allowed");
-      // });
+        await expect(
+          CustodianContractPrimary2[removeUserAccounts](userOfType, [
+            userOfOtherType,
+          ])
+        ).to.be.revertedWith("caller is not allowed");
+      });
 
       it(`doesn't allow non-owners to remove ${roleName}`, async () => {
         const { userOfType } = await getNamedAccounts();
@@ -609,100 +609,100 @@ describe("CustodianContract", function () {
         );
       });
 
-      // it(`adds ${roleName} addresses successfully, if sender is owner`, async () => {
-      //   const { userOfType, userOfType2, userOfOtherType } =
-      //     await getNamedAccounts();
+      it(`adds ${roleName} addresses successfully, if sender is owner`, async () => {
+        const { userOfType, userOfType2, userOfOtherType } =
+          await getNamedAccounts();
 
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType)).not
-      //     .to.be.reverted;
-      //   // await expect(
-      //   //   CustodianContract[addUserAccounts](userOfType, [userOfType2])
-      //   // ).not.to.be.reverted;
-      //   expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
-      //   expect(await CustodianContract[isUser](userOfType2)).to.be.equal(true);
-      //   expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
-      //     false
-      //   );
-      // });
+        await expect(CustodianContract[addUser]("countryCode", userOfType)).not
+          .to.be.reverted;
+        await expect(
+          CustodianContract[addUserAccounts](userOfType, [userOfType2])
+        ).not.to.be.reverted;
+        expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
+        expect(await CustodianContract[isUser](userOfType2)).to.be.equal(true);
+        expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
+          false
+        );
+      });
 
-      // it(`adds ${roleName} addresses successfully, if sender is primary ${roleName} and adding for themselves`, async () => {
-      //   const { userOfType, userOfType2, userOfOtherType } =
-      //     await getNamedAccounts();
+      it(`adds ${roleName} addresses successfully, if sender is primary ${roleName} and adding for themselves`, async () => {
+        const { userOfType, userOfType2, userOfOtherType } =
+          await getNamedAccounts();
 
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType)).not
-      //     .to.be.reverted;
+        await expect(CustodianContract[addUser]("countryCode", userOfType)).not
+          .to.be.reverted;
 
-      //   const CustodianContractPrimaryUser = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType
-      //   );
+        const CustodianContractPrimaryUser = await ethers.getContract(
+          "CustodianContract",
+          userOfType
+        );
 
-      //   // await expect(
-      //   //   CustodianContractPrimaryUser[addUserAccounts](userOfType, [
-      //   //     userOfType2,
-      //   //   ])
-      //   // ).not.to.be.reverted;
+        await expect(
+          CustodianContractPrimaryUser[addUserAccounts](userOfType, [
+            userOfType2,
+          ])
+        ).not.to.be.reverted;
 
-      //   expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
-      //   expect(await CustodianContract[isUser](userOfType2)).to.be.equal(true);
-      //   expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
-      //     false
-      //   );
-      // });
+        expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
+        expect(await CustodianContract[isUser](userOfType2)).to.be.equal(true);
+        expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
+          false
+        );
+      });
 
-      // it(`removes ${roleName} addresses successfully, if sender is owner`, async () => {
-      //   const { userOfType, userOfType2, userOfOtherType } =
-      //     await getNamedAccounts();
+      it(`removes ${roleName} addresses successfully, if sender is owner`, async () => {
+        const { userOfType, userOfType2, userOfOtherType } =
+          await getNamedAccounts();
 
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType)).not
-      //     .to.be.reverted;
-      //   await expect(
-      //     CustodianContract[addUserAccounts](userOfType, [userOfType2])
-      //   ).not.to.be.reverted;
-      //   await expect(
-      //     CustodianContract[removeUserAccounts](userOfType, [userOfType2])
-      //   ).not.to.be.reverted;
-      //   expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
-      //   expect(await CustodianContract[isUser](userOfType2)).to.be.equal(false);
-      //   expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
-      //     false
-      //   );
-      // });
+        await expect(CustodianContract[addUser]("countryCode", userOfType)).not
+          .to.be.reverted;
+        await expect(
+          CustodianContract[addUserAccounts](userOfType, [userOfType2])
+        ).not.to.be.reverted;
+        await expect(
+          CustodianContract[removeUserAccounts](userOfType, [userOfType2])
+        ).not.to.be.reverted;
+        expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
+        expect(await CustodianContract[isUser](userOfType2)).to.be.equal(false);
+        expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
+          false
+        );
+      });
 
-      // it(`removes ${roleName} addresses successfully, if sender is primary ${roleName} and removing for themselves`, async () => {
-      //   const { userOfType, userOfType2, userOfOtherType } =
-      //     await getNamedAccounts();
+      it(`removes ${roleName} addresses successfully, if sender is primary ${roleName} and removing for themselves`, async () => {
+        const { userOfType, userOfType2, userOfOtherType } =
+          await getNamedAccounts();
 
-      //   await expect(CustodianContract[addUser]("countryCode", userOfType)).not
-      //     .to.be.reverted;
-      //   await expect(
-      //     CustodianContract[addUserAccounts](userOfType, [userOfType2])
-      //   ).not.to.be.reverted;
+        await expect(CustodianContract[addUser]("countryCode", userOfType)).not
+          .to.be.reverted;
+        await expect(
+          CustodianContract[addUserAccounts](userOfType, [userOfType2])
+        ).not.to.be.reverted;
 
-      //   const CustodianContractPrimaryUser = await ethers.getContract(
-      //     "CustodianContract",
-      //     userOfType
-      //   );
+        const CustodianContractPrimaryUser = await ethers.getContract(
+          "CustodianContract",
+          userOfType
+        );
 
-      //   await expect(
-      //     CustodianContractPrimaryUser[removeUserAccounts](userOfType, [
-      //       userOfType2,
-      //     ])
-      //   ).not.to.be.reverted;
-      //   expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
-      //   expect(await CustodianContract[isUser](userOfType2)).to.be.equal(false);
-      //   expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
-      //     false
-      //   );
-      // });
+        await expect(
+          CustodianContractPrimaryUser[removeUserAccounts](userOfType, [
+            userOfType2,
+          ])
+        ).not.to.be.reverted;
+        expect(await CustodianContract[isUser](userOfType)).to.be.equal(true);
+        expect(await CustodianContract[isUser](userOfType2)).to.be.equal(false);
+        expect(await CustodianContract[isUser](userOfOtherType)).to.be.equal(
+          false
+        );
+      });
 
-      // it(`can't add addresses to non-existent ${roleName}`, async () => {
-      //   const { userOfType, userOfType2 } = await getNamedAccounts();
+      it(`can't add addresses to non-existent ${roleName}`, async () => {
+        const { userOfType, userOfType2 } = await getNamedAccounts();
 
-      //   await expect(
-      //     CustodianContract[addUserAccounts](userOfType, [userOfType2])
-      //   ).to.be.revertedWith("user does not exist");
-      // });
+        await expect(
+          CustodianContract[addUserAccounts](userOfType, [userOfType2])
+        ).to.be.revertedWith("user does not exist");
+      });
 
       it(`removes ${roleName} successfully`, async () => {
         const { userOfType, userOfType2, userOfOtherType } =
@@ -710,9 +710,9 @@ describe("CustodianContract", function () {
 
         await expect(CustodianContract[addUser]("countryCode", userOfType)).not
           .to.be.reverted;
-        // await expect(
-        //   CustodianContract[addUserAccounts](userOfType, [userOfType2])
-        // ).not.to.be.reverted;
+        await expect(
+          CustodianContract[addUserAccounts](userOfType, [userOfType2])
+        ).not.to.be.reverted;
         await expect(CustodianContract[removeUser](userOfType)).not.to.be
           .reverted;
         expect(await CustodianContract[isUser](userOfType)).to.be.equal(false);
@@ -765,8 +765,8 @@ describe("CustodianContract", function () {
       createTests({
         roleName: "issuer",
         addUser: "addIssuer",
-        // addUserAccounts: "addIssuerAccounts",
-        // removeUserAccounts: "removeIssuerAccounts",
+        addUserAccounts: "addIssuerAccounts",
+        removeUserAccounts: "removeIssuerAccounts",
         removeUser: "removeIssuer",
         isUser: "isIssuer",
         userAddressName: "issuer",
@@ -777,8 +777,8 @@ describe("CustodianContract", function () {
       createTests({
         roleName: "KYC provider",
         addUser: "addKycProvider",
-        // addUserAccounts: "addKycProviderAccounts",
-        // removeUserAccounts: "removeKycProviderAccounts",
+        addUserAccounts: "addKycProviderAccounts",
+        removeUserAccounts: "removeKycProviderAccounts",
         removeUser: "removeKycProvider",
         isUser: "isKycProvider",
         userAddressName: "kycProvider",
@@ -791,8 +791,8 @@ describe("CustodianContract", function () {
         removeUser: "removeInsurer",
         isUser: "isInsurer",
         userAddressName: "insurer",
-        // addUserAccounts: "addInsurerAccounts",
-        // removeUserAccounts: "removeInsurerAccounts",
+        addUserAccounts: "addInsurerAccounts",
+        removeUserAccounts: "removeInsurerAccounts",
       });
     });
 

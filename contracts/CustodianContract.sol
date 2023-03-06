@@ -59,40 +59,50 @@ contract CustodianContract is
     uint256 value;
     string currency;
     address issuerPrimaryAddress;
-    address kycProviderPrimaryAddress;
+    // address kycProviderPrimaryAddress;
     address insurerPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
     TokenStatus status;
     TokenType tokenType;
     address address_;
-    bool onChainKyc;
+    // bool onChainKyc;
     address liquidityPool;
   }
 
-  struct KycBasicDetails {
-    bool leiCheck;
-    bool bankCheck;
-    bool citizenshipCheck;
-    bool addressCheck;
-  }
+  // struct KycBasicDetails {
+  //   bool leiCheck;
+  //   bool bankCheck;
+  //   bool citizenshipCheck;
+  //   bool addressCheck;
+  // }
 
-  struct KycAMLCTF {
-    bool pepCheck;
-    bool sanctionScreening;
-    bool suspiciousActivityReport;
-    bool cddReport;
-    bool fatfComplianceCheck;
-  }
+  // struct KycAMLCTF {
+  //   bool pepCheck;
+  //   bool sanctionScreening;
+  //   bool suspiciousActivityReport;
+  //   bool cddReport;
+  //   bool fatfComplianceCheck;
+  // }
+
+  // struct KycData {
+  // bytes32 countryCode;
+  // bool kycStatus;
+  // bool accredation;
+  // bool affiliation;
+  // bool exempted;
+  // KycBasicDetails kycBasicDetails;
+  // KycAMLCTF kycAmlCtf;
+  // }
 
   struct KycData {
     bytes32 countryCode;
     bool kycStatus;
-    bool accredation;
-    bool affiliation;
-    bool exempted;
-    KycBasicDetails kycBasicDetails;
-    KycAMLCTF kycAmlCtf;
+    // bool accredation;
+    // bool affiliation;
+    // bool exempted;
+    // KycBasicDetails kycBasicDetails;
+    // KycAMLCTF kycAmlCtf;
   }
 
   mapping(address => mapping(address => KycData)) public kycVerifications;
@@ -115,12 +125,12 @@ contract CustodianContract is
   mapping(address => LiquidityPool) public _liquidityPool;
 
   mapping(address => address) public _addressToIssuerPrimaryAddress;
-  mapping(address => address) public _addressToKycProviderPrimaryAddress;
+  // mapping(address => address) public _addressToKycProviderPrimaryAddress;
   mapping(address => address) public _addressToInsurerPrimaryAddress;
 
   mapping(address => bool) internal _isIssuer;
-  mapping(address => bool) internal _isCustodian;
-  mapping(address => bool) internal _isKycProvider;
+  // mapping(address => bool) internal _isCustodian;
+  // mapping(address => bool) internal _isKycProvider;
   mapping(address => bool) internal _isInsurer;
 
   mapping(address => TokenData) internal _tokens;
@@ -152,10 +162,10 @@ contract CustodianContract is
   event AddIssuerAddress(address primaryAddress, address[] addresses);
   event RemoveIssuerAddress(address primaryAddress, address[] addresses);
 
-  event AddKYCProvider(address primaryAddress);
-  event RemoveKYCProvider(address primaryAddress);
-  event AddKYCProviderAddress(address primaryAddress, address[] addresses);
-  event RemoveKYCProviderAddress(address primaryAddress, address[] addresses);
+  // event AddKYCProvider(address primaryAddress);
+  // event RemoveKYCProvider(address primaryAddress);
+  // event AddKYCProviderAddress(address primaryAddress, address[] addresses);
+  // event RemoveKYCProviderAddress(address primaryAddress, address[] addresses);
 
   event AddInsurer(address primaryAddress);
   event RemoveInsurer(address primaryAddress);
@@ -187,8 +197,8 @@ contract CustodianContract is
     USER_ALREADY_EXISTS,
     USER_DOES_NOT_EXIST,
     REMOVED_ISSUER_HAS_TOKENS,
-    REMOVED_CUSTODIAN_HAS_TOKENS,
-    REMOVED_KYCPROVIDER_HAS_TOKENS,
+    // REMOVED_CUSTODIAN_HAS_TOKENS,
+    // REMOVED_KYCPROVIDER_HAS_TOKENS,
     TOKEN_WRONG_ISSUER,
     TOKEN_WRONG_CUSTODIAN,
     TOKEN_WRONG_KYCPROVIDER,
@@ -230,17 +240,19 @@ contract CustodianContract is
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "removed issuer must not have tokens"
       );
-    } else if (condition == ErrorCondition.REMOVED_CUSTODIAN_HAS_TOKENS) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "removed custodian must not have tokens"
-      );
-    } else if (condition == ErrorCondition.REMOVED_KYCPROVIDER_HAS_TOKENS) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "removed KYC provider must not have tokens"
-      );
-    } else if (condition == ErrorCondition.REMOVED_INSURER_HAS_TOKENS) {
+    }
+    // else if (condition == ErrorCondition.REMOVED_CUSTODIAN_HAS_TOKENS) {
+    //   revert ERC1066Error(
+    //     ReasonCodes.APP_SPECIFIC_FAILURE,
+    //     "removed custodian must not have tokens"
+    //   );
+    // } else if (condition == ErrorCondition.REMOVED_KYCPROVIDER_HAS_TOKENS) {
+    //   revert ERC1066Error(
+    //     ReasonCodes.APP_SPECIFIC_FAILURE,
+    //     "removed KYC provider must not have tokens"
+    //   );
+    // }
+    else if (condition == ErrorCondition.REMOVED_INSURER_HAS_TOKENS) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "removed insurer must not have tokens"
@@ -250,17 +262,20 @@ contract CustodianContract is
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "issuer does not exists"
       );
-    } else if (condition == ErrorCondition.TOKEN_WRONG_CUSTODIAN) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "custodian does not exists"
-      );
-    } else if (condition == ErrorCondition.TOKEN_WRONG_KYCPROVIDER) {
-      revert ERC1066Error(
-        ReasonCodes.APP_SPECIFIC_FAILURE,
-        "kyc provider does not exists"
-      );
-    } else if (condition == ErrorCondition.TOKEN_WRONG_INSURER) {
+    }
+    // else if (condition == ErrorCondition.TOKEN_WRONG_CUSTODIAN) {
+    //   revert ERC1066Error(
+    //     ReasonCodes.APP_SPECIFIC_FAILURE,
+    //     "custodian does not exists"
+    //   );
+    // }
+    // else if (condition == ErrorCondition.TOKEN_WRONG_KYCPROVIDER) {
+    //   revert ERC1066Error(
+    //     ReasonCodes.APP_SPECIFIC_FAILURE,
+    //     "kyc provider does not exists"
+    //   );
+    // }
+    else if (condition == ErrorCondition.TOKEN_WRONG_INSURER) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "insurer does not exists"
@@ -316,7 +331,7 @@ contract CustodianContract is
     address issuerAddress,
     address investorAddress,
     KycData calldata investorKycData
-  ) external onlyIssuerOrKycProvider {
+  ) external onlyIssuer {
     kycVerifications[issuerAddress][investorAddress] = investorKycData;
     emit KycUpdated(issuerAddress, investorAddress);
   }
@@ -338,9 +353,9 @@ contract CustodianContract is
     return _addressToIssuerPrimaryAddress[issuer] == primaryIssuer;
   }
 
-  function isKycProvider(address addr) public view returns (bool) {
-    return _isKycProvider[_addressToKycProviderPrimaryAddress[addr]];
-  }
+  // function isKycProvider(address addr) public view returns (bool) {
+  //   return _isKycProvider[_addressToKycProviderPrimaryAddress[addr]];
+  // }
 
   function isWhitelisted(address tokenAddress, address investorAddress)
     public
@@ -365,19 +380,19 @@ contract CustodianContract is
     _;
   }
 
-  modifier onlyKycProvider() {
-    if (isKycProvider(msg.sender) == false) {
-      throwError(ErrorCondition.WRONG_CALLER);
-    }
-    _;
-  }
+  // modifier onlyKycProvider() {
+  //   if (isKycProvider(msg.sender) == false) {
+  //     throwError(ErrorCondition.WRONG_CALLER);
+  //   }
+  //   _;
+  // }
 
-  modifier onlyIssuerOrKycProvider() {
-    if (isIssuer(msg.sender) == false && isKycProvider(msg.sender) == false) {
-      throwError(ErrorCondition.WRONG_CALLER);
-    }
-    _;
-  }
+  // modifier onlyIssuerOrKycProvider() {
+  //   if (isIssuer(msg.sender) == false && isKycProvider(msg.sender) == false) {
+  //     throwError(ErrorCondition.WRONG_CALLER);
+  //   }
+  //   _;
+  // }
 
   function _addRole(
     mapping(address => bool) storage _isUserType,
@@ -493,19 +508,19 @@ contract CustodianContract is
     emit AddIssuer(primaryAddress);
   }
 
-  function addKycProvider(string calldata countryCode, address primaryAddress)
-    external
-    onlyOwner
-  {
-    _addRole(
-      _isKycProvider,
-      _kycProviders,
-      _addressToKycProviderPrimaryAddress,
-      countryCode,
-      primaryAddress
-    );
-    emit AddKYCProvider(primaryAddress);
-  }
+  // function addKycProvider(string calldata countryCode, address primaryAddress)
+  //   external
+  //   onlyOwner
+  // {
+  //   _addRole(
+  //     _isKycProvider,
+  //     _kycProviders,
+  //     _addressToKycProviderPrimaryAddress,
+  //     countryCode,
+  //     primaryAddress
+  //   );
+  //   emit AddKYCProvider(primaryAddress);
+  // }
 
   function addInsurer(string calldata countryCode, address primaryAddress)
     external
@@ -534,18 +549,18 @@ contract CustodianContract is
     emit RemoveIssuer(primaryAddress);
   }
 
-  function removeKycProvider(address primaryAddress) external onlyOwner {
-    if (_tokenAddressesByKycProviderPrimaryAddress[primaryAddress].length > 0) {
-      throwError(ErrorCondition.REMOVED_KYCPROVIDER_HAS_TOKENS);
-    }
-    _removeRole(
-      _isKycProvider,
-      _kycProviders,
-      _addressToKycProviderPrimaryAddress,
-      primaryAddress
-    );
-    emit RemoveKYCProvider(primaryAddress);
-  }
+  // function removeKycProvider(address primaryAddress) external onlyOwner {
+  //   if (_tokenAddressesByKycProviderPrimaryAddress[primaryAddress].length > 0) {
+  //     throwError(ErrorCondition.REMOVED_KYCPROVIDER_HAS_TOKENS);
+  //   }
+  //   _removeRole(
+  //     _isKycProvider,
+  //     _kycProviders,
+  //     _addressToKycProviderPrimaryAddress,
+  //     primaryAddress
+  //   );
+  //   emit RemoveKYCProvider(primaryAddress);
+  // }
 
   function removeInsurer(address primaryAddress) external onlyOwner {
     if (_tokenAddressesByInsurerPrimaryAddress[primaryAddress].length > 0) {
@@ -574,19 +589,19 @@ contract CustodianContract is
     emit AddIssuerAddress(primaryAddress, addresses);
   }
 
-  function addKycProviderAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _addRoleAddresses(
-      _isKycProvider,
-      _kycProviders,
-      _addressToKycProviderPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit AddKYCProviderAddress(primaryAddress, addresses);
-  }
+  // function addKycProviderAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _addRoleAddresses(
+  //     _isKycProvider,
+  //     _kycProviders,
+  //     _addressToKycProviderPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit AddKYCProviderAddress(primaryAddress, addresses);
+  // }
 
   function addInsurerAccounts(
     address primaryAddress,
@@ -630,19 +645,19 @@ contract CustodianContract is
     emit RemoveInsurerAddress(primaryAddress, addresses);
   }
 
-  function removeKycProviderAccounts(
-    address primaryAddress,
-    address[] calldata addresses
-  ) external {
-    _removeRoleAddresses(
-      _isKycProvider,
-      _kycProviders,
-      _addressToKycProviderPrimaryAddress,
-      primaryAddress,
-      addresses
-    );
-    emit RemoveKYCProviderAddress(primaryAddress, addresses);
-  }
+  // function removeKycProviderAccounts(
+  //   address primaryAddress,
+  //   address[] calldata addresses
+  // ) external {
+  //   _removeRoleAddresses(
+  //     _isKycProvider,
+  //     _kycProviders,
+  //     _addressToKycProviderPrimaryAddress,
+  //     primaryAddress,
+  //     addresses
+  //   );
+  //   emit RemoveKYCProviderAddress(primaryAddress, addresses);
+  // }
 
   function addLiqudityPool(address primaryAddress, address settlementAddress)
     external
@@ -684,7 +699,7 @@ contract CustodianContract is
     string currency;
     address issuerPrimaryAddress;
     // address custodianPrimaryAddress;
-    address kycProviderPrimaryAddress;
+    // address kycProviderPrimaryAddress;
     address insurerPrimaryAddress;
     bool earlyRedemption;
     uint256 minSubscription;
@@ -698,7 +713,7 @@ contract CustodianContract is
     bytes32[] countries;
     InvestorClassificationRules investorClassifications;
     bool useIssuerWhitelist;
-    bool onChainKyc;
+    // bool onChainKyc;
     bytes32 documentName;
     string documentUri;
     bytes32 documentHash;
@@ -713,9 +728,9 @@ contract CustodianContract is
       throwError(ErrorCondition.TOKEN_WRONG_ISSUER);
     }
 
-    if (_isKycProvider[token.kycProviderPrimaryAddress] == false) {
-      throwError(ErrorCondition.TOKEN_WRONG_KYCPROVIDER);
-    }
+    // if (_isKycProvider[token.kycProviderPrimaryAddress] == false) {
+    //   throwError(ErrorCondition.TOKEN_WRONG_KYCPROVIDER);
+    // }
     if (token.insurerCollateralShare > 0) {
       if (_isInsurer[token.insurerPrimaryAddress] == false) {
         throwError(ErrorCondition.TOKEN_WRONG_INSURER);
@@ -781,14 +796,14 @@ contract CustodianContract is
     _tokens[tokenAddress].value = token.value;
     _tokens[tokenAddress].currency = token.currency;
     _tokens[tokenAddress].issuerPrimaryAddress = token.issuerPrimaryAddress;
-    _tokens[tokenAddress].kycProviderPrimaryAddress = token
-      .kycProviderPrimaryAddress;
+    // _tokens[tokenAddress].kycProviderPrimaryAddress = token
+    //   .kycProviderPrimaryAddress;
     _tokens[tokenAddress].insurerPrimaryAddress = token.insurerPrimaryAddress;
     _tokens[tokenAddress].earlyRedemption = token.earlyRedemption;
     _tokens[tokenAddress].minSubscription = token.minSubscription;
     _tokens[tokenAddress].status = TokenStatus.Published;
     _tokens[tokenAddress].address_ = tokenAddress;
-    _tokens[tokenAddress].onChainKyc = token.onChainKyc;
+    // _tokens[tokenAddress].onChainKyc = token.onChainKyc;
     _tokens[tokenAddress].tokenType = token.tokenType;
     _tokens[tokenAddress].liquidityPool = token.liquidityPool;
     _tokenWithNameExists[token.name] = true;
@@ -796,8 +811,8 @@ contract CustodianContract is
     _tokenAddressesByIssuerPrimaryAddress[token.issuerPrimaryAddress].push(
       tokenAddress
     );
-    _tokenAddressesByKycProviderPrimaryAddress[token.kycProviderPrimaryAddress]
-      .push(tokenAddress);
+    // _tokenAddressesByKycProviderPrimaryAddress[token.kycProviderPrimaryAddress]
+    //   .push(tokenAddress);
     _tokenAddressesByInsurerPrimaryAddress[token.insurerPrimaryAddress].push(
       tokenAddress
     );
@@ -846,7 +861,7 @@ contract CustodianContract is
 
   function addWhitelist(address tokenAddress, address[] calldata addresses)
     external
-    onlyIssuerOrKycProvider
+    onlyIssuer
   {
     assertTokenExists(tokenAddress);
     assertTokenNotPaused(tokenAddress);
@@ -859,7 +874,7 @@ contract CustodianContract is
 
   function removeWhitelist(address tokenAddress, address[] calldata addresses)
     external
-    onlyIssuerOrKycProvider
+    onlyIssuer
   {
     assertTokenExists(tokenAddress);
     assertTokenNotPaused(tokenAddress);
@@ -910,10 +925,13 @@ contract CustodianContract is
       address tokenIssuer = _tokens[tokenAddress].issuerPrimaryAddress;
 
       // Check if KYC is Complete.
-      if (
-        !kycVerifications[tokenIssuer][investor].kycStatus &&
-        _tokens[tokenAddress].onChainKyc
-      ) {
+      // if (
+      //   !kycVerifications[tokenIssuer][investor].kycStatus &&
+      //   _tokens[tokenAddress].onChainKyc
+      // ) {
+      //   return ReasonCodes.KYC_INCOMPLETE;
+      // }
+      if (!kycVerifications[tokenIssuer][investor].kycStatus) {
         return ReasonCodes.KYC_INCOMPLETE;
       }
 
@@ -932,10 +950,17 @@ contract CustodianContract is
           break;
         }
       }
+      // if (
+      //   !isInvestorCountryAllowed &&
+      //   _tokenRestrictions[tokenAddress].allowedCountries.length > 0 &&
+      //   kycVerifications[tokenIssuer][investor].kycBasicDetails.citizenshipCheck
+      // ) {
+      //   return ReasonCodes.COUNTRY_NOT_ALLOWED;
+      // }
       if (
         !isInvestorCountryAllowed &&
         _tokenRestrictions[tokenAddress].allowedCountries.length > 0 &&
-        kycVerifications[tokenIssuer][investor].kycBasicDetails.citizenshipCheck
+        kycVerifications[tokenIssuer][investor].kycStatus
       ) {
         return ReasonCodes.COUNTRY_NOT_ALLOWED;
       }
@@ -946,7 +971,10 @@ contract CustodianContract is
           .allowedInvestorClassifications
           .isExempted
       ) {
-        if (!kycVerifications[tokenIssuer][investor].exempted) {
+        // if (!kycVerifications[tokenIssuer][investor].exempted) {
+        //   return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+        // }
+        if (!kycVerifications[tokenIssuer][investor].kycStatus) {
           return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
         }
       }
@@ -955,7 +983,10 @@ contract CustodianContract is
           .allowedInvestorClassifications
           .isAccredited
       ) {
-        if (!kycVerifications[tokenIssuer][investor].accredation) {
+        // if (!kycVerifications[tokenIssuer][investor].accredation) {
+        //   return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+        // }
+        if (!kycVerifications[tokenIssuer][investor].kycStatus) {
           return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
         }
       }
@@ -964,7 +995,10 @@ contract CustodianContract is
           .allowedInvestorClassifications
           .isAffiliated
       ) {
-        if (!kycVerifications[tokenIssuer][investor].affiliation) {
+        // if (!kycVerifications[tokenIssuer][investor].affiliation) {
+        //   return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
+        // }
+        if (!kycVerifications[tokenIssuer][investor].kycStatus) {
           return ReasonCodes.INVESTOR_CLASSIFICATION_NOT_ALLOWED;
         }
       }

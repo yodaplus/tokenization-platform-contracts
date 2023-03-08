@@ -76,7 +76,7 @@ const setupTest = deployments.createFixture(
 describe("TimeOracleManual", function () {
   let CustodianContract;
   let CustodianContractIssuer;
-  let CustodianContractKycProvider;
+  // let CustodianContractKycProvider;
   let TokenContract;
   let TokenContractNonIssuer;
   let TokenContractSubscriber;
@@ -129,7 +129,7 @@ describe("TimeOracleManual", function () {
       issuer,
       subscriber,
       subscriber2,
-      kycProvider,
+      // kycProvider,
       insurer,
     } = await getNamedAccounts();
     CustodianContract = await ethers.getContract(
@@ -140,16 +140,16 @@ describe("TimeOracleManual", function () {
       "CustodianContract",
       issuer
     );
-    CustodianContractKycProvider = await ethers.getContract(
-      "CustodianContract",
-      kycProvider
-    );
+    // CustodianContractIssuer = await ethers.getContract(
+    //   "CustodianContract",
+    //   kycProvider
+    // );
     PaymentToken = await ethers.getContract(
       "PaymentToken",
       custodianContractOwner
     );
     await CustodianContract.addIssuer("countryCode", issuer);
-    await CustodianContract.addKycProvider("countryCode", kycProvider);
+    // await CustodianContract.addKycProvider("countryCode", kycProvider);
     await CustodianContract.addInsurer("countryCode", insurer);
     await PaymentToken.transfer(subscriber, 1000);
     await CustodianContract.addPaymentToken(PaymentToken.address);
@@ -162,7 +162,7 @@ describe("TimeOracleManual", function () {
       redemptionSwapMultiple: [3],
       earlyRedemption: false,
       issuerPrimaryAddress: issuer,
-      kycProviderPrimaryAddress: kycProvider,
+      // kycProviderPrimaryAddress: kycProvider,
       insurerPrimaryAddress: insurer,
       collateral: 3,
       issuerSettlementAddress: issuer,
@@ -183,9 +183,9 @@ describe("TimeOracleManual", function () {
       tokens[0].address_,
       subscriber
     );
-    await CustodianContractKycProvider.updateKyc(issuer, subscriber, KYC_DATA);
-    await CustodianContractKycProvider.updateKyc(issuer, subscriber2, KYC_DATA);
-    await CustodianContractKycProvider.addWhitelist(tokens[0].address_, [
+    await CustodianContractIssuer.updateKyc(issuer, subscriber, KYC_DATA);
+    await CustodianContractIssuer.updateKyc(issuer, subscriber2, KYC_DATA);
+    await CustodianContractIssuer.addWhitelist(tokens[0].address_, [
       subscriber,
       subscriber2,
     ]);

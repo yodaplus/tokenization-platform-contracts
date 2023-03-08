@@ -28,7 +28,7 @@ const TOKEN_EXAMPLE = {
     isAffiliated: true,
   },
   useIssuerWhitelist: false,
-  onChainKyc: true,
+  // onChainKyc: true,
   documentName: stringToBytes32("RICK_ASTLEY"),
   documentUri:
     "https://ipfs.io/ipfs/QmbXp7tz1v92zdARJp6576xxFuNnd2tycs3dtFikrcczNY?filename=rickastley.jpg",
@@ -41,22 +41,22 @@ const TOKEN_EXAMPLE = {
 const KYC_DATA = {
   countryCode: stringToBytes32("USA"),
   kycStatus: true,
-  accredation: true,
-  affiliation: true,
-  exempted: true,
-  kycBasicDetails: {
-    leiCheck: true,
-    bankCheck: true,
-    citizenshipCheck: true,
-    addressCheck: true,
-  },
-  kycAmlCtf: {
-    pepCheck: true,
-    sanctionScreening: true,
-    suspiciousActivityReport: true,
-    cddReport: true,
-    fatfComplianceCheck: true,
-  },
+  // accredation: true,
+  // affiliation: true,
+  // exempted: true,
+  // kycBasicDetails: {
+  //   leiCheck: true,
+  //   bankCheck: true,
+  //   citizenshipCheck: true,
+  //   addressCheck: true,
+  // },
+  // kycAmlCtf: {
+  //   pepCheck: true,
+  //   sanctionScreening: true,
+  //   suspiciousActivityReport: true,
+  //   cddReport: true,
+  //   fatfComplianceCheck: true,
+  // },
 };
 module.exports = {
   TOKEN_EXAMPLE,

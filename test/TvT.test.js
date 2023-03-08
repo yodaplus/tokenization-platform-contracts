@@ -22,7 +22,7 @@ const moveBlockTimestampBy = async (value) => {
 describe("TvT", function () {
   let CustodianContract;
   let CustodianContractIssuer;
-  let CustodianContractKycProvider;
+  // let CustodianContractKycProvider;
   let TokenContract;
   let TokenContractNonIssuer;
   let TokenContractSubscriber;
@@ -56,16 +56,16 @@ describe("TvT", function () {
       "CustodianContract",
       issuer
     );
-    CustodianContractKycProvider = await ethers.getContract(
-      "CustodianContract",
-      kycProvider
-    );
+    // CustodianContractKycProvider = await ethers.getContract(
+    //   "CustodianContract",
+    //   kycProvider
+    // );
     PaymentToken = await ethers.getContract(
       "PaymentToken",
       custodianContractOwner
     );
     await CustodianContract.addIssuer("countryCode", issuer);
-    await CustodianContract.addKycProvider("countryCode", kycProvider);
+    // await CustodianContract.addKycProvider("countryCode", kycProvider);
     await CustodianContract.addInsurer("countryCode", insurer);
     await PaymentToken.transfer(subscriber, 1000);
     await CustodianContract.addPaymentToken(PaymentToken.address);
@@ -78,7 +78,7 @@ describe("TvT", function () {
       redemptionSwapMultiple: [3],
       earlyRedemption: false,
       issuerPrimaryAddress: issuer,
-      kycProviderPrimaryAddress: kycProvider,
+      // kycProviderPrimaryAddress: kycProvider,
       insurerPrimaryAddress: insurer,
       collateral: 3,
       issuerSettlementAddress: issuer,
@@ -99,9 +99,9 @@ describe("TvT", function () {
       tokens[0].address_,
       subscriber
     );
-    await CustodianContractKycProvider.updateKyc(issuer, subscriber, KYC_DATA);
-    await CustodianContractKycProvider.updateKyc(issuer, subscriber2, KYC_DATA);
-    await CustodianContractKycProvider.addWhitelist(tokens[0].address_, [
+    await CustodianContractIssuer.updateKyc(issuer, subscriber, KYC_DATA);
+    await CustodianContractIssuer.updateKyc(issuer, subscriber2, KYC_DATA);
+    await CustodianContractIssuer.addWhitelist(tokens[0].address_, [
       subscriber,
       subscriber2,
     ]);
@@ -154,7 +154,7 @@ describe("TvT", function () {
         redemptionSwapMultiple: [1],
         issuerPrimaryAddress: issuer,
 
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
       })
@@ -176,7 +176,7 @@ describe("TvT", function () {
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
 
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
       })
@@ -198,7 +198,7 @@ describe("TvT", function () {
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
 
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
       })
@@ -665,7 +665,7 @@ describe("TvT", function () {
             earlyRedemption: false,
             issuerPrimaryAddress: issuer,
 
-            kycProviderPrimaryAddress: kycProvider,
+            // kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             collateral: 3,
             insurerCollateralShare: 1,
@@ -1019,7 +1019,7 @@ describe("TvT", function () {
             earlyRedemption: false,
             issuerPrimaryAddress: issuer,
 
-            kycProviderPrimaryAddress: kycProvider,
+            // kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             issuerSettlementAddress: issuer,
           });
@@ -1260,7 +1260,7 @@ describe("TvT", function () {
           earlyRedemption: false,
           issuerPrimaryAddress: issuer,
 
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           collateral: 4,
           issuerSettlementAddress: issuer,
@@ -1277,18 +1277,10 @@ describe("TvT", function () {
           tokens[1].address_,
           subscriber
         );
-        await CustodianContractKycProvider.updateKyc(
-          issuer,
-          subscriber,
-          KYC_DATA
-        );
-        await CustodianContractKycProvider.updateKyc(
-          issuer,
-          subscriber2,
-          KYC_DATA
-        );
+        await CustodianContractIssuer.updateKyc(issuer, subscriber, KYC_DATA);
+        await CustodianContractIssuer.updateKyc(issuer, subscriber2, KYC_DATA);
 
-        await CustodianContractKycProvider.addWhitelist(tokens[1].address_, [
+        await CustodianContractIssuer.addWhitelist(tokens[1].address_, [
           subscriber,
           subscriber2,
         ]);

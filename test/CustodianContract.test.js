@@ -29,34 +29,34 @@ describe("CustodianContract", function () {
 
   describe("tokens", () => {
     let CustodianContractIssuer;
-    let CustodianContractKycProvider;
+    // let CustodianContractKycProvider;
 
     beforeEach(async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
       await CustodianContract.addIssuer("countryCode", issuer);
-      await CustodianContract.addKycProvider("countryCode", kycProvider);
+      // await CustodianContract.addKycProvider("countryCode", kycProvider);
       await CustodianContract.addInsurer("countryCode", insurer);
       CustodianContractIssuer = await ethers.getContract(
         "CustodianContract",
         issuer
       );
-      CustodianContractKycProvider = await ethers.getContract(
+      /*  CustodianContractKycProvider = await ethers.getContract(
         "CustodianContract",
         kycProvider
-      );
+      ); */
     });
 
     describe("whitelisting", () => {
       let tokenAddress;
 
       beforeEach(async () => {
-        const { issuer, kycProvider, insurer } = await getNamedAccounts();
+        const { issuer, insurer } = await getNamedAccounts();
 
         await expect(
           CustodianContractIssuer.publishToken({
             ...TOKEN_EXAMPLE,
             issuerPrimaryAddress: issuer,
-            kycProviderPrimaryAddress: kycProvider,
+            // kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             issuerSettlementAddress: issuer,
           })
@@ -67,16 +67,16 @@ describe("CustodianContract", function () {
         tokenAddress = tokens[0].address_;
       });
 
-      it("only issuers and KYC providers can add/remove whitelisted addresses", async () => {
+      it("only issuers can add/remove whitelisted addresses", async () => {
         const { subscriber } = await getNamedAccounts();
 
         await expect(
           CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber])
         ).not.to.be.reverted;
 
-        await expect(
-          CustodianContractKycProvider.addWhitelist(tokenAddress, [subscriber])
-        ).not.to.be.reverted;
+        // await expect(
+        //   CustodianContractKycProvider.addWhitelist(tokenAddress, [subscriber])
+        // ).not.to.be.reverted;
 
         await expect(
           CustodianContract.addWhitelist(tokenAddress, [subscriber])
@@ -86,11 +86,11 @@ describe("CustodianContract", function () {
           CustodianContractIssuer.removeWhitelist(tokenAddress, [subscriber])
         ).not.to.be.reverted;
 
-        await expect(
-          CustodianContractKycProvider.removeWhitelist(tokenAddress, [
-            subscriber,
-          ])
-        ).not.to.be.reverted;
+        // await expect(
+        //   CustodianContractKycProvider.removeWhitelist(tokenAddress, [
+        //     subscriber,
+        //   ])
+        // ).not.to.be.reverted;
 
         await expect(
           CustodianContract.removeWhitelist(tokenAddress, [subscriber])
@@ -154,13 +154,13 @@ describe("CustodianContract", function () {
       let tokenAddress;
 
       beforeEach(async () => {
-        const { issuer, kycProvider, insurer } = await getNamedAccounts();
+        const { issuer, insurer } = await getNamedAccounts();
 
         await expect(
           CustodianContractIssuer.publishToken({
             ...TOKEN_EXAMPLE,
             issuerPrimaryAddress: issuer,
-            kycProviderPrimaryAddress: kycProvider,
+            // kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             issuerSettlementAddress: issuer,
           })
@@ -193,13 +193,13 @@ describe("CustodianContract", function () {
     });
 
     it(`doesn't allow non-issuers to publish tokens`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       await expect(
         CustodianContract.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -207,42 +207,41 @@ describe("CustodianContract", function () {
     });
 
     it(`can't publish a token for non-existent issuer`, async () => {
-      const { userOfOtherType, kycProvider, insurer, issuer } =
-        await getNamedAccounts();
+      const { userOfOtherType, insurer, issuer } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: userOfOtherType,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
       ).to.be.revertedWith("issuer does not exists");
     });
 
-    it(`can't publish a token for non-existent KYC provider`, async () => {
-      const { issuer, userOfOtherType, insurer } = await getNamedAccounts();
+    // it(`can't publish a token for non-existent KYC provider`, async () => {
+    //   const { issuer, userOfOtherType, insurer } = await getNamedAccounts();
 
-      await expect(
-        CustodianContractIssuer.publishToken({
-          ...TOKEN_EXAMPLE,
-          issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: userOfOtherType,
-          insurerPrimaryAddress: insurer,
-          issuerSettlementAddress: issuer,
-        })
-      ).to.be.revertedWith("kyc provider does not exists");
-    });
+    //   await expect(
+    //     CustodianContractIssuer.publishToken({
+    //       ...TOKEN_EXAMPLE,
+    //       issuerPrimaryAddress: issuer,
+    //       kycProviderPrimaryAddress: userOfOtherType,
+    //       insurerPrimaryAddress: insurer,
+    //       issuerSettlementAddress: issuer,
+    //     })
+    //   ).to.be.revertedWith("kyc provider does not exists");
+    // });
 
     it(`can't publish a token with the same name twice`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -253,7 +252,7 @@ describe("CustodianContract", function () {
           ...TOKEN_EXAMPLE,
           symbol: "TT2",
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -261,13 +260,13 @@ describe("CustodianContract", function () {
     });
 
     it(`can't publish a token with the same symbol twice`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -278,7 +277,7 @@ describe("CustodianContract", function () {
           ...TOKEN_EXAMPLE,
           name: "Test Token 2",
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -286,14 +285,14 @@ describe("CustodianContract", function () {
     });
 
     it(`can publish a token`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
 
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
 
@@ -311,12 +310,12 @@ describe("CustodianContract", function () {
     });
 
     it(`emits TokenPublished(...) event on token publish`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       const publishTokenHandler = await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
       });
@@ -329,13 +328,13 @@ describe("CustodianContract", function () {
     });
 
     it(`sets proper name, symbol and decimals for the published token`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -355,13 +354,13 @@ describe("CustodianContract", function () {
     });
 
     it(`sets proper owner for the published token`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -378,13 +377,13 @@ describe("CustodianContract", function () {
     });
 
     it(`can publish different tokens with unique symbol and name`, async () => {
-      const { issuer, kycProvider, insurer } = await getNamedAccounts();
+      const { issuer, insurer } = await getNamedAccounts();
 
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -396,7 +395,7 @@ describe("CustodianContract", function () {
           name: "Test Token 2",
           symbol: "TT2",
           issuerPrimaryAddress: issuer,
-          kycProviderPrimaryAddress: kycProvider,
+          // kycProviderPrimaryAddress: kycProvider,
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         })
@@ -412,8 +411,7 @@ describe("CustodianContract", function () {
   });
   describe("paymentToken", () => {
     it("can set payment token", async () => {
-      const { issuer, kycProvider, custodianContractOwner } =
-        await getNamedAccounts();
+      const { issuer, custodianContractOwner } = await getNamedAccounts();
       const CustodianContract = await ethers.getContract(
         "CustodianContract",
         custodianContractOwner
@@ -732,7 +730,7 @@ describe("CustodianContract", function () {
 
       it(`can't remove ${roleName} with tokens`, async () => {
         const namedAccounts = await getNamedAccounts();
-        const { issuer, kycProvider, insurer } = namedAccounts;
+        const { issuer, insurer } = namedAccounts;
 
         const CustodianContractIssuer = await ethers.getContract(
           "CustodianContract",
@@ -741,16 +739,16 @@ describe("CustodianContract", function () {
 
         await expect(CustodianContract.addIssuer("countryCode", issuer)).not.to
           .be.reverted;
-        await expect(
+        /*    await expect(
           CustodianContract.addKycProvider("countryCode", kycProvider)
-        ).not.to.be.reverted;
+        ).not.to.be.reverted; */
         await expect(CustodianContract.addInsurer("countryCode", insurer)).not
           .to.be.reverted;
         await expect(
           CustodianContractIssuer.publishToken({
             ...TOKEN_EXAMPLE,
             issuerPrimaryAddress: issuer,
-            kycProviderPrimaryAddress: kycProvider,
+            // kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             issuerSettlementAddress: issuer,
           })
@@ -773,7 +771,7 @@ describe("CustodianContract", function () {
       });
     });
 
-    describe("KYC provider", async () => {
+    /*   describe("KYC provider", async () => {
       createTests({
         roleName: "KYC provider",
         addUser: "addKycProvider",
@@ -783,7 +781,7 @@ describe("CustodianContract", function () {
         isUser: "isKycProvider",
         userAddressName: "kycProvider",
       });
-    });
+    }); */
     describe("insurer", async () => {
       createTests({
         roleName: "insurer",
@@ -801,18 +799,17 @@ describe("CustodianContract", function () {
 
       await expect(CustodianContract.addIssuer("countryCode", issuer)).not.to.be
         .reverted;
-      await expect(CustodianContract.addKycProvider("countryCode", issuer)).not
-        .to.be.reverted;
+      /*    await expect(CustodianContract.addKycProvider("countryCode", issuer)).not
+        .to.be.reverted; */
       await expect(CustodianContract.addInsurer("countryCode", issuer)).not.to;
       expect(await CustodianContract.isIssuer(issuer)).to.be.equal(true);
-      expect(await CustodianContract.isKycProvider(issuer)).to.be.equal(true);
+      /* expect(await CustodianContract.isKycProvider(issuer)).to.be.equal(true); */
       expect(await CustodianContract.isInsurer(issuer)).to.be.equal(true);
     });
   });
   describe("liquidity pool", () => {
     it("can add liquidity pool", async () => {
-      const { issuer, kycProvider, custodianContractOwner } =
-        await getNamedAccounts();
+      const { issuer, custodianContractOwner } = await getNamedAccounts();
       const CustodianContract = await ethers.getContract(
         "CustodianContract",
         custodianContractOwner
@@ -822,8 +819,7 @@ describe("CustodianContract", function () {
         .withArgs(issuer, issuer);
     });
     it("can remove liquidity pool", async () => {
-      const { issuer, kycProvider, custodianContractOwner } =
-        await getNamedAccounts();
+      const { issuer, custodianContractOwner } = await getNamedAccounts();
       const CustodianContract = await ethers.getContract(
         "CustodianContract",
         custodianContractOwner
@@ -836,85 +832,77 @@ describe("CustodianContract", function () {
         .withArgs(issuer);
     });
   });
-  describe("KYC", () => {
-    let CustodianContractIssuer;
-    let PaymentToken;
+  //describe("KYC", () => {
+  //  let CustodianContractIssuer;
+  //  let PaymentToken;
 
-    beforeEach(async () => {
-      const {
-        issuer,
+  //   beforeEach(async () => {
+  //     const {
+  //       issuer,
+  //    kycProvider,
+  //       custodianContractOwner,
+  //       subscriber,
+  //       insurer,
+  //     } = await getNamedAccounts();
+  //     await CustodianContract.addIssuer("countryCode", issuer);
+  //        await CustodianContract.addKycProvider("countryCode", kycProvider);
+  //     await CustodianContract.addInsurer("countryCode", insurer);
+  //     CustodianContractIssuer = await ethers.getContract(
+  //       "CustodianContract",
+  //       issuer
+  //     );
+  //     PaymentToken = await ethers.getContract(
+  //       "PaymentToken",
+  //       custodianContractOwner
+  //     );
+  //     await PaymentToken.transfer(subscriber, 1000);
+  //     await CustodianContract.addPaymentToken(PaymentToken.address);
+  //   });
+  //   it("should issue if kyc is disabled for token", async () => {
+  //     const { issuer, subscriber, insurer } = await getNamedAccounts();
 
-        kycProvider,
-        custodianContractOwner,
-        subscriber,
-        insurer,
-      } = await getNamedAccounts();
-      await CustodianContract.addIssuer("countryCode", issuer);
-      await CustodianContract.addKycProvider("countryCode", kycProvider);
-      await CustodianContract.addInsurer("countryCode", insurer);
-      CustodianContractIssuer = await ethers.getContract(
-        "CustodianContract",
-        issuer
-      );
-      PaymentToken = await ethers.getContract(
-        "PaymentToken",
-        custodianContractOwner
-      );
-      await PaymentToken.transfer(subscriber, 1000);
-      await CustodianContract.addPaymentToken(PaymentToken.address);
-    });
-    it("should issue if kyc is disabled for token", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+  //     await CustodianContractIssuer.publishToken({
+  //       ...TOKEN_EXAMPLE,
+  //       paymentTokens: [PaymentToken.address],
+  //       issuanceSwapMultiple: [2],
+  //       redemptionSwapMultiple: [3],
+  //       earlyRedemption: false,
+  //       issuerPrimaryAddress: issuer,
+  //        kycProviderPrimaryAddress: kycProvider,
+  //       insurerPrimaryAddress: insurer,
+  //       issuerSettlementAddress: issuer,
 
-      await CustodianContractIssuer.publishToken({
-        ...TOKEN_EXAMPLE,
-        paymentTokens: [PaymentToken.address],
-        issuanceSwapMultiple: [2],
-        redemptionSwapMultiple: [3],
-        earlyRedemption: false,
-        issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
-        insurerPrimaryAddress: insurer,
-        issuerSettlementAddress: issuer,
+  //       onChainKyc: false,
+  //       countries: [],
+  //       investorClassifications: {
+  //         isExempted: false,
+  //         isAccredited: false,
+  //         isAffiliated: false,
+  //       },
+  //       useIssuerWhitelist: false,
+  //     });
+  //     const tokens = await CustodianContractIssuer.getTokens(issuer);
 
-        onChainKyc: false,
-        countries: [],
-        investorClassifications: {
-          isExempted: false,
-          isAccredited: false,
-          isAffiliated: false,
-        },
-        useIssuerWhitelist: false,
-      });
-      const tokens = await CustodianContractIssuer.getTokens(issuer);
-
-      const tokenAddress = tokens[0].address_;
-      await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
-      const TokenTvT = await ethers.getContractAt(
-        "TokenTvT",
-        tokenAddress,
-        issuer
-      );
-      await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
-        .not.to.be.reverted;
-    });
-  });
+  //     const tokenAddress = tokens[0].address_;
+  //     await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
+  //     const TokenTvT = await ethers.getContractAt(
+  //       "TokenTvT",
+  //       tokenAddress,
+  //       issuer
+  //     );
+  //     await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
+  //       .not.to.be.reverted;
+  //   });
+  // });
   describe("TransferRestrictions", () => {
     let CustodianContractIssuer;
     let PaymentToken;
 
     beforeEach(async () => {
-      const {
-        issuer,
-
-        kycProvider,
-        custodianContractOwner,
-        subscriber,
-        insurer,
-      } = await getNamedAccounts();
+      const { issuer, custodianContractOwner, subscriber, insurer } =
+        await getNamedAccounts();
       await CustodianContract.addIssuer("countryCode", issuer);
-      await CustodianContract.addKycProvider("countryCode", kycProvider);
+      /*  await CustodianContract.addKycProvider("countryCode", kycProvider); */
       await CustodianContract.addInsurer("countryCode", insurer);
       CustodianContractIssuer = await ethers.getContract(
         "CustodianContract",
@@ -928,8 +916,7 @@ describe("CustodianContract", function () {
       await CustodianContract.addPaymentToken(PaymentToken.address);
     });
     it("can't issue if issuer not in allowed countries", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+      const { issuer, subscriber, insurer } = await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
@@ -938,7 +925,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
       });
@@ -960,8 +947,7 @@ describe("CustodianContract", function () {
       ).to.be.revertedWith("country is not allowed");
     });
     it("issue if issuer in allowed countries", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+      const { issuer, subscriber, insurer } = await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
@@ -970,7 +956,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
       });
@@ -992,8 +978,7 @@ describe("CustodianContract", function () {
         .not.to.be.reverted;
     });
     it("should not issue if kyc is complete", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+      const { issuer, subscriber, insurer } = await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
@@ -1002,7 +987,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
       });
@@ -1021,8 +1006,7 @@ describe("CustodianContract", function () {
       ).to.be.revertedWith("KYC is incomplete");
     });
     it("should revert if investor is not isAccredited else issue", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+      const { issuer, subscriber, insurer } = await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
@@ -1031,7 +1015,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
 
@@ -1046,7 +1030,7 @@ describe("CustodianContract", function () {
       const tokenAddress = tokens[0].address_;
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
-        accredation: false,
+        kycStatus: false,
       });
       await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
       const TokenTvT = await ethers.getContractAt(
@@ -1056,17 +1040,16 @@ describe("CustodianContract", function () {
       );
       await expect(
         TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
-      ).to.be.revertedWith("investor classification is not allowed");
+      ).to.be.revertedWith("KYC is incomplete");
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
-        accredation: true,
+        kycStatus: true,
       });
       await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
         .not.to.be.reverted;
     });
     it("should revert if investor is not isExempted else issue", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+      const { issuer, subscriber, insurer } = await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
@@ -1075,7 +1058,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
 
@@ -1090,7 +1073,7 @@ describe("CustodianContract", function () {
       const tokenAddress = tokens[0].address_;
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
-        exempted: false,
+        kycStatus: false,
       });
       await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
       const TokenTvT = await ethers.getContractAt(
@@ -1100,17 +1083,16 @@ describe("CustodianContract", function () {
       );
       await expect(
         TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
-      ).to.be.revertedWith("investor classification is not allowed");
+      ).to.be.revertedWith("KYC is incomplete");
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
-        exempted: true,
+        kycStatus: true,
       });
       await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
         .not.to.be.reverted;
     });
     it("should revert if investor is not isAffiliated else issue", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+      const { issuer, subscriber, insurer } = await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
@@ -1119,7 +1101,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
 
@@ -1134,7 +1116,7 @@ describe("CustodianContract", function () {
       const tokenAddress = tokens[0].address_;
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
-        affiliation: false,
+        kycStatus: false,
       });
       await CustodianContractIssuer.addWhitelist(tokenAddress, [subscriber]);
       const TokenTvT = await ethers.getContractAt(
@@ -1144,17 +1126,16 @@ describe("CustodianContract", function () {
       );
       await expect(
         TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0)
-      ).to.be.revertedWith("investor classification is not allowed");
+      ).to.be.revertedWith("KYC is incomplete");
       await CustodianContractIssuer.updateKyc(issuer, subscriber, {
         ...KYC_DATA,
-        affiliation: true,
+        kycStatus: true,
       });
       await expect(TokenTvT["issue(address,uint256,uint256)"](subscriber, 2, 0))
         .not.to.be.reverted;
     });
     it("should not issue if investor not in issuer whitelist", async () => {
-      const { issuer, subscriber, kycProvider, insurer } =
-        await getNamedAccounts();
+      const { issuer, subscriber, insurer } = await getNamedAccounts();
 
       await CustodianContractIssuer.publishToken({
         ...TOKEN_EXAMPLE,
@@ -1163,7 +1144,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
 
@@ -1194,7 +1175,7 @@ describe("CustodianContract", function () {
         redemptionSwapMultiple: [3],
         earlyRedemption: false,
         issuerPrimaryAddress: issuer,
-        kycProviderPrimaryAddress: kycProvider,
+        // kycProviderPrimaryAddress: kycProvider,
         useIssuerWhitelist: true,
         issuerSettlementAddress: issuer,
       });

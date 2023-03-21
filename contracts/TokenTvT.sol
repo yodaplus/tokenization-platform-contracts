@@ -19,6 +19,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
   uint256 internal _issuerCollateral;
   uint256 internal _insurerCollateral;
   address internal _collateralProvider;
+  uint256[] internal _issuePrice;
 
   address internal _issuerSettlementAddress;
   IssueType internal _issueType;
@@ -81,6 +82,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
     TokenBase(input.name, input.symbol, input.maxTotalSupply, custodianContract)
   {
     paymentTokens = input.paymentTokens;
+    _issuePrice = input.issuanceSwapMultiple;
     _issuanceSwapMultiple = input.issuanceSwapMultiple;
     _redemptionSwapMultiple = input.redemptionSwapMultiple;
     maturityPeriod = input.maturityPeriod;
@@ -154,6 +156,11 @@ contract TokenTvT is TokenBase, ITokenHooks {
 
     address tokenOwner = owner();
 
+    uint256 issuePrice = _issuanceSwapMultiple[0];
+    if (_issueType == IssueType.NAV && tranche == 0) {
+      issuePrice = _issuePrice[0];
+    }
+
     if (reasonCode != ReasonCodes.TRANSFER_SUCCESS) {
       if (reasonCode == ReasonCodes.KYC_INCOMPLETE) {
         throwError(ErrorCondition.KYC_INCOMPLETE);
@@ -175,7 +182,7 @@ contract TokenTvT is TokenBase, ITokenHooks {
         tradeTokenDestination: tradeTokenDestination,
         issuerAddress: tokenOwner,
         paymentToken: paymentTokens[0],
-        paymentTokenAmount: _issuanceSwapMultiple[0] * value,
+        paymentTokenAmount: issuePrice * value,
         paymentTokenDestination: paymentTokenDestination,
         investorAddress: subscriber,
         collateral: _collateral * value,

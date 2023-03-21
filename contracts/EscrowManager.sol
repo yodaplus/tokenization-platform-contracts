@@ -66,6 +66,7 @@ contract EscrowManager is
   }
 
   event IssuanceEscrowComplete(uint256 orderId);
+  event CancelIssuance(uint256 orderId);
   event RedemptionEscrowComplete(uint256 orderId);
   event DefaultedEscrow(uint256 orderId);
   event XDCTransfered(address _from, address _to, uint256 _amount);
@@ -637,6 +638,8 @@ contract EscrowManager is
     ITokenHooks(escrowOrder.tradeToken).burnTokens(
       escrowOrder.tradeTokenAmount
     );
+
+    emit CancelIssuance(orderId);
   }
 
   function swapIssuance(uint256 orderId) external {

@@ -9,6 +9,7 @@
     "compile": "hardhat compile",
     "deploy-mainnet": "hardhat --network mainnet deploy --reset --export deployments/mainnet.json",
     "deploy-apothem": "hardhat --network apothem deploy --reset --export deployments/apothem.json",
+    "deploy-private": "hardhat --network private deploy --reset --export deployments/private.json",
     "remixd": "remixd -s ./ -u https://remix.ethereum.org",
     "gas": "REPORT_GAS=true npm test",
     "size": "hardhat size-contracts",

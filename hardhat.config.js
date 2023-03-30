@@ -59,6 +59,10 @@ module.exports = {
       ...sharedNetworkConfig,
       url: "https://rpc-apothem.xinfin.yodaplus.net",
     },
+    private: {
+      ...sharedNetworkConfig,
+      url: "http://subnet-rpc.yodaplus.net",
+    },
   },
   watcher: {
     test: {

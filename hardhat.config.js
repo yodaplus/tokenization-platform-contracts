@@ -61,7 +61,7 @@ module.exports = {
     },
     private: {
       ...sharedNetworkConfig,
-      url: "http://subnet-rpc.yodaplus.net",
+      url: "https://subnet-rpc.yodaplus.net",
     },
   },
   watcher: {

@@ -19,7 +19,7 @@ contract Tokenomics is Ownable {
 
   // TODO: Create a Modifier to check if the caller is the custodian contract address
 
-  // Declare this TokenDate struct in a separate file and import it here because it will be used in the Custodian contract as well
+  // Declare this TokenData struct in a separate file and import it here because it will be used in the Custodian contract as well
   struct TokenData {
     address addr;
     address issuerPrimaryAddress;

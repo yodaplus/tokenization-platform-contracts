@@ -71,6 +71,13 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     args: [],
     ...deployOptions,
   });
+
+  await deploy("Tokenomics", {
+    from : custodianContractOwner,
+    args : [],
+    ...deployOptions,
+  })
+
 };
 
 module.exports.tags = ["CustodianContract"];

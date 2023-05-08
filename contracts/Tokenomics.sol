@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./TokenomicsTypes.sol";
 
 contract Tokenomics is Ownable {
   string public constant VERSION = "0.0.1";
@@ -19,22 +20,13 @@ contract Tokenomics is Ownable {
 
   // TODO: Create a Modifier to check if the caller is the custodian contract address
 
-  // Declare this TokenData struct in a separate file and import it here because it will be used in the Custodian contract as well
-  struct TokenData {
-    address addr;
-    address issuerPrimaryAddress;
-    string symbol;
-    uint256 quantity;
-  }
-
-  // Should we add a timestamp to the struct ?
-  // Should we add a feeRate to the struct ?
-  // Should we add a quantity to the struct ?
-
   struct TokenFee {
     string symbol;
+    uint256 quantity;
     address issuerPrimaryAddress;
+    uint256 feeRate;
     uint256 fees;
+    uint256 timestamp;
   }
 
   /**
@@ -44,15 +36,39 @@ contract Tokenomics is Ownable {
 
   // Should we add more details to the event ?
 
-  event FeeDeposited(string symbol, address addr);
+  event FeeDeposited(
+    string symbol,
+    address addr,
+    address issuerPrimaryAddress,
+    uint256 fees
+  );
 
-  constructor(uint256 fees, address _feeDestinationAddress) {
+  constructor(
+    uint256 fees,
+    address _feeDestinationAddress,
+    address _custodianContractAddress
+  ) {
     perTokenFee = fees;
     feeDestinationAddress = _feeDestinationAddress;
+    custodianContractAddress = _custodianContractAddress;
   }
 
-  // TODO: Add a modifier to check if the caller is the custodian contract address
-  function depositFee(TokenData calldata input) external payable {
+  //  Add a modifier to check if the caller is the custodian contract address
+
+  modifier onlyCustodianContract() {
+    if (msg.sender == custodianContractAddress) {
+      revert ERC1066Error(
+        ReasonCodes.APP_SPECIFIC_FAILURE,
+        "caller is not allowed"
+      );
+    }
+  }
+
+  function depositFee(TokenFeeData calldata input)
+    external
+    payable
+    onlyCustodianContract
+  {
     // check if the fee amount is correct
     require(
       input.quantity * perTokenFee == msg.value,
@@ -60,19 +76,29 @@ contract Tokenomics is Ownable {
     );
     TokenFee memory log = TokenFee(
       input.symbol,
+      input.quantity,
       input.issuerPrimaryAddress,
-      msg.value
+      perTokenFee,
+      msg.value,
+      now
     );
     feesLog[input.addr].push(log);
 
     payable(feeDestinationAddress).transfer(msg.value);
-    emit FeeDeposited(input.symbol, input.addr); // Also emit what amount of fees were deposited ?
+    emit FeeDeposited(
+      input.symbol,
+      input.addr,
+      input.issuerPrimaryAddress,
+      msg.value
+    );
   }
 
+  //   set the address of the wallet that receives the fee
   function setFeeDestinationAddress(address addr) external onlyOwner {
     feeDestinationAddress = addr;
   }
 
+  // set the fee per token
   function setPerTokenFee(uint256 amount) external onlyOwner {
     perTokenFee = amount;
   }

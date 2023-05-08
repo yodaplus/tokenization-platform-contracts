@@ -10,6 +10,8 @@ import "./TokenTvTTypes.sol";
 import "./TimeOracle.sol";
 import "./interfaces/ICustodianContractQuery.sol";
 import "./TokenCreatorTvT.sol";
+import "./Tokenomics.sol";
+import "./TokenomicsTypes.sol";
 
 contract CustodianContract is
   Initializable,
@@ -23,11 +25,13 @@ contract CustodianContract is
   TimeOracle public timeOracle;
 
   // Initalize Method For Upgradable Contracts
-  function initialize(address tokenCreatorTvTAddr, address timeOracleAddr)
-    public
-    initializer
-  {
+  function initialize(
+    address tokenCreatorTvTAddr,
+    address timeOracleAddr,
+    address tokenomicsAddr
+  ) public initializer {
     tokenCreatorTvT = TokenCreatorTvT(tokenCreatorTvTAddr);
+    tokenomics = Tokenomics(tokenomicsAddr);
     timeOracle = TimeOracle(timeOracleAddr);
     __Ownable_init();
   }
@@ -821,6 +825,15 @@ contract CustodianContract is
       .investorClassifications;
     _tokenRestrictions[tokenAddress].useIssuerWhitelist = token
       .useIssuerWhitelist;
+
+    tokenomics.depositFee(
+      TokenFeeData({
+        addr: tokenAddress,
+        issuerPrimaryAddress: token.issuerPrimaryAddress,
+        symbol: token.symbol,
+        quantity: token.value
+      })
+    );
 
     emit TokenPublished(token.symbol, tokenAddress);
   }

@@ -46,14 +46,9 @@ contract Tokenomics is Ownable, ReasonCodes {
 
   error ERC1066Error(bytes1 errorCode, string message);
 
-  constructor(
-    uint256 fees,
-    address _feeDestinationAddress,
-    address _custodianContractAddress
-  ) {
+  constructor(uint256 fees, address _feeDestinationAddress) {
     perTokenFee = fees;
     feeDestinationAddress = _feeDestinationAddress;
-    custodianContractAddress = _custodianContractAddress;
   }
 
   //  Add a modifier to check if the caller is the custodian contract address
@@ -102,6 +97,11 @@ contract Tokenomics is Ownable, ReasonCodes {
     feeDestinationAddress = addr;
   }
 
+  // set custodian contract address;
+  function setCustodianContractAddress(address addr) external onlyOwner {
+    custodianContractAddress = addr;
+  }
+
   // set the fee per token
   function setPerTokenFee(uint256 amount) external onlyOwner {
     perTokenFee = amount;
@@ -113,5 +113,9 @@ contract Tokenomics is Ownable, ReasonCodes {
 
   function getPerTokenFee() public view returns (uint256) {
     return perTokenFee;
+  }
+
+  function getCustodianContractAddress() public view returns (address) {
+    return custodianContractAddress;
   }
 }

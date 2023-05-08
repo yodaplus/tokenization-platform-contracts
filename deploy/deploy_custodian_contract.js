@@ -1,3 +1,5 @@
+const { ethers } = require("hardhat");
+
 const deployOptions = {
   log: true,
   gasPrice: ethers.utils.parseUnits("1", "gwei"),
@@ -34,11 +36,13 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     ...deployOptions,
   });
 
-  const tokenomicsAddress =  await deploy("Tokenomics", {
+  const tokenomics =  await deploy("Tokenomics", {
     from : custodianContractOwner,
-    args : [],
+    args : [10 , custodianContractOwner],
     ...deployOptions,
   });
+
+  const tokenomicsAddress = tokenomics.address;
 
   const deployResult = await deploy("CustodianContract", {
     from: custodianContractOwner,
@@ -51,6 +55,13 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     },
   });
   const custodianContractAddress = deployResult.address;
+
+  const Tokenomics = await ethers.getContract(
+    "Tokenomics",
+    custodianContractOwner
+  )
+  // set the custodian contract address in the tokenomics contract
+  Tokenomics.setCustodianContractAddress(custodianContractAddress);
 
   const TokenCreatorTvT = await ethers.getContract(
     "TokenCreatorTvT",

@@ -34,13 +34,19 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     ...deployOptions,
   });
 
+  const tokenomicsAddress =  await deploy("Tokenomics", {
+    from : custodianContractOwner,
+    args : [],
+    ...deployOptions,
+  });
+
   const deployResult = await deploy("CustodianContract", {
     from: custodianContractOwner,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
       execute: {
         methodName: "initialize",
-        args: [tokenCreatorTvTAddress, timeOracleBlockAddress],
+        args: [tokenCreatorTvTAddress, timeOracleBlockAddress , tokenomicsAddress],
       },
     },
   });
@@ -72,11 +78,7 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     ...deployOptions,
   });
 
-  await deploy("Tokenomics", {
-    from : custodianContractOwner,
-    args : [],
-    ...deployOptions,
-  })
+  
 
 };
 

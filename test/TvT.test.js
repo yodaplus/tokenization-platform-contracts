@@ -82,6 +82,8 @@ describe("TvT", function () {
       insurerPrimaryAddress: insurer,
       collateral: 3,
       issuerSettlementAddress: issuer,
+    },{
+      value:100
     });
     const tokens = await CustodianContract.getTokens(issuer);
     TokenContract = await ethers.getContractAt(
@@ -135,6 +137,8 @@ describe("TvT", function () {
         kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
+      },{
+        value:100
       })
     ).to.be.revertedWith("early redemption is not allowed for TvT tokens");
   });
@@ -157,6 +161,8 @@ describe("TvT", function () {
         // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
+      },{
+        value:100
       })
     ).to.be.revertedWith("payment token is not active");
   });
@@ -179,6 +185,8 @@ describe("TvT", function () {
         // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
+      },{
+        value:100
       })
     ).to.be.revertedWith("wrong input");
   });
@@ -201,6 +209,8 @@ describe("TvT", function () {
         // kycProviderPrimaryAddress: kycProvider,
         insurerPrimaryAddress: insurer,
         issuerSettlementAddress: issuer,
+      },{
+        value:100
       })
     ).not.to.be.reverted;
 
@@ -670,6 +680,8 @@ describe("TvT", function () {
             collateral: 3,
             insurerCollateralShare: 1,
             issuerSettlementAddress: issuer,
+          },{
+            value:100
           });
           const tokens = await CustodianContract.getTokens(issuer);
           CollatrizedTokenIssuer = await ethers.getContractAt(
@@ -1022,6 +1034,8 @@ describe("TvT", function () {
             // kycProviderPrimaryAddress: kycProvider,
             insurerPrimaryAddress: insurer,
             issuerSettlementAddress: issuer,
+          },{
+            value:100
           });
           const tokens = await CustodianContract.getTokens(issuer);
           UnCollatrizedTokenIssuer = await ethers.getContractAt(
@@ -1264,6 +1278,8 @@ describe("TvT", function () {
           insurerPrimaryAddress: insurer,
           collateral: 4,
           issuerSettlementAddress: issuer,
+        },{
+          value:100
         });
 
         const tokens = await CustodianContract.getTokens(issuer);

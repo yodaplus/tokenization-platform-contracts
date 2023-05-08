@@ -13,8 +13,8 @@ const normalizeArrayOutput = (arrOutput) => arrOutput.map(normalizeOutput);
 
 describe("CustodianContract", function () {
   let CustodianContract;
-  const amount = 10;
-  
+  // let amount;
+  // let TokenomicsContract;
   beforeEach(async () => {
     await deployments.fixture(["CustodianContract", "TokenCreator"]);
     const { custodianContractOwner } = await getNamedAccounts();
@@ -22,6 +22,12 @@ describe("CustodianContract", function () {
       "CustodianContract",
       custodianContractOwner
     );
+
+    // TokenomicsContract = await ethers.getContract(
+    //   "Tokenomics",
+    //   custodianContractOwner
+    // )
+    // amount = TokenomicsContract.getPerTokenFee();
   });
 
   it("has a version", async () => {
@@ -52,7 +58,6 @@ describe("CustodianContract", function () {
 
       beforeEach(async () => {
         const { issuer, insurer } = await getNamedAccounts();
-        
         await expect(
           CustodianContractIssuer.publishToken({
             ...TOKEN_EXAMPLE,
@@ -61,8 +66,8 @@ describe("CustodianContract", function () {
             insurerPrimaryAddress: insurer,
             issuerSettlementAddress: issuer,
           },
-          {
-            value: amount*TOKEN_EXAMPLE.value
+          { 
+            value:100
           }
           )
         ).not.to.be.reverted;
@@ -170,7 +175,7 @@ describe("CustodianContract", function () {
             issuerSettlementAddress: issuer,
           },
           {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
         ).not.to.be.reverted;
 
@@ -212,7 +217,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
         {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
       ).to.be.revertedWith("caller is not allowed");
     });
@@ -228,7 +233,7 @@ describe("CustodianContract", function () {
           insurerPrimaryAddress: insurer,
           issuerSettlementAddress: issuer,
         },{
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
       ).to.be.revertedWith("issuer does not exists");
     });
@@ -249,7 +254,6 @@ describe("CustodianContract", function () {
 
     it(`can't publish a token with the same name twice`, async () => {
       const { issuer, insurer } = await getNamedAccounts();
-     
       await expect(
         CustodianContractIssuer.publishToken({
           ...TOKEN_EXAMPLE,
@@ -259,7 +263,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
         {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
       );
 
@@ -273,7 +277,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
         {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           }
         )
       ).to.be.revertedWith("token with the same name already exists");
@@ -291,7 +295,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
         {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
       ).not.to.be.reverted;
 
@@ -305,7 +309,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
         {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
       ).to.be.revertedWith("token with the same symbol already exists");
     });
@@ -324,7 +328,7 @@ describe("CustodianContract", function () {
           tokenType: 0,
         },
         {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
       ).not.to.be.reverted;
 
@@ -347,7 +351,7 @@ describe("CustodianContract", function () {
         issuerSettlementAddress: issuer,
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
 
       const tokens = await CustodianContractIssuer.getTokens(issuer);
@@ -368,7 +372,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       })
       ).not.to.be.reverted;
 
@@ -397,7 +401,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       })
       ).not.to.be.reverted;
 
@@ -422,7 +426,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       })
       ).not.to.be.reverted;
 
@@ -437,7 +441,7 @@ describe("CustodianContract", function () {
           issuerSettlementAddress: issuer,
         },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       })
       ).not.to.be.reverted;
 
@@ -793,7 +797,7 @@ describe("CustodianContract", function () {
             issuerSettlementAddress: issuer,
           },
           {
-            value: amount*TOKEN_EXAMPLE.value
+            value: 100
           })
         ).not.to.be.reverted;
         await expect(
@@ -973,7 +977,7 @@ describe("CustodianContract", function () {
         issuerSettlementAddress: issuer,
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1006,7 +1010,7 @@ describe("CustodianContract", function () {
         issuerSettlementAddress: issuer,
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1039,7 +1043,7 @@ describe("CustodianContract", function () {
         issuerSettlementAddress: issuer,
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1075,7 +1079,7 @@ describe("CustodianContract", function () {
         },
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1120,7 +1124,7 @@ describe("CustodianContract", function () {
         },
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1165,7 +1169,7 @@ describe("CustodianContract", function () {
         },
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1207,7 +1211,7 @@ describe("CustodianContract", function () {
         useIssuerWhitelist: true,
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 
@@ -1238,7 +1242,7 @@ describe("CustodianContract", function () {
         issuerSettlementAddress: issuer,
       },
       {
-        value: amount*TOKEN_EXAMPLE.value
+        value: 100
       });
       const tokens = await CustodianContractIssuer.getTokens(issuer);
 

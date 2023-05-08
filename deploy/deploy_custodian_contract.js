@@ -61,7 +61,7 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     custodianContractOwner
   )
   // set the custodian contract address in the tokenomics contract
-  Tokenomics.setCustodianContractAddress(custodianContractAddress);
+  await Tokenomics.setCustodianContractAddress(custodianContractAddress);
 
   const TokenCreatorTvT = await ethers.getContract(
     "TokenCreatorTvT",

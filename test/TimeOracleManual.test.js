@@ -37,6 +37,12 @@ const setupTest = deployments.createFixture(
         args: [escrowManagerAddress],
       }
     );
+      const tokenomics =  await deploy("Tokenomics", {
+      from : custodianContractOwner,
+      args : [10 , custodianContractOwner],
+    });
+
+    const tokenomicsAddress = tokenomics.address;
 
     const deployResult = await deploy("CustodianContract", {
       from: custodianContractOwner,
@@ -44,12 +50,16 @@ const setupTest = deployments.createFixture(
         proxyContract: "OpenZeppelinTransparentProxy",
         execute: {
           methodName: "initialize",
-          args: [tokenCreatorTvTAddress, timeOracleManualAddress],
+          args: [tokenCreatorTvTAddress, timeOracleManualAddress , tokenomicsAddress ],
         },
       },
     });
     const custodianContractAddress = deployResult.address;
-
+    const Tokenomics = await ethers.getContract(
+      "Tokenomics",
+      custodianContractOwner
+    )
+    await Tokenomics.setCustodianContractAddress(custodianContractAddress);
     const TokenCreatorTvT = await ethers.getContract(
       "TokenCreatorTvT",
       custodianContractOwner
@@ -85,6 +95,7 @@ describe("TimeOracleManual", function () {
   let EscrowManagerIssuer;
   let EscrowManagerSubscriber;
   let TimeOracleManual;
+  let Tokenomics;
 
   const prepareIssuanceSwap = async (amount = 1) => {
     const { issuer, subscriber } = await getNamedAccounts();
@@ -166,6 +177,8 @@ describe("TimeOracleManual", function () {
       insurerPrimaryAddress: insurer,
       collateral: 3,
       issuerSettlementAddress: issuer,
+    },{
+      value:100
     });
     const tokens = await CustodianContract.getTokens(issuer);
     TokenContract = await ethers.getContractAt(

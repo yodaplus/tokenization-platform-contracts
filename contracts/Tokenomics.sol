@@ -54,7 +54,7 @@ contract Tokenomics is Ownable, ReasonCodes {
   //  Add a modifier to check if the caller is the custodian contract address
 
   modifier onlyCustodianContract() {
-    if (msg.sender == custodianContractAddress) {
+    if (msg.sender != custodianContractAddress) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "caller is not allowed"

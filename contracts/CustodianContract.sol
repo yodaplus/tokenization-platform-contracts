@@ -12,6 +12,7 @@ import "./interfaces/ICustodianContractQuery.sol";
 import "./TokenCreatorTvT.sol";
 import "./Tokenomics.sol";
 import "./TokenomicsTypes.sol";
+import "hardhat/console.sol";
 
 contract CustodianContract is
   Initializable,
@@ -826,9 +827,8 @@ contract CustodianContract is
       .investorClassifications;
     _tokenRestrictions[tokenAddress].useIssuerWhitelist = token
       .useIssuerWhitelist;
-
     require(
-      msg.value == tokenomics.getPerTokenFee() * token.value,
+      msg.value == tokenomics.getPerTokenFee() * token.maxTotalSupply,
       "Insufficient funds for publishing token!"
     );
 
@@ -837,7 +837,7 @@ contract CustodianContract is
         addr: tokenAddress,
         issuerPrimaryAddress: token.issuerPrimaryAddress,
         symbol: token.symbol,
-        quantity: token.value
+        quantity: token.maxTotalSupply
       })
     );
 

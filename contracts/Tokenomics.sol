@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./TokenomicsTypes.sol";
+import "./ReasonCodes.sol";
 
-contract Tokenomics is Ownable {
+contract Tokenomics is Ownable, ReasonCodes {
   string public constant VERSION = "0.0.1";
   /**
    * @dev perTokenFee is the fee that will be charged per token
@@ -43,6 +44,8 @@ contract Tokenomics is Ownable {
     uint256 fees
   );
 
+  error ERC1066Error(bytes1 errorCode, string message);
+
   constructor(
     uint256 fees,
     address _feeDestinationAddress,
@@ -62,6 +65,7 @@ contract Tokenomics is Ownable {
         "caller is not allowed"
       );
     }
+    _;
   }
 
   function depositFee(TokenFeeData calldata input)
@@ -80,7 +84,7 @@ contract Tokenomics is Ownable {
       input.issuerPrimaryAddress,
       perTokenFee,
       msg.value,
-      now
+      block.timestamp
     );
     feesLog[input.addr].push(log);
 

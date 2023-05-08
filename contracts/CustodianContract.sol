@@ -23,6 +23,7 @@ contract CustodianContract is
 
   TokenCreatorTvT public tokenCreatorTvT;
   TimeOracle public timeOracle;
+  Tokenomics public tokenomics;
 
   // Initalize Method For Upgradable Contracts
   function initialize(
@@ -727,7 +728,7 @@ contract CustodianContract is
     IssueType issueType;
   }
 
-  function publishToken(TokenInput calldata token) external onlyIssuer {
+  function publishToken(TokenInput calldata token) external payable onlyIssuer {
     if (_isIssuer[token.issuerPrimaryAddress] == false) {
       throwError(ErrorCondition.TOKEN_WRONG_ISSUER);
     }
@@ -826,7 +827,12 @@ contract CustodianContract is
     _tokenRestrictions[tokenAddress].useIssuerWhitelist = token
       .useIssuerWhitelist;
 
-    tokenomics.depositFee(
+    require(
+      msg.value == tokenomics.getPerTokenFee() * token.value,
+      "Insufficient funds for publishing token!"
+    );
+
+    tokenomics.depositFee{value: msg.value}(
       TokenFeeData({
         addr: tokenAddress,
         issuerPrimaryAddress: token.issuerPrimaryAddress,

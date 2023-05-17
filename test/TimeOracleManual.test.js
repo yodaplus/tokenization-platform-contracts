@@ -59,7 +59,8 @@ const setupTest = deployments.createFixture(
       "Tokenomics",
       custodianContractOwner
     )
-    await Tokenomics.setCustodianContractAddress(custodianContractAddress);
+    // whitelist the custodian contract address to the tokenomics contract
+    await Tokenomics.whitelistContractAddress(custodianContractAddress);
     const TokenCreatorTvT = await ethers.getContract(
       "TokenCreatorTvT",
       custodianContractOwner

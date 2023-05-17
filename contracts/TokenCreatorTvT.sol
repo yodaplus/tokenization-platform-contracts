@@ -14,15 +14,16 @@ contract TokenCreatorTvT is Ownable {
     escrowManagerAddress = escrowManagerAddress_;
   }
 
-  function publishToken(TokenTvTInput calldata input, address issuer)
-    external
-    onlyOwner
-    returns (address tokenAddress)
-  {
+  function publishToken(
+    TokenTvTInput calldata input,
+    address issuer,
+    address tokenomicsAddr
+  ) external onlyOwner returns (address tokenAddress) {
     TokenTvT deployedToken = new TokenTvT(
       input,
       msg.sender,
-      escrowManagerAddress
+      escrowManagerAddress,
+      tokenomicsAddr
     );
     deployedToken.transferOwnership(issuer);
     return address(deployedToken);

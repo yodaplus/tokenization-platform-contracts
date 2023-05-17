@@ -7,21 +7,27 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/ICustodianContractQuery.sol";
 import "./ReasonCodes.sol";
+import "./Tokenomics.sol";
+import "./TokenomicsTypes.sol";
 
 abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
   bool internal _isFinalized;
   uint256 internal _maxTotalSupply;
-
+  string internal _symbol;
   ICustodianContractQuery internal _custodianContract;
+  Tokenomics public tokenomics;
 
   constructor(
     string memory name,
     string memory symbol,
     uint256 maxTotalSupply_,
-    address custodianContract_
+    address custodianContract_,
+    address tokenomicsAddr
   ) ERC20(name, symbol) {
     _maxTotalSupply = maxTotalSupply_;
     _custodianContract = ICustodianContractQuery(custodianContract_);
+    tokenomics = Tokenomics(tokenomicsAddr);
+    _symbol = symbol;
   }
 
   function pause() public onlyOwner {
@@ -148,6 +154,7 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
 
   function setMaxSupply(uint256 maxTotalSupply_)
     external
+    payable
     onlyOwner
     whenNotPaused
   {
@@ -156,6 +163,21 @@ abstract contract TokenBase is ERC20Burnable, Pausable, Ownable, ReasonCodes {
     }
 
     if (maxTotalSupply_ > _maxTotalSupply) {
+      require(
+        msg.value ==
+          tokenomics.getPerTokenFee() * (maxTotalSupply_ - _maxTotalSupply),
+        "Insufficient funds for publishing token!"
+      );
+
+      tokenomics.depositFee{value: msg.value}(
+        TokenFeeData({
+          addr: address(this),
+          issuerPrimaryAddress: owner(),
+          symbol: _symbol,
+          quantity: maxTotalSupply_ - _maxTotalSupply
+        })
+      );
+
       emit SupplyIncreased(_maxTotalSupply, maxTotalSupply_);
     } else if (maxTotalSupply_ < _maxTotalSupply) {
       emit SupplyDecreased(_maxTotalSupply, maxTotalSupply_);

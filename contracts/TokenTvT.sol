@@ -5,6 +5,7 @@ import "./TokenBase.sol";
 import "./TokenTvTTypes.sol";
 import "./interfaces/ITokenHooks.sol";
 import "./interfaces/IEscrowInitiate.sol";
+import "./TokenomicsTypes.sol";
 
 contract TokenTvT is TokenBase, ITokenHooks {
   string public constant VERSION = "0.0.1";
@@ -77,9 +78,16 @@ contract TokenTvT is TokenBase, ITokenHooks {
   constructor(
     TokenTvTInput memory input,
     address custodianContract,
-    address escrowManagerAddress
+    address escrowManagerAddress,
+    address tokenomicsAddr
   )
-    TokenBase(input.name, input.symbol, input.maxTotalSupply, custodianContract)
+    TokenBase(
+      input.name,
+      input.symbol,
+      input.maxTotalSupply,
+      custodianContract,
+      tokenomicsAddr
+    )
   {
     paymentTokens = input.paymentTokens;
     _issuePrice = input.issuanceSwapMultiple;

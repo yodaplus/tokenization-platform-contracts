@@ -17,8 +17,7 @@ contract Tokenomics is Ownable, ReasonCodes {
   /**
    * @dev custodianContractAddress is the address of the custodian contract which will be used to call depositFee function
    */
-  address internal custodianContractAddress;
-
+  mapping(address => bool) internal whitelistedContractAddresses;
   // TODO: Create a Modifier to check if the caller is the custodian contract address
 
   struct TokenFee {
@@ -54,7 +53,7 @@ contract Tokenomics is Ownable, ReasonCodes {
   //  Add a modifier to check if the caller is the custodian contract address
 
   modifier onlyCustodianContract() {
-    if (msg.sender != custodianContractAddress) {
+    if (!whitelistedContractAddresses[msg.sender]) {
       revert ERC1066Error(
         ReasonCodes.APP_SPECIFIC_FAILURE,
         "caller is not allowed"
@@ -82,7 +81,7 @@ contract Tokenomics is Ownable, ReasonCodes {
       block.timestamp
     );
     feesLog[input.addr].push(log);
-
+    whitelistedContractAddresses[input.addr] = true;
     payable(feeDestinationAddress).transfer(msg.value);
     emit FeeDeposited(
       input.symbol,
@@ -98,9 +97,9 @@ contract Tokenomics is Ownable, ReasonCodes {
   }
 
   // set custodian contract address;
-  function setCustodianContractAddress(address addr) external onlyOwner {
-    custodianContractAddress = addr;
-  }
+  // function setCustodianContractAddress(address addr) external onlyOwner {
+  //   custodianContractAddress = addr;
+  // }
 
   // set the fee per token
   function setPerTokenFee(uint256 amount) external onlyOwner {
@@ -115,7 +114,15 @@ contract Tokenomics is Ownable, ReasonCodes {
     return perTokenFee;
   }
 
-  function getCustodianContractAddress() public view returns (address) {
-    return custodianContractAddress;
+  // function getCustodianContractAddress() public view returns (address) {
+  //   return custodianContractAddress;
+  // }
+
+  function whitelistContractAddress(address addr) external onlyOwner {
+    whitelistedContractAddresses[addr] = true;
+  }
+
+  function blacklistCustodianContractAddress(address addr) external onlyOwner {
+    whitelistedContractAddresses[addr] = false;
   }
 }

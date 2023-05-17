@@ -11,8 +11,11 @@ contract Token is TokenBase {
     string memory name,
     string memory symbol,
     uint256 maxTotalSupply,
-    address custodianContract
-  ) TokenBase(name, symbol, maxTotalSupply, custodianContract) {}
+    address custodianContract,
+    address tokenomicsAddr
+  )
+    TokenBase(name, symbol, maxTotalSupply, custodianContract, tokenomicsAddr)
+  {}
 
   function issue(
     address subscriber,

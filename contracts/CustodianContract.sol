@@ -12,7 +12,6 @@ import "./interfaces/ICustodianContractQuery.sol";
 import "./TokenCreatorTvT.sol";
 import "./Tokenomics.sol";
 import "./TokenomicsTypes.sol";
-import "hardhat/console.sol";
 
 contract CustodianContract is
   Initializable,
@@ -794,7 +793,8 @@ contract CustodianContract is
         issuerSettlementAddress: token.issuerSettlementAddress,
         issueType: token.issueType
       }),
-      msg.sender
+      msg.sender,
+      address(tokenomics)
     );
 
     _tokens[tokenAddress].name = token.name;

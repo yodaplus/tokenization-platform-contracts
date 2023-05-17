@@ -60,8 +60,8 @@ module.exports = async ({ getNamedAccounts, deployments, network }) => {
     "Tokenomics",
     custodianContractOwner
   )
-  // set the custodian contract address in the tokenomics contract
-  await Tokenomics.setCustodianContractAddress(custodianContractAddress);
+  // whitelist the custodian contract address in the tokenomics contract
+  await Tokenomics.whitelistContractAddress(custodianContractAddress);
 
   const TokenCreatorTvT = await ethers.getContract(
     "TokenCreatorTvT",
